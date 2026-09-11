@@ -1,0 +1,101 @@
+services:
+  # ==============================================================================
+  # 1. PostgreSQL Relational Database Service
+  # ==============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: insureassist-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: insureassist
+      POSTGRES_PASSWORD: Test@123
+      POSTGRES_DB: insureassist
+    ports:
+      - "5435:5432"
+    volumes:
+      - insureassist_pgdata:/var/lib/postgresql/data
+    networks:
+      - insureassist-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insureassist -d insureassist"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==============================================================================
+  # 2. Authentication Microservice (JWT & User Identity)
+  # ==============================================================================
+  auth-service:
+    build:
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    image: insureassist-auth
+    container_name: insureassist-auth-container
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      APP_NAME: "InsureAssist Auth Service"
+      APP_ENV: "development"
+      PORT: 8001
+      HOST: "0.0.0.0"
+      JWT_SECRET_KEY: "insureassist-super-secret-jwt-key-for-development-mode"
+      JWT_ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      DATABASE_URL: "postgresql://insureassist:Test%40123@postgres:5432/insureassist"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:3000,*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - insureassist-network
+
+  # ==============================================================================
+  # 3. Customer Microservice (Policies, Claims/FNOL, Renewals, Profiles)
+  # ==============================================================================
+  customer-service:
+    build:
+      context: ./backend/customer-service
+      dockerfile: Dockerfile
+    image: insureassist-customer
+    container_name: insureassist-customer-container
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      APP_NAME: "InsureAssist Customer Service"
+      APP_ENV: "development"
+      PORT: 8002
+      HOST: "0.0.0.0"
+      JWT_SECRET_KEY: "insureassist-super-secret-jwt-key-for-development-mode"
+      JWT_ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      DATABASE_URL: "postgresql://insureassist:Test%40123@postgres:5432/insureassist"
+      EXCEL_DATASET_PATH: "/app/data/pc_insurance_large_dataset.xlsx"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:3000,*"
+    volumes:
+      - "C:/Users/i-sirivalli.mannem/Downloads/pc_insurance_large_dataset.xlsx:/app/data/pc_insurance_large_dataset.xlsx:ro"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - insureassist-network
+
+  # ==============================================================================
+  # FUTURE MICROSERVICES (PLANNED EXTENSIONS)
+  # ==============================================================================
+  # agent-service:        # Planned Port: 8003
+  # underwriter-service:  # Planned Port: 8004
+  # admin-service:        # Planned Port: 8005
+  # ai-service:           # Planned Port: 8006
+  # document-service:     # Planned Port: 8007
+  # notification-service: # Planned Port: 8008
+
+volumes:
+  insureassist_pgdata:
+    name: insureassist_pgdata
+
+networks:
+  insureassist-network:
+    name: insureassist-network
+    driver: bridge
