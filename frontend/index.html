@@ -1075,7 +1075,7 @@
         <section id="page-agent-dashboard" class="page">
           <div class="page-header">
             <div>
-              <h2 class="page-title">Welcome back, Alex!</h2>
+              <h2 class="page-title" id="agent-welcome-title">Welcome back, Agent!</h2>
               <p class="page-subtitle">Here's an overview of your assigned customer portfolio.</p>
             </div>
             <div class="portal-tag" style="background:#FAF6F2;border-color:#EADBCE;color:#3B241D;">
@@ -1086,7 +1086,7 @@
 
           <!-- 4 Agent Summary Cards -->
           <div class="grid grid-4" style="margin-bottom: 1.5rem">
-            <!-- Card 1: Assigned Customers (18) -->
+            <!-- Card 1: Assigned Customers -->
             <div class="card stat-card" id="agent-card-customers" data-tooltip="Customers currently assigned to this agent.">
               <div class="stat-card-top">
                 <div class="stat-icon teal">
@@ -1094,12 +1094,12 @@
                 </div>
                 <span class="stat-card-click-hint">View Panel →</span>
               </div>
-              <div class="stat-value">18</div>
+              <div class="stat-value" id="agent-stat-customers">0</div>
               <div class="stat-label">Assigned Customers</div>
               <div class="stat-subtext">Active accounts under your care</div>
             </div>
 
-            <!-- Card 2: Active Policies (32) -->
+            <!-- Card 2: Active Policies -->
             <div class="card stat-card" id="agent-card-policies" data-tooltip="Policies belonging to your assigned customers.">
               <div class="stat-card-top">
                 <div class="stat-icon blue">
@@ -1107,25 +1107,25 @@
                 </div>
                 <span class="stat-card-click-hint">View Panel →</span>
               </div>
-              <div class="stat-value">32</div>
+              <div class="stat-value" id="agent-stat-policies">0</div>
               <div class="stat-label">Active Policies</div>
               <div class="stat-subtext">Multi-line customer contracts</div>
             </div>
 
-            <!-- Card 3: Upcoming Renewals (5) -->
-            <div class="card stat-card" id="agent-card-renewals" data-tooltip="Policies approaching renewal within the next 90 days.">
+            <!-- Card 3: Upcoming Renewals -->
+            <div class="card stat-card" id="agent-card-renewals" data-tooltip="Policies approaching renewal within the next 30 days.">
               <div class="stat-card-top">
                 <div class="stat-icon amber">
                   <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 </div>
                 <span class="stat-card-click-hint">View Panel →</span>
               </div>
-              <div class="stat-value">5</div>
+              <div class="stat-value" id="agent-stat-renewals">0</div>
               <div class="stat-label">Upcoming Renewals</div>
-              <div class="stat-subtext">Approaching in next 90 days</div>
+              <div class="stat-subtext">Approaching in next 30 days</div>
             </div>
 
-            <!-- Card 4: Annual Premium Portfolio ($48,650) -->
+            <!-- Card 4: Annual Premium Portfolio -->
             <div class="card stat-card" id="agent-card-premium" data-tooltip="Total annual premium across your assigned customer policies.">
               <div class="stat-card-top">
                 <div class="stat-icon green">
@@ -1133,7 +1133,7 @@
                 </div>
                 <span class="stat-card-click-hint">Breakdown →</span>
               </div>
-              <div class="stat-value">$48,650</div>
+              <div class="stat-value" id="agent-stat-premium">$0</div>
               <div class="stat-label">Annual Premium Portfolio</div>
               <div class="stat-subtext">Your assigned portfolio</div>
             </div>
@@ -1147,66 +1147,24 @@
                 <div class="card-header">
                   <div>
                     <h3 class="card-title">Premium by Policy Type</h3>
-                    <div class="card-subtitle">Distribution across your assigned 32 client policies</div>
+                    <div class="card-subtitle" id="agent-premium-chart-subtitle">Distribution across your assigned client policies</div>
                   </div>
-                  <span class="badge badge-info" data-tooltip="Total book value">$48,650 Total</span>
+                  <span class="badge badge-info" id="agent-premium-chart-total" data-tooltip="Total book value">$0 Total</span>
                 </div>
                 <div class="chart-container">
-                  <div class="chart-bars-horizontal">
-                    <div class="chart-row" data-tooltip="Homeowner policies: $18,400 (38%)">
-                      <div class="chart-row-label">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                        Home
-                      </div>
-                      <div class="chart-row-track">
-                        <div class="chart-row-fill accent-1" style="width: 38%;">38%</div>
-                      </div>
-                      <div class="chart-row-val">$18,400</div>
-                    </div>
-
-                    <div class="chart-row" data-tooltip="Auto vehicle policies: $15,200 (31%)">
-                      <div class="chart-row-label">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 8"/></svg>
-                        Auto
-                      </div>
-                      <div class="chart-row-track">
-                        <div class="chart-row-fill accent-2" style="width: 31%;">31%</div>
-                      </div>
-                      <div class="chart-row-val">$15,200</div>
-                    </div>
-
-                    <div class="chart-row" data-tooltip="Commercial insurance policies: $9,800 (20%)">
-                      <div class="chart-row-label">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                        Commercial
-                      </div>
-                      <div class="chart-row-track">
-                        <div class="chart-row-fill accent-3" style="width: 20%;">20%</div>
-                      </div>
-                      <div class="chart-row-val">$9,800</div>
-                    </div>
-
-                    <div class="chart-row" data-tooltip="Umbrella liability policies: $5,250 (11%)">
-                      <div class="chart-row-label">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        Umbrella
-                      </div>
-                      <div class="chart-row-track">
-                        <div class="chart-row-fill accent-4" style="width: 11%;">11%</div>
-                      </div>
-                      <div class="chart-row-val">$5,250</div>
-                    </div>
+                  <div class="chart-bars-horizontal" id="agent-premium-chart-bars">
+                    <!-- Populated dynamically via GET /agent/dashboard -->
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Right Independent Column: Assigned Customer Renewals (5) -->
+            <!-- Right Independent Column: Assigned Customer Renewals -->
             <div class="agent-col-right">
               <div class="card agent-card-renewals">
                 <div class="card-header">
                   <div>
-                    <h3 class="card-title">Assigned Customer Renewals (5)</h3>
+                    <h3 class="card-title" id="agent-dashboard-renewals-title">Assigned Customer Renewals</h3>
                     <div class="card-subtitle">Clients requiring renewal outreach</div>
                   </div>
                 </div>
@@ -1231,7 +1189,7 @@
 
             <div class="table-search-bar">
               <input type="text" class="table-search-input" id="agent-customer-quick-search" placeholder="Filter assigned customers by name or ID...">
-              <div style="font-size:0.8rem;color:var(--gray-500);">18 assigned client accounts</div>
+              <div id="agent-quick-search-count" style="font-size:0.8rem;color:var(--gray-500);">0 assigned client accounts</div>
             </div>
 
             <div class="data-table-container compact-table-scroll" id="agent-dashboard-customers-table-container">
@@ -1258,14 +1216,14 @@
           </div>
         </section>
 
-        <!-- Agent Page 2: My Customers Directory (Full 18 Customers with Pagination) -->
+        <!-- Agent Page 2: My Customers Directory (with Pagination) -->
         <section id="page-agent-customers" class="page">
           <div class="page-header">
             <div>
-              <h2 class="page-title">My Assigned Customers (18)</h2>
+              <h2 class="page-title" id="agent-customers-page-title">My Assigned Customers (0)</h2>
               <p class="page-subtitle">Full directory of client accounts under your active agent management.</p>
             </div>
-            <div class="portal-tag">18 Assigned Clients</div>
+            <div class="portal-tag" id="agent-customers-portal-tag">0 Assigned Clients</div>
           </div>
 
           <div class="card">
@@ -1323,10 +1281,10 @@
         <section id="page-agent-policies" class="page">
           <div class="page-header">
             <div>
-              <h2 class="page-title">Assigned Customer Policies (32)</h2>
-              <p class="page-subtitle">Policies belonging strictly to your assigned customer book.</p>
+              <h2 class="page-title" id="agent-policies-page-title">Assigned Customer Policies (15)</h2>
+              <p class="page-subtitle" id="agent-policies-page-subtitle">15 total policies across your 6 assigned customer accounts (8 Active · 7 Inactive/Expired)</p>
             </div>
-            <div class="portal-tag">32 Client Policies</div>
+            <div class="portal-tag" id="agent-policies-portal-tag">15 Total · 8 Active</div>
           </div>
 
           <div class="card">
@@ -1451,15 +1409,15 @@
 
           <!-- 1. AGENT PROFILE CARD -->
           <div class="profile-header card" style="margin-bottom: 1.5rem;">
-            <div class="profile-avatar-large agent-avatar">AR</div>
+            <div class="profile-avatar-large agent-avatar" id="agent-profile-avatar">AN</div>
             <div style="flex: 1;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
                 <div>
-                  <h3 style="font-size: 1.45rem; color: var(--blue-900); font-weight: 700;">Alex Rivera</h3>
-                  <p style="color: var(--gray-500); font-size: 0.9rem; margin-top: 2px;">Agent ID: <strong>AGT-401-92</strong> · Role: <strong>Senior Broker (CIC)</strong> · Member Since: <strong>March 2021</strong></p>
-                  <p style="font-size: 0.8rem; color: var(--gray-600); margin-top: 4px;">Department: Retail Brokerage Operations · Team: Midwest Client Advisory Team</p>
+                  <h3 id="agent-profile-name" style="font-size: 1.45rem; color: var(--blue-900); font-weight: 700;">Agent Profile</h3>
+                  <p id="agent-profile-id-meta" style="color: var(--gray-500); font-size: 0.9rem; margin-top: 2px;">Agent ID: <strong id="agent-profile-id-sub">1321</strong> · Role: <strong id="agent-profile-role-sub">Agent</strong></p>
+                  <p style="font-size: 0.8rem; color: var(--gray-600); margin-top: 4px;">Department: Retail Brokerage Operations · Status: Licensed Broker</p>
                 </div>
-                <span class="badge badge-active" style="background:#f0fdfa;border-color:#99f6e4;color:#0f766e;font-size:0.8rem;padding:0.4rem 0.85rem;">Senior Broker (18 Assigned Clients)</span>
+                <span class="badge badge-active" id="agent-profile-badge" style="background:#f0fdfa;border-color:#99f6e4;color:#0f766e;font-size:0.8rem;padding:0.4rem 0.85rem;">Active Licensed Agent</span>
               </div>
             </div>
           </div>
@@ -1474,11 +1432,11 @@
                   <div class="card-subtitle">Verified broker licensing and operational unit</div>
                 </div>
               </div>
-              <div class="detail-row"><span class="detail-label">Full Name</span><span class="detail-value">Alex Rivera</span></div>
-              <div class="detail-row"><span class="detail-label">Agent ID</span><span class="detail-value" style="font-family:monospace;font-weight:700">AGT-401-92</span></div>
+              <div class="detail-row"><span class="detail-label">Full Name</span><span class="detail-value" id="agent-profile-fullname">Agent</span></div>
+              <div class="detail-row"><span class="detail-label">Agent ID</span><span class="detail-value" id="agent-profile-id" style="font-family:monospace;font-weight:700">1321</span></div>
               <div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">Retail Brokerage Operations</span></div>
-              <div class="detail-row"><span class="detail-label">Team</span><span class="detail-value">Midwest Client Advisory Team</span></div>
-              <div class="detail-row"><span class="detail-label">Account Status</span><span class="badge badge-active">Active Licensed Broker (IL-892301)</span></div>
+              <div class="detail-row"><span class="detail-label">Role</span><span class="detail-value" id="agent-profile-role">Agent</span></div>
+              <div class="detail-row"><span class="detail-label">Account Status</span><span class="badge badge-active">Active Licensed Agent</span></div>
             </div>
 
             <!-- Contact Details Card -->
@@ -1489,10 +1447,10 @@
                   <div class="card-subtitle">Work communication and supervisory channels</div>
                 </div>
               </div>
-              <div class="detail-row"><span class="detail-label">Email Address</span><span class="detail-value">alex.rivera@insureassist.com</span></div>
+              <div class="detail-row"><span class="detail-label">Email Address</span><span class="detail-value" id="agent-profile-email">agent@example.com</span></div>
               <div class="detail-row"><span class="detail-label">Primary Phone</span><span class="detail-value">(555) 890-1234</span></div>
-              <div class="detail-row"><span class="detail-label">Office / Team Info</span><span class="detail-value">Chicago Regional Office #400</span></div>
-              <div class="detail-row"><span class="detail-label">Manager / Supervisor</span><span class="detail-value" style="color:var(--blue-700);font-weight:700">Marcus Vance (Managing Director)</span></div>
+              <div class="detail-row"><span class="detail-label">Office / Regional Info</span><span class="detail-value">Corporate Brokerage Desk</span></div>
+              <div class="detail-row"><span class="detail-label">Operational Status</span><span class="detail-value" style="color:var(--blue-700);font-weight:700">Online & Verified</span></div>
             </div>
           </div>
 

@@ -1,5 +1,6 @@
 const AUTH_SERVICE_URL = 'http://127.0.0.1:8001';
 const CUSTOMER_SERVICE_URL = 'http://127.0.0.1:8002';
+const AGENT_SERVICE_URL = 'http://127.0.0.1:8003';
 
 /**
      * MOCK DATA REPOSITORIES (ORGANIZED SEPARATELY)
@@ -373,13 +374,13 @@ const MOCK_DB = {
     }
   ],
 
-  // Agent Workspace Data (Alex Rivera)
+  // Agent Workspace Data (Aarav Sharma)
   agent: {
-    id: 'AGT-401',
-    name: 'Alex Rivera',
-    email: 'alex.rivera@insureassist.com',
-    initials: 'AR',
-    title: 'Senior Broker · 18 Assigned Customers',
+    id: 'AGT-1321',
+    name: 'Aarav Sharma',
+    email: 'aarav.sharma@insureassist.com',
+    initials: 'AS',
+    title: 'Senior Licensed Broker · 18 Assigned Customers',
     stats: {
       assignedCustomers: 18,
       activePolicies: 32,
@@ -388,22 +389,26 @@ const MOCK_DB = {
     }
   },
 
-  // Assigned Customers to Alex Rivera (18 Records)
+  // Assigned Customers to Agent Aarav Sharma (18 Complete Static Records)
   assignedCustomers: [
     {
       id: 'CUST-001',
       name: 'Sarah Mitchell',
       email: 'sarah.mitchell@email.com',
       phone: '(555) 234-7890',
+      address: '124 Grand Avenue, Suite 100, Springfield, IL 62701',
       city: 'Springfield',
       totalPolicies: 3,
       activePolicies: 3,
       nextRenewal: '45 days',
       renewalDate: '15 Mar 2027',
       policies: [
-        { id: 'POL-002', type: 'Homeowners HO-3', status: 'Active', premium: '$1,840', expiry: '15 Mar 2027', category: 'Property' },
-        { id: 'POL-001', type: 'Auto Comprehensive', status: 'Active', premium: '$1,260', expiry: '02 Apr 2027', category: 'Vehicle' },
-        { id: 'POL-004', type: 'Personal Umbrella', status: 'Active', premium: '$400', expiry: '01 Jun 2027', category: 'Commercial' }
+        { id: 'POL-002', type: 'Homeowners HO-3', status: 'Active', premium: '$1,840', deductible: '$1,000', expiry: '15 Mar 2027', category: 'Property' },
+        { id: 'POL-001', type: 'Auto Comprehensive', status: 'Active', premium: '$1,260', deductible: 'Collision $500 / Comp $250', expiry: '02 Apr 2027', category: 'Vehicle' },
+        { id: 'POL-004', type: 'Personal Umbrella', status: 'Active', premium: '$400', deductible: '$0 Retention', expiry: '01 Jun 2027', category: 'Commercial' }
+      ],
+      claims: [
+        { id: 'CLM-2024-8831', date: '28 Aug 2025', type: 'Water Damage', amount: '$4,850', status: 'Settled', desc: 'Kitchen supply line burst causing floor water damage. Remediation completed and claim settled.' }
       ]
     },
     {
@@ -411,14 +416,18 @@ const MOCK_DB = {
       name: 'John Carter',
       email: 'john.carter@email.com',
       phone: '(555) 456-1122',
+      address: '742 Evergreen Terrace, Evanston, IL 60201',
       city: 'Evanston',
       totalPolicies: 2,
       activePolicies: 2,
       nextRenewal: '63 days',
       renewalDate: '02 Apr 2027',
       policies: [
-        { id: 'POL-003', type: 'Auto Comprehensive', status: 'Active', premium: '$980', expiry: '15 Jun 2027', category: 'Vehicle' },
-        { id: 'POL-014', type: 'Homeowners HO-3', status: 'Active', premium: '$2,100', expiry: '02 Apr 2027', category: 'Property' }
+        { id: 'POL-003', type: 'Auto Comprehensive', status: 'Active', premium: '$980', deductible: 'Collision $500 / Comp $250', expiry: '15 Jun 2027', category: 'Vehicle' },
+        { id: 'POL-014', type: 'Homeowners HO-3', status: 'Active', premium: '$2,100', deductible: '$1,000', expiry: '02 Apr 2027', category: 'Property' }
+      ],
+      claims: [
+        { id: 'CLM-2025-4421', date: '12 Jan 2026', type: 'Glass / Windshield', amount: '$350', status: 'Settled', desc: 'Highway pebble damage to front windshield. OEM glass replaced.' }
       ]
     },
     {
@@ -426,30 +435,36 @@ const MOCK_DB = {
       name: 'Emily Johnson',
       email: 'emily.johnson@email.com',
       phone: '(555) 789-3344',
+      address: '510 Main Street, Suite 3B, Naperville, IL 60540',
       city: 'Naperville',
-      totalPolicies: 4,
+      totalPolicies: 3,
       activePolicies: 3,
       nextRenewal: '20 days',
       renewalDate: '22 Apr 2027',
       policies: [
-        { id: 'POL-015', type: 'Commercial General Liability', status: 'Active', premium: '$2,400', expiry: '22 Apr 2027', category: 'Specialty' },
-        { id: 'POL-016', type: 'Business Property', status: 'Active', premium: '$3,200', expiry: '12 Jul 2027', category: 'Property' },
-        { id: 'POL-017', type: 'Commercial Auto Fleet', status: 'Active', premium: '$4,100', expiry: '19 Sep 2027', category: 'Vehicle' }
-      ]
+        { id: 'POL-015', type: 'Commercial General Liability', status: 'Active', premium: '$2,400', deductible: '$1,000', expiry: '22 Apr 2027', category: 'Specialty' },
+        { id: 'POL-016', type: 'Business Property', status: 'Active', premium: '$3,200', deductible: '$2,500', expiry: '12 Jul 2027', category: 'Property' },
+        { id: 'POL-017', type: 'Commercial Auto Fleet', status: 'Active', premium: '$4,100', deductible: '$1,000', expiry: '19 Sep 2027', category: 'Vehicle' }
+      ],
+      claims: []
     },
     {
       id: 'CUST-004',
       name: 'Michael Brown',
       email: 'michael.brown@email.com',
       phone: '(555) 901-5566',
+      address: '88 Pine Ridge Road, Oak Park, IL 60302',
       city: 'Oak Park',
       totalPolicies: 2,
       activePolicies: 2,
       nextRenewal: '90 days',
       renewalDate: '10 May 2027',
       policies: [
-        { id: 'POL-018', type: 'Commercial Property', status: 'Active', premium: '$890', expiry: '10 May 2027', category: 'Commercial' },
-        { id: 'POL-019', type: 'Condo Unit HO-6', status: 'Active', premium: '$750', expiry: '14 Aug 2027', category: 'Property' }
+        { id: 'POL-018', type: 'Commercial Property', status: 'Active', premium: '$890', deductible: '$1,000', expiry: '10 May 2027', category: 'Commercial' },
+        { id: 'POL-019', type: 'Condo Unit HO-6', status: 'Active', premium: '$750', deductible: '$500', expiry: '14 Aug 2027', category: 'Property' }
+      ],
+      claims: [
+        { id: 'CLM-2025-1190', date: '04 Oct 2025', type: 'Water Backup', amount: '$1,200', status: 'Settled', desc: 'Basement sump pump power failure backup during thunderstorm.' }
       ]
     },
     {
@@ -457,45 +472,53 @@ const MOCK_DB = {
       name: 'David Chen',
       email: 'david.chen@email.com',
       phone: '(555) 345-6789',
+      address: '230 North Michigan Avenue, Apt 14B, Chicago, IL 60601',
       city: 'Chicago',
       totalPolicies: 3,
       activePolicies: 3,
       nextRenewal: '108 days',
       renewalDate: '28 May 2027',
       policies: [
-        { id: 'POL-020', type: 'Watercraft & Boat Shield', status: 'Active', premium: '$650', expiry: '28 May 2027', category: 'Specialty' },
-        { id: 'POL-021', type: 'Auto Comprehensive', status: 'Active', premium: '$1,450', expiry: '10 Nov 2027', category: 'Vehicle' },
-        { id: 'POL-022', type: 'Homeowners HO-3', status: 'Active', premium: '$2,300', expiry: '05 Jan 2028', category: 'Property' }
-      ]
+        { id: 'POL-020', type: 'Watercraft & Boat Shield', status: 'Active', premium: '$650', deductible: '$500', expiry: '28 May 2027', category: 'Specialty' },
+        { id: 'POL-021', type: 'Auto Comprehensive', status: 'Active', premium: '$1,450', deductible: '$500', expiry: '10 Nov 2027', category: 'Vehicle' },
+        { id: 'POL-022', type: 'Homeowners HO-3', status: 'Active', premium: '$2,300', deductible: '$1,000', expiry: '05 Jan 2028', category: 'Property' }
+      ],
+      claims: []
     },
     {
       id: 'CUST-006',
       name: 'Jessica Taylor',
       email: 'jessica.taylor@email.com',
       phone: '(555) 678-9012',
+      address: '44 Woodfield Road, Schaumburg, IL 60173',
       city: 'Schaumburg',
       totalPolicies: 2,
       activePolicies: 2,
       nextRenewal: '142 days',
       renewalDate: '15 Jul 2027',
       policies: [
-        { id: 'POL-023', type: 'Scheduled Jewelry Floater', status: 'Active', premium: '$420', expiry: '15 Jul 2027', category: 'Specialty' },
-        { id: 'POL-024', type: 'Homeowners HO-3', status: 'Active', premium: '$1,950', expiry: '20 Oct 2027', category: 'Property' }
-      ]
+        { id: 'POL-023', type: 'Scheduled Jewelry Floater', status: 'Active', premium: '$420', deductible: '$0', expiry: '15 Jul 2027', category: 'Specialty' },
+        { id: 'POL-024', type: 'Homeowners HO-3', status: 'Active', premium: '$1,950', deductible: '$1,000', expiry: '20 Oct 2027', category: 'Property' }
+      ],
+      claims: []
     },
     {
       id: 'CUST-007',
       name: 'Robert Martinez',
       email: 'robert.m@email.com',
       phone: '(555) 123-4567',
+      address: '102 River Drive, Peoria, IL 61602',
       city: 'Peoria',
       totalPolicies: 2,
       activePolicies: 2,
       nextRenewal: '160 days',
       renewalDate: '01 Aug 2027',
       policies: [
-        { id: 'POL-025', type: 'Auto Collision', status: 'Active', premium: '$1,100', expiry: '01 Aug 2027', category: 'Vehicle' },
-        { id: 'POL-038', type: 'Personal Umbrella', status: 'Active', premium: '$400', expiry: '12 Sep 2027', category: 'Commercial' }
+        { id: 'POL-025', type: 'Auto Collision', status: 'Active', premium: '$1,100', deductible: '$500', expiry: '01 Aug 2027', category: 'Vehicle' },
+        { id: 'POL-038', type: 'Personal Umbrella', status: 'Active', premium: '$400', deductible: '$0 Retention', expiry: '12 Sep 2027', category: 'Commercial' }
+      ],
+      claims: [
+        { id: 'CLM-2024-9901', date: '19 Nov 2024', type: 'Collision Impact', amount: '$3,400', status: 'Settled', desc: 'Rear bumper fender repair following minor intersection incident.' }
       ]
     },
     {
@@ -503,26 +526,28 @@ const MOCK_DB = {
       name: 'Amanda Wilson',
       email: 'amanda.w@email.com',
       phone: '(555) 234-5678',
+      address: '90 Fox Valley Way, Aurora, IL 60504',
       city: 'Aurora',
       totalPolicies: 2,
       activePolicies: 2,
       nextRenewal: '185 days',
       renewalDate: '25 Aug 2027',
       policies: [
-        { id: 'POL-026', type: 'Pet Comprehensive Health', status: 'Active', premium: '$480', expiry: '25 Aug 2027', category: 'Specialty' },
-        { id: 'POL-027', type: 'Condo HO-6', status: 'Active', premium: '$860', expiry: '14 Dec 2027', category: 'Property' }
-      ]
+        { id: 'POL-026', type: 'Pet Comprehensive Health', status: 'Active', premium: '$480', deductible: '$250', expiry: '25 Aug 2027', category: 'Specialty' },
+        { id: 'POL-027', type: 'Condo HO-6', status: 'Active', premium: '$860', deductible: '$500', expiry: '14 Dec 2027', category: 'Property' }
+      ],
+      claims: []
     },
-    { id: 'CUST-009', name: 'Brian Anderson', email: 'brian.a@email.com', phone: '(555) 345-6780', city: 'Rockford', totalPolicies: 2, activePolicies: 2, nextRenewal: '210 days', renewalDate: '20 Sep 2027', policies: [{ id: 'POL-028', type: 'Business Owners Policy', status: 'Active', premium: '$720', expiry: '20 Sep 2027', category: 'Commercial' }, { id: 'POL-039', type: 'Commercial Property', status: 'Active', premium: '$1,800', expiry: '15 Oct 2027', category: 'Property' }] },
-    { id: 'CUST-010', name: 'Catherine Lee', email: 'catherine.l@email.com', phone: '(555) 456-7891', city: 'Joliet', totalPolicies: 2, activePolicies: 2, nextRenewal: '230 days', renewalDate: '10 Oct 2027', policies: [{ id: 'POL-029', type: 'Auto Comp', status: 'Active', premium: '$1,320', expiry: '10 Oct 2027', category: 'Vehicle' }, { id: 'POL-040', type: 'Personal Cyber Shield', status: 'Active', premium: '$320', expiry: '01 Nov 2027', category: 'Specialty' }] },
-    { id: 'CUST-011', name: 'Daniel White', email: 'daniel.w@email.com', phone: '(555) 567-8902', city: 'Elgin', totalPolicies: 2, activePolicies: 2, nextRenewal: '250 days', renewalDate: '30 Oct 2027', policies: [{ id: 'POL-030', type: 'Homeowners HO-3', status: 'Active', premium: '$2,050', expiry: '30 Oct 2027', category: 'Property' }, { id: 'POL-041', type: 'Auto Comprehensive', status: 'Active', premium: '$1,150', expiry: '15 Nov 2027', category: 'Vehicle' }] },
-    { id: 'CUST-012', name: 'Elizabeth Harris', email: 'elizabeth.h@email.com', phone: '(555) 678-9013', city: 'Waukegan', totalPolicies: 1, activePolicies: 1, nextRenewal: '270 days', renewalDate: '20 Nov 2027', policies: [{ id: 'POL-031', type: 'Umbrella Liability', status: 'Active', premium: '$450', expiry: '20 Nov 2027', category: 'Commercial' }] },
-    { id: 'CUST-013', name: 'George Clark', email: 'george.c@email.com', phone: '(555) 789-0124', city: 'Champaign', totalPolicies: 1, activePolicies: 1, nextRenewal: '290 days', renewalDate: '10 Dec 2027', policies: [{ id: 'POL-032', type: 'Cyber Shield', status: 'Active', premium: '$310', expiry: '10 Dec 2027', category: 'Specialty' }] },
-    { id: 'CUST-014', name: 'Hannah Lewis', email: 'hannah.l@email.com', phone: '(555) 890-1235', city: 'Bloomington', totalPolicies: 2, activePolicies: 2, nextRenewal: '310 days', renewalDate: '30 Dec 2027', policies: [{ id: 'POL-033', type: 'Condo Unit', status: 'Active', premium: '$790', expiry: '30 Dec 2027', category: 'Property' }] },
-    { id: 'CUST-015', name: 'Ian Walker', email: 'ian.w@email.com', phone: '(555) 901-2346', city: 'Decatur', totalPolicies: 1, activePolicies: 1, nextRenewal: '320 days', renewalDate: '10 Jan 2028', policies: [{ id: 'POL-034', type: 'Auto Collision', status: 'Active', premium: '$1,150', expiry: '10 Jan 2028', category: 'Vehicle' }] },
-    { id: 'CUST-016', name: 'Julia Hall', email: 'julia.h@email.com', phone: '(555) 012-3457', city: 'Des Plaines', totalPolicies: 2, activePolicies: 2, nextRenewal: '340 days', renewalDate: '30 Jan 2028', policies: [{ id: 'POL-035', type: 'Homeowners', status: 'Active', premium: '$1,920', expiry: '30 Jan 2028', category: 'Property' }] },
-    { id: 'CUST-017', name: 'Kevin Young', email: 'kevin.y@email.com', phone: '(555) 123-7890', city: 'Berwyn', totalPolicies: 1, activePolicies: 1, nextRenewal: '350 days', renewalDate: '10 Feb 2028', policies: [{ id: 'POL-036', type: 'Commercial Auto', status: 'Active', premium: '$840', expiry: '10 Feb 2028', category: 'Commercial' }] },
-    { id: 'CUST-018', name: 'Laura King', email: 'laura.k@email.com', phone: '(555) 234-8901', city: 'Skokie', totalPolicies: 2, activePolicies: 2, nextRenewal: '360 days', renewalDate: '20 Feb 2028', policies: [{ id: 'POL-037', type: 'Auto Comp', status: 'Active', premium: '$1,290', expiry: '20 Feb 2028', category: 'Vehicle' }] }
+    { id: 'CUST-009', name: 'Brian Anderson', email: 'brian.a@email.com', phone: '(555) 345-6780', address: '18 State Street, Rockford, IL 61101', city: 'Rockford', totalPolicies: 2, activePolicies: 2, nextRenewal: '210 days', renewalDate: '20 Sep 2027', policies: [{ id: 'POL-028', type: 'Business Owners Policy', status: 'Active', premium: '$720', deductible: '$1,000', expiry: '20 Sep 2027', category: 'Commercial' }, { id: 'POL-039', type: 'Commercial Property', status: 'Active', premium: '$1,800', deductible: '$2,500', expiry: '15 Oct 2027', category: 'Property' }], claims: [] },
+    { id: 'CUST-010', name: 'Catherine Lee', email: 'catherine.l@email.com', phone: '(555) 456-7891', address: '400 Western Ave, Joliet, IL 60435', city: 'Joliet', totalPolicies: 2, activePolicies: 2, nextRenewal: '230 days', renewalDate: '10 Oct 2027', policies: [{ id: 'POL-029', type: 'Auto Comp', status: 'Active', premium: '$1,320', deductible: '$250', expiry: '10 Oct 2027', category: 'Vehicle' }, { id: 'POL-040', type: 'Personal Cyber Shield', status: 'Active', premium: '$320', deductible: '$0', expiry: '01 Nov 2027', category: 'Specialty' }], claims: [] },
+    { id: 'CUST-011', name: 'Daniel White', email: 'daniel.w@email.com', phone: '(555) 567-8902', address: '75 Highland Ave, Elgin, IL 60120', city: 'Elgin', totalPolicies: 2, activePolicies: 2, nextRenewal: '250 days', renewalDate: '30 Oct 2027', policies: [{ id: 'POL-030', type: 'Homeowners HO-3', status: 'Active', premium: '$2,050', deductible: '$1,000', expiry: '30 Oct 2027', category: 'Property' }, { id: 'POL-041', type: 'Auto Comprehensive', status: 'Active', premium: '$1,150', deductible: '$500', expiry: '15 Nov 2027', category: 'Vehicle' }], claims: [] },
+    { id: 'CUST-012', name: 'Elizabeth Harris', email: 'elizabeth.h@email.com', phone: '(555) 678-9013', address: '22 Lakefront Blvd, Waukegan, IL 60085', city: 'Waukegan', totalPolicies: 1, activePolicies: 1, nextRenewal: '270 days', renewalDate: '20 Nov 2027', policies: [{ id: 'POL-031', type: 'Umbrella Liability', status: 'Active', premium: '$450', deductible: '$0', expiry: '20 Nov 2027', category: 'Commercial' }], claims: [] },
+    { id: 'CUST-013', name: 'George Clark', email: 'george.c@email.com', phone: '(555) 789-0124', address: '610 University Ave, Champaign, IL 61820', city: 'Champaign', totalPolicies: 1, activePolicies: 1, nextRenewal: '290 days', renewalDate: '10 Dec 2027', policies: [{ id: 'POL-032', type: 'Cyber Shield', status: 'Active', premium: '$310', deductible: '$0', expiry: '10 Dec 2027', category: 'Specialty' }], claims: [] },
+    { id: 'CUST-014', name: 'Hannah Lewis', email: 'hannah.l@email.com', phone: '(555) 890-1235', address: '305 College Ave, Bloomington, IL 61701', city: 'Bloomington', totalPolicies: 1, activePolicies: 1, nextRenewal: '310 days', renewalDate: '30 Dec 2027', policies: [{ id: 'POL-033', type: 'Condo Unit', status: 'Active', premium: '$790', deductible: '$500', expiry: '30 Dec 2027', category: 'Property' }], claims: [] },
+    { id: 'CUST-015', name: 'Ian Walker', email: 'ian.w@email.com', phone: '(555) 901-2346', address: '144 Prairie View, Decatur, IL 62521', city: 'Decatur', totalPolicies: 1, activePolicies: 1, nextRenewal: '320 days', renewalDate: '10 Jan 2028', policies: [{ id: 'POL-034', type: 'Auto Collision', status: 'Active', premium: '$1,150', deductible: '$500', expiry: '10 Jan 2028', category: 'Vehicle' }], claims: [] },
+    { id: 'CUST-016', name: 'Julia Hall', email: 'julia.h@email.com', phone: '(555) 012-3457', address: '88 Oakton Street, Des Plaines, IL 60018', city: 'Des Plaines', totalPolicies: 1, activePolicies: 1, nextRenewal: '340 days', renewalDate: '30 Jan 2028', policies: [{ id: 'POL-035', type: 'Homeowners', status: 'Active', premium: '$1,920', deductible: '$1,000', expiry: '30 Jan 2028', category: 'Property' }], claims: [] },
+    { id: 'CUST-017', name: 'Kevin Young', email: 'kevin.y@email.com', phone: '(555) 123-7890', address: '1200 Grove Ave, Berwyn, IL 60402', city: 'Berwyn', totalPolicies: 1, activePolicies: 1, nextRenewal: '350 days', renewalDate: '10 Feb 2028', policies: [{ id: 'POL-036', type: 'Commercial Auto', status: 'Active', premium: '$840', deductible: '$1,000', expiry: '10 Feb 2028', category: 'Commercial' }], claims: [] },
+    { id: 'CUST-018', name: 'Laura King', email: 'laura.k@email.com', phone: '(555) 234-8901', address: '500 Lincoln Ave, Skokie, IL 60077', city: 'Skokie', totalPolicies: 1, activePolicies: 1, nextRenewal: '360 days', renewalDate: '20 Feb 2028', policies: [{ id: 'POL-037', type: 'Auto Comp', status: 'Active', premium: '$1,290', deductible: '$250', expiry: '20 Feb 2028', category: 'Vehicle' }], claims: [] }
   ],
 
   // Customer Personalized Policy Recommendations (Req)
@@ -1673,46 +1698,180 @@ function initSlidePanelListeners() {
   });
 }
 
+function mapPolicyCategoryFrontend(type) {
+  const t = String(type || '').toLowerCase();
+  if (t.includes('home') || t.includes('property') || t.includes('renter') || t.includes('dwelling')) return 'Property';
+  if (t.includes('auto') || t.includes('vehicle') || t.includes('car') || t.includes('fleet')) return 'Vehicle';
+  if (t.includes('commercial') || t.includes('business') || t.includes('liability') || t.includes('general liability')) return 'Commercial';
+  if (t.includes('umbrella') || t.includes('watercraft') || t.includes('specialty')) return 'Specialty';
+  return 'General';
+}
+
 // Open Customer Details Panel (for Agent view)
 function openCustomerDetailsPanel(custId) {
-  const cust = MOCK_DB.assignedCustomers.find(c => c.id === custId);
-  if (!cust) return;
+  const allCusts = (window.agentCustomersData && window.agentCustomersData.customers) ||
+                   (window.agentDashboardData && window.agentDashboardData.assigned_customers) ||
+                   MOCK_DB.assignedCustomers || [];
 
-  const policiesHtml = cust.policies.map(p => `
-        <div class="panel-policy-list-item">
-          <div>
-            <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${p.type}</div>
-            <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${p.id} · ${p.premium}/yr</div>
-            <div style="font-size:0.75rem;color:var(--gray-500)">Renews: ${p.expiry} · ${p.category}</div>
+  const cust = allCusts.find(c => String(c.customer_id || c.id) === String(custId));
+  if (!cust) {
+    showToast(`Customer record (${custId}) not found.`);
+    return;
+  }
+
+  const custName = cust.name || 'Customer';
+  const displayId = cust.customer_id || cust.id;
+  const email = cust.email || 'N/A';
+  const phone = cust.mobile || cust.phone || '+91-98949-36898';
+  const address = cust.address || (cust.city ? `${cust.city}, IL` : '124 Grand Avenue, Chicago, IL 60611');
+  const agentDisplayName = getAgentDisplayName();
+
+  // Find policies for this customer
+  let policiesList = Array.isArray(cust.policies) && cust.policies.length > 0 ? cust.policies : [];
+  if (policiesList.length === 0 && window.agentPoliciesData && Array.isArray(window.agentPoliciesData.policies)) {
+    policiesList = window.agentPoliciesData.policies.filter(p => String(p.customer_id) === String(displayId));
+  }
+
+  // Calculate total annual premium for this customer
+  const totalCustomerPremium = policiesList.reduce((acc, p) => {
+    const amt = typeof p.premium_amount === 'number' ? p.premium_amount : parseFloat(String(p.premium || '0').replace(/[^0-9.]/g, '')) || 0;
+    return acc + amt;
+  }, 0);
+
+  // Policies cards
+  let policiesHtml = '';
+  if (policiesList.length > 0) {
+    policiesHtml = policiesList.map(p => {
+      const polId = p.policy_id || p.id;
+      const polNumber = p.policy_number || p.code || polId;
+      const polType = p.policy_type || p.type || 'Comprehensive Policy';
+      const polCat = p.category || mapPolicyCategoryFrontend(polType);
+      const polStatus = p.status || 'Active';
+      const polPrem = p.premium || (typeof p.premium_amount === 'number' ? `$${p.premium_amount.toLocaleString()}/yr` : '$0/yr');
+      const formattedPrem = polPrem.includes('/yr') ? polPrem : `${polPrem}/yr`;
+      const polDeductible = p.deductible || (polType.toLowerCase().includes('auto') ? 'Collision $500 · Comp $250' : 'All Perils $1,000');
+      const polExpiry = p.expiry_date || p.end_date || p.expiry || 'N/A';
+      const statusBadgeClass = polStatus.toLowerCase() === 'active' ? 'badge-active' : polStatus.toLowerCase() === 'pending' ? 'badge-pending' : 'badge-info';
+
+      return `
+        <div class="panel-policy-list-item" style="display:flex;justify-content:space-between;align-items:center;background:var(--white);border:1px solid var(--gray-200);border-radius:8px;padding:12px;margin-bottom:8px;">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <strong style="color:var(--blue-900);font-size:0.925rem;">${polType}</strong>
+              <span class="badge ${statusBadgeClass}" style="font-size:0.7rem;padding:2px 6px;">${polStatus}</span>
+            </div>
+            <div style="font-size:0.8rem;color:var(--gray-600);font-family:monospace;margin-bottom:4px;">
+              ${polNumber} · <span style="font-weight:700;color:var(--blue-900);">${formattedPrem}</span> · ${polCat} Line
+            </div>
+            <div style="font-size:0.775rem;color:var(--gray-500);">
+              Deductible: <strong>${polDeductible}</strong> · Expiry: <strong>${polExpiry}</strong>
+            </div>
           </div>
-          <button class="btn btn-outline btn-sm" onclick="openPolicyDetailsPanel('${p.id}', '${cust.name}')">View Policy →</button>
-        </div>
-      `).join('');
-
-  const contentHtml = `
-        <div class="detail-section">
-          <div class="detail-section-title">Assigned Customer Record</div>
-          <div class="detail-row"><span class="detail-label">Customer Name</span><span class="detail-value" style="font-size:1rem;color:var(--blue-900)">${cust.name}</span></div>
-          <div class="detail-row"><span class="detail-label">Customer ID</span><span class="detail-value" style="font-family:monospace">${cust.id}</span></div>
-          <div class="detail-row"><span class="detail-label">Email Address</span><span class="detail-value">${cust.email}</span></div>
-          <div class="detail-row"><span class="detail-label">Primary Phone</span><span class="detail-value">${cust.phone}</span></div>
-          <div class="detail-row"><span class="detail-label">Location / City</span><span class="detail-value">${cust.city}, IL</span></div>
-          <div class="detail-row"><span class="detail-label">Account Status</span><span class="badge badge-active">Assigned & Active</span></div>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-section-title">Customer Policy Portfolio (${cust.policies.length})</div>
-          <div style="display:flex;flex-direction:column;gap:0.65rem;">
-            ${policiesHtml}
-          </div>
-        </div>
-
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary btn-block btn-sm" onclick="navigateTo('agent-policies')">View Customer Policies Directory →</button>
+          <button class="btn btn-outline btn-sm" style="flex-shrink:0;margin-left:12px;" onclick="openPolicyDetailsPanel('${polId || polNumber}', '${custName}')">
+            View Policy →
+          </button>
         </div>
       `;
+    }).join('');
+  } else {
+    policiesHtml = `
+      <div style="padding:1rem;text-align:center;color:var(--gray-500);font-size:0.85rem;background:var(--white);border:1px dashed var(--gray-300);border-radius:8px;">
+        No active insurance contracts on file for this client.
+      </div>
+    `;
+  }
 
-  openOrUpdateSlidePanel(`Customer: ${cust.name}`, `Client ID: ${cust.id} · Assigned Portfolio`, contentHtml);
+  // Claims history
+  let claimsHtml = '';
+  const claimsList = Array.isArray(cust.claims) ? cust.claims : [];
+  if (claimsList.length > 0) {
+    claimsHtml = claimsList.map(cl => `
+      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <strong style="color:var(--blue-900);font-size:0.875rem;">${cl.type || cl.incident_type || 'Property Loss'}</strong>
+          <span class="badge ${String(cl.status || cl.claim_status).toLowerCase().includes('settled') ? 'badge-active' : 'badge-pending'}" style="font-size:0.7rem;padding:2px 6px;">${cl.status || cl.claim_status || 'Under Review'}</span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--gray-600);margin-bottom:4px;">
+          Claim <code>${cl.id || cl.claim_number || 'CLM-1001'}</code> · Date: ${cl.date || cl.incident_date || 'Recent'} · Amount: <strong style="color:var(--blue-900);">${cl.amount || (cl.claim_amount ? '$' + Number(cl.claim_amount).toLocaleString() : '$0')}</strong>
+        </div>
+        <div style="font-size:0.775rem;color:var(--gray-500);line-height:1.4;">
+          ${cl.desc || cl.incident_description || 'First notice of loss filed.'}
+        </div>
+      </div>
+    `).join('');
+  } else {
+    claimsHtml = `
+      <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:12px 14px;color:#166534;font-size:0.825rem;display:flex;align-items:center;gap:8px;">
+        <svg width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>No claims on file — Clean loss history across all active policies.</span>
+      </div>
+    `;
+  }
+
+  // Renewal Info
+  const primaryPolicy = policiesList[0] || {};
+  const renewalDue = cust.renewal_date || cust.renewalDate || (primaryPolicy.expiry_date || primaryPolicy.end_date || primaryPolicy.expiry || 'Scheduled');
+  const nextRenewalDays = cust.next_renewal || cust.nextRenewal || 'Scheduled';
+  const renewalBadgeClass = String(nextRenewalDays).toLowerCase().includes('day') && parseInt(nextRenewalDays) <= 30 ? 'badge-pending' : 'badge-info';
+
+  const contentHtml = `
+    <!-- 1. Customer Overview Section -->
+    <div class="detail-section">
+      <div class="detail-section-title">Client Identity & Contact Information</div>
+      <div class="detail-row"><span class="detail-label">Customer Name</span><span class="detail-value" style="font-size:1.05rem;font-weight:700;color:var(--blue-900)">${custName}</span></div>
+      <div class="detail-row"><span class="detail-label">Customer ID</span><span class="detail-value"><code style="font-size:0.85rem;background:var(--gray-100);padding:3px 8px;border-radius:4px;color:var(--blue-900);font-weight:600;">${displayId}</code></span></div>
+      <div class="detail-row"><span class="detail-label">Email Address</span><span class="detail-value"><a href="mailto:${email}" style="color:var(--blue-600);text-decoration:none;">${email}</a></span></div>
+      <div class="detail-row"><span class="detail-label">Primary Phone</span><span class="detail-value">${phone}</span></div>
+      <div class="detail-row"><span class="detail-label">Street Address</span><span class="detail-value">${address}</span></div>
+      <div class="detail-row"><span class="detail-label">Assigned Agent</span><span class="detail-value"><strong>${agentDisplayName}</strong> (Agent ID: 1321)</span></div>
+      <div class="detail-row"><span class="detail-label">Account Status</span><span class="badge badge-active">Assigned & In Good Standing</span></div>
+    </div>
+
+    <!-- 2. Upcoming Renewal Information -->
+    <div class="detail-section">
+      <div class="detail-section-title">Upcoming Renewal Schedule</div>
+      <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:12px 14px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <strong style="color:#92400E;font-size:0.875rem;">Next Renewal Due: ${renewalDue}</strong>
+          <span class="badge ${renewalBadgeClass}">${nextRenewalDays}</span>
+        </div>
+        <div style="font-size:0.8rem;color:#78350F;">
+          Primary policy scheduled for renewal review: <strong>${primaryPolicy.policy_type || primaryPolicy.type || 'Commercial / General'}</strong> (${primaryPolicy.policy_number || primaryPolicy.id || 'Active'}) · Estimated Premium: <strong>${primaryPolicy.premium || (primaryPolicy.premium_amount ? '$' + Number(primaryPolicy.premium_amount).toLocaleString() + '/yr' : '$0/yr')}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Policy Portfolio -->
+    <div class="detail-section">
+      <div class="detail-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Active Policy Portfolio (${policiesList.length})</span>
+        <span style="font-size:0.825rem;font-weight:700;color:var(--blue-900);">Total: $${Number(totalCustomerPremium.toFixed(2)).toLocaleString()}/yr</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.4rem;margin-top:8px;">
+        ${policiesHtml}
+      </div>
+    </div>
+
+    <!-- 4. Claims Record -->
+    <div class="detail-section">
+      <div class="detail-section-title">Claims History & Loss Records</div>
+      <div style="margin-top:8px;">
+        ${claimsHtml}
+      </div>
+    </div>
+
+    <!-- 5. Quick Actions -->
+    <div style="display:flex;gap:10px;margin-top:1.25rem;">
+      <button class="btn btn-outline btn-block btn-sm" onclick="showToast('Advisory renewal reminder queued for ${custName}.')">
+        Send Renewal Reminder
+      </button>
+      <button class="btn btn-primary btn-block btn-sm" onclick="navigateTo('agent-policies'); closeSlidePanel();">
+        Inspect Policies Ledger →
+      </button>
+    </div>
+  `;
+
+  openOrUpdateSlidePanel(`Customer: ${custName}`, `Client ID: ${displayId} · Assigned to Agent ${agentDisplayName}`, contentHtml);
 }
 
 /**
@@ -1768,250 +1927,272 @@ function getPolicyContextualDescription(policy, customerName) {
   return `Your active ${policy.type} policy provides dedicated insurance coverage for your declared assets and liabilities. Review the policy details, coverage limits, exclusions, and supporting documents below.`;
 }
 
-// Open Policy Details Panel (Consistent Universal Experience)
-function openPolicyDetailsPanel(policyId, customerName = '') {
-  if (!customerName) customerName = (window.customerProfileData && window.customerProfileData.name) || 'Customer';
-  let p = (window.customerPoliciesData || []).find(item => item.id === policyId || item.code === policyId) ||
-          (MOCK_DB.customerPolicies || []).find(item => item.id === policyId || item.code === policyId);
+// Open Policy Details Panel (Consistent Universal Experience using Real Database Data)
+async function openPolicyDetailsPanel(policyId, customerName = '') {
+  if (!policyId) return;
 
-  if (!p) {
-    // Fallback search in assigned customer policies
-    for (const cust of (MOCK_DB.assignedCustomers || [])) {
-      const found = cust.policies.find(cp => cp.id === policyId);
-      if (found) {
-        p = {
-          id: found.id,
-          code: `POL-2024-${found.id.replace('POL-', '')}`,
-          type: found.type,
-          category: found.category || 'General',
-          status: found.status || 'Active',
-          effective: '01 Jan 2025',
-          expiry: found.expiry || '01 Jan 2026',
-          premium: found.premium.includes('$') ? `${found.premium}/yr` : `$${found.premium}/yr`,
-          deductible: found.type.toLowerCase().includes('auto') ? 'Collision: $500 · Comp: $250' : 'All Perils: $1,000',
-          coverage: [
-            'Primary Coverage Limit — $300,000',
-            'Secondary Liability Shield — $100,000',
-            'Legal Defense Costs — Included'
-          ],
-          deductiblesList: ['Comprehensive / All Perils — $500'],
-          exclusions: [
-            'Intentional criminal acts or damages',
-            'Unapproved commercial usage without endorsement',
-            'Standard wear, tear, and progressive deterioration'
-          ],
-          docs: [
-            `${found.type} Policy Document (PDF)`,
-            'Certificate of Active Coverage (PDF)'
-          ]
-        };
-        customerName = cust.name;
-        break;
+  // 1. Try fetching live policy details directly from Agent Service / Customer Service API
+  let liveDetail = null;
+  const token = getAuthToken();
+  const currentRole = ((window.CURRENT_AUTH && window.CURRENT_AUTH.user && window.CURRENT_AUTH.user.role) || (MOCK_DB && MOCK_DB.currentRole) || 'customer').toLowerCase();
+
+  if (token && ['agent', 'broker'].includes(currentRole)) {
+    try {
+      const resp = await fetch(`${AGENT_SERVICE_URL}/agent/policies/${encodeURIComponent(policyId)}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      if (resp.ok) {
+        liveDetail = await resp.json();
       }
+    } catch (e) {
+      console.warn('Could not fetch policy detail from /agent/policies/:', e);
     }
   }
 
-  if (!p) {
-    // Fallback search in allPolicies ledger
-    const found = (MOCK_DB.allPolicies || []).find(ap => ap.id === policyId);
-    if (found) {
-      customerName = found.customer || customerName;
-      const typeLower = found.type.toLowerCase();
+  // 2. If liveDetail is returned from backend, use real database fields
+  if (liveDetail) {
+    const pNumber = liveDetail.policy_number || liveDetail.policy_id || policyId;
+    const pType = liveDetail.policy_type || 'Insurance Policy';
+    const cName = liveDetail.customer_name || customerName || 'Assigned Policyholder';
+    const cId = liveDetail.customer_id || 'Not available';
+    const pStatus = liveDetail.status || 'Active';
+    const pCategory = liveDetail.category || 'General';
+    const pPrem = liveDetail.premium || (liveDetail.premium_amount ? `$${liveDetail.premium_amount.toLocaleString()}/yr` : 'Not available');
+    const pStart = liveDetail.start_date || 'Not available';
+    const pEnd = liveDetail.end_date || 'Not available';
 
-      let defaultCoverage = ['Primary Declared Asset — Full Replacement Value', 'Comprehensive Liability — $500,000', 'Emergency Support — 24/7 Hotline'];
-      let defaultExclusions = ['Unregistered peril hazards', 'Nuclear / War risks', 'Normal wear and tear'];
-      let defaultDocs = [`${found.type} Policy Contract (PDF)`, 'Policy Declarations & Schedule (PDF)'];
+    const coveragesList = (Array.isArray(liveDetail.coverages) && liveDetail.coverages.length > 0)
+      ? liveDetail.coverages
+      : [];
 
-      if (typeLower.includes('home') || typeLower.includes('ho-3')) {
-        defaultCoverage = ['Dwelling Replacement — $450,000', 'Personal Property — $225,000', 'Personal Liability — $300,000', 'Loss of Use — $90,000'];
-        defaultExclusions = ['External surface flood', 'Earth movement / seismic', 'Gradual wear & tear'];
-        defaultDocs = ['Homeowners Policy Contract (PDF)', 'Water Backup Rider (PDF)', 'Declarations Page (PDF)'];
-      } else if (typeLower.includes('auto')) {
-        defaultCoverage = ['Bodily Injury Liability — $100,000 / $300,000', 'Property Damage Liability — $100,000', 'Collision & Comprehensive — ACV ($500 ded.)', 'Roadside Assistance — Included'];
-        defaultExclusions = ['Commercial transport usage', 'Racing & track events', 'Intentional damage'];
-        defaultDocs = ['Auto Policy Declarations (PDF)', 'Proof of Insurance Card (PDF)'];
-      } else if (typeLower.includes('commercial') || typeLower.includes('business')) {
-        defaultCoverage = ['Building & Structure — $500,000', 'Business Personal Property — $250,000', 'Business Interruption — $100,000', 'General Commercial Liability — $1,000,000'];
-        defaultExclusions = ['Off-premises utility surge', 'Unlicensed equipment operation', 'Gradual deterioration'];
-        defaultDocs = ['Commercial Policy Schedule (PDF)', 'Property Endorsement (PDF)', 'Certificate of Insurance (PDF)'];
-      } else if (typeLower.includes('umbrella')) {
-        defaultCoverage = ['Excess Personal Liability — $1,000,000', 'Legal Defense Representation — Included', 'Worldwide Territory Shield — Included'];
-        defaultExclusions = ['Business venture liability', 'Professional malpractice', 'Intentional criminal harm'];
-        defaultDocs = ['Personal Umbrella Schedule (PDF)', 'Underlying Policy Matrix (PDF)'];
-      } else if (typeLower.includes('cyber')) {
-        defaultCoverage = ['Identity Theft Restoration — $50,000', 'Ransomware / Cyber Extortion — $25,000', 'System Data Recovery — $10,000'];
-        defaultExclusions = ['Unencrypted commercial database breaches', 'Infrastructure hardware sabotage'];
-        defaultDocs = ['Cyber Defense Certificate (PDF)', 'Incident Response Guide (PDF)'];
-      }
+    const exclusionsList = (Array.isArray(liveDetail.exclusions) && liveDetail.exclusions.length > 0)
+      ? liveDetail.exclusions
+      : [];
 
-      p = {
-        id: found.id,
-        code: `POL-2024-${found.id.replace('POL-', '')}`,
-        type: found.type,
-        category: found.category || 'General',
-        status: found.status || 'Active',
-        effective: found.effective || '01 Jan 2025',
-        expiry: found.expiry || '01 Jan 2026',
-        premium: found.premium,
-        deductible: found.deductible || 'Standard Deductible: $500',
-        coverage: defaultCoverage,
-        exclusions: defaultExclusions,
-        docs: defaultDocs
-      };
-    }
+    const claimsList = (Array.isArray(liveDetail.claims) && liveDetail.claims.length > 0)
+      ? liveDetail.claims
+      : [];
+
+    const renewalsList = (Array.isArray(liveDetail.renewals) && liveDetail.renewals.length > 0)
+      ? liveDetail.renewals
+      : [];
+
+    const statusBadgeClass = (pStatus.toLowerCase() === 'active') ? 'badge-active' : (pStatus.toLowerCase().includes('pending') ? 'badge-pending' : 'badge-info');
+
+    const contentHtml = `
+      <div class="policy-context-desc-box" style="margin-bottom: 1.25rem; padding: 0.95rem 1.15rem; background: var(--blue-50); border: 1px solid var(--blue-100); border-radius: 8px;">
+        <p style="font-size: 0.85rem; color: var(--blue-900); line-height: 1.5; margin: 0; font-weight: 500;">
+          Official policy record for <strong>${cName}</strong> (${pNumber}). Underwritten under the <strong>${pCategory}</strong> line.
+        </p>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">Policy Overview</div>
+        <div class="detail-row"><span class="detail-label">Policyholder</span><span class="detail-value" style="color:var(--blue-900);font-weight:700">${cName} ${cId !== 'Not available' ? `<span style="font-size:0.75rem;color:var(--gray-500);font-weight:normal">(${cId})</span>` : ''}</span></div>
+        <div class="detail-row"><span class="detail-label">Policy Number</span><span class="detail-value" style="font-family:monospace;font-weight:600">${pNumber}</span></div>
+        <div class="detail-row"><span class="detail-label">Policy Type</span><span class="detail-value">${pType}</span></div>
+        <div class="detail-row"><span class="detail-label">Category</span><span class="badge badge-info">${pCategory}</span></div>
+        <div class="detail-row"><span class="detail-label">Status</span><span class="badge ${statusBadgeClass}">${pStatus}</span></div>
+        <div class="detail-row"><span class="detail-label">Annual Premium</span><span class="detail-value" style="color:var(--blue-900);font-size:1rem;font-weight:700;">${pPrem}</span></div>
+        <div class="detail-row"><span class="detail-label">Effective Date</span><span class="detail-value">${pStart}</span></div>
+        <div class="detail-row"><span class="detail-label">Expiration Date</span><span class="detail-value">${pEnd}</span></div>
+        ${liveDetail.customer_email ? `<div class="detail-row"><span class="detail-label">Customer Email</span><span class="detail-value">${liveDetail.customer_email}</span></div>` : ''}
+        ${liveDetail.customer_phone ? `<div class="detail-row"><span class="detail-label">Customer Phone</span><span class="detail-value">${liveDetail.customer_phone}</span></div>` : ''}
+      </div>
+
+      <!-- Real Coverages from PostgreSQL -->
+      <div class="detail-section">
+        <div class="detail-section-title">Coverages & Policy Limits (${coveragesList.length})</div>
+        ${coveragesList.length > 0 ? `
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${coveragesList.map(cov => `
+              <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-weight:600;font-size:0.85rem;color:var(--blue-900);">${cov.coverage_name}</div>
+                  <div style="font-size:0.75rem;color:var(--gray-500);">Limit: <strong>${cov.formatted_limit || 'Not available'}</strong> · Deductible: <strong>${cov.formatted_deductible || 'Not available'}</strong></div>
+                </div>
+                <span class="badge ${(cov.status || '').toLowerCase() === 'active' ? 'badge-active' : 'badge-info'}" style="font-size:0.7rem;">${cov.status || 'Active'}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <div style="font-size:0.85rem;color:var(--gray-500);padding:0.5rem 0;">No specific coverage breakdown records on file for this policy.</div>
+        `}
+      </div>
+
+      <!-- Real Exclusions from PostgreSQL -->
+      <div class="detail-section">
+        <div class="detail-section-title">Policy Exclusions (${exclusionsList.length})</div>
+        ${exclusionsList.length > 0 ? `
+          <ul class="bullet-list exclusion-list">
+            ${exclusionsList.map(ex => `
+              <li><strong>${ex.exclusion_name}:</strong> ${ex.description || 'Excluded from policy terms.'}</li>
+            `).join('')}
+          </ul>
+        ` : `
+          <div style="font-size:0.85rem;color:var(--gray-500);padding:0.5rem 0;">No specific exclusion records recorded for this policy.</div>
+        `}
+      </div>
+
+      <!-- Real Claims from PostgreSQL -->
+      <div class="detail-section">
+        <div class="detail-section-title">Claims History (${claimsList.length})</div>
+        ${claimsList.length > 0 ? `
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${claimsList.map(cl => `
+              <div style="background:var(--white);border:1px solid var(--gray-200);border-radius:6px;padding:8px 12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <strong style="color:var(--blue-900);font-size:0.85rem;">${cl.claim_number} · ${cl.incident_type || 'Claim'}</strong>
+                  <span class="badge badge-pending" style="font-size:0.7rem;">${cl.claim_status || 'Under Review'}</span>
+                </div>
+                <div style="font-size:0.75rem;color:var(--gray-600);margin-top:2px;">Amount: <strong>${cl.formatted_amount || 'Not available'}</strong> · Date: ${cl.incident_date || 'N/A'}</div>
+                ${cl.incident_description ? `<div style="font-size:0.75rem;color:var(--gray-500);margin-top:2px;">${cl.incident_description}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <div style="font-size:0.85rem;color:var(--gray-500);padding:0.5rem 0;">No claims filed against this policy.</div>
+        `}
+      </div>
+
+      <!-- Real Renewal Requests from PostgreSQL -->
+      <div class="detail-section" style="border-bottom:none;">
+        <div class="detail-section-title">Renewal Information (${renewalsList.length})</div>
+        ${renewalsList.length > 0 ? `
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${renewalsList.map(rn => `
+              <div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                <div>
+                  <div style="font-weight:700;color:#92400E;font-size:0.85rem;">${rn.renewal_id}</div>
+                  <div style="font-size:0.75rem;color:#78350F;">Renewal Date: <strong>${rn.renewal_date || 'Upcoming'}</strong> · Premium: <strong>${rn.formatted_renewal_premium || 'Not available'}</strong></div>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <span class="badge ${rn.status === 'Approved' ? 'badge-active' : 'badge-pending'}">${rn.status}</span>
+                  ${(rn.status === 'Pending Approval' && ['agent', 'broker'].includes(currentRole)) ? `
+                    <button class="btn btn-primary btn-sm" style="background:#16a34a;border-color:#16a34a;color:#fff;font-size:0.75rem;padding:3px 10px;" onclick="event.stopPropagation(); handleAgentApproveRenewal('${rn.renewal_id}')">Approve</button>
+                  ` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <div style="font-size:0.85rem;color:var(--gray-500);padding:0.5rem 0;">Policy is in good standing. No pending renewal requests.</div>
+        `}
+      </div>
+    `;
+
+    openOrUpdateSlidePanel(`${pType}`, `Policy: ${pNumber} · ${cName}`, contentHtml);
+    return;
   }
 
-  if (!p) return;
+  // 3. Fallback to cached agent/customer policy lists if API call was not available
+  const allKnownPolicies = [
+    ...(window.agentPoliciesData && window.agentPoliciesData.policies ? window.agentPoliciesData.policies : []),
+    ...(window.customerPoliciesData || []),
+    ...(MOCK_DB.assignedCustomers ? MOCK_DB.assignedCustomers.flatMap(c => c.policies.map(p => ({ ...p, customer_name: c.name, customer_id: c.id }))) : []),
+    ...(MOCK_DB.allPolicies || [])
+  ];
 
-  const descriptionText = getPolicyContextualDescription(p, customerName);
+  const p = allKnownPolicies.find(item =>
+    String(item.policy_id || item.id) === String(policyId) ||
+    String(item.policy_number || item.code) === String(policyId)
+  );
+
+  if (!p) {
+    showToast(`Policy details for ${policyId} not available.`);
+    return;
+  }
+
+  const pNumber = p.policy_number || p.code || p.id || policyId;
+  const pType = p.policy_type || p.type || 'Insurance Policy';
+  const cName = p.customer_name || p.custName || customerName || 'Policyholder';
+  const cId = p.customer_id || p.custId || 'Not available';
+  const pStatus = p.status || 'Active';
+  const pCategory = p.category || 'General';
+  const pPrem = p.formatted_premium || (p.premium ? (typeof p.premium === 'number' ? `$${p.premium.toLocaleString()}/yr` : p.premium) : 'Not available');
+  const pStart = p.start_date || p.effective || 'Not available';
+  const pEnd = p.end_date || p.expiry || 'Not available';
+
+  const statusBadgeClass = (pStatus.toLowerCase() === 'active') ? 'badge-active' : 'badge-pending';
 
   const contentHtml = `
-        <!-- Dynamic Policy Contextual Description (2-3 Lines) -->
-        <div class="policy-context-desc-box" style="margin-bottom: 1.25rem; padding: 0.95rem 1.15rem; background: var(--blue-50); border: 1px solid var(--blue-100); border-radius: 8px;">
-          <p style="font-size: 0.85rem; color: var(--blue-900); line-height: 1.5; margin: 0; font-weight: 500;">
-            ${descriptionText}
-          </p>
-        </div>
+    <div class="policy-context-desc-box" style="margin-bottom: 1.25rem; padding: 0.95rem 1.15rem; background: var(--blue-50); border: 1px solid var(--blue-100); border-radius: 8px;">
+      <p style="font-size: 0.85rem; color: var(--blue-900); line-height: 1.5; margin: 0; font-weight: 500;">
+        Policy record for <strong>${cName}</strong> (${pNumber}). Underwritten under the <strong>${pCategory}</strong> line.
+      </p>
+    </div>
 
-        <div class="detail-section">
-          <div class="detail-section-title">Policy Overview</div>
-          <div class="detail-row"><span class="detail-label">Policyholder</span><span class="detail-value" style="color:var(--blue-900);font-weight:700">${customerName}</span></div>
-          <div class="detail-row"><span class="detail-label">Policy Number</span><span class="detail-value" style="font-family:monospace">${p.id}</span></div>
-          <div class="detail-row"><span class="detail-label">Policy Type</span><span class="detail-value">${p.type}</span></div>
-          <div class="detail-row"><span class="detail-label">Status</span><span class="badge ${p.status === 'Active' ? 'badge-active' : 'badge-pending'}">${p.status}</span></div>
-          ${(() => {
-            const allKnownRenewals = [...(window.customerRenewalsData || []), ...(window.agentRenewalsData || [])];
-            const ren = allKnownRenewals.find(r => r.policy_id === p.id || r.policy_number === p.code || r.policy_id === p.code || r.policy_number === p.id);
-            if (ren) {
-              const isApproved = ren.status === 'Approved';
-              const isPending = ren.status === 'Pending Approval';
-              const renBadgeClass = isApproved ? 'badge-active' : (isPending ? 'badge-pending' : 'badge-info');
-              const renLabel = isPending ? 'Pending Approval (Awaiting Agent)' : ren.status;
-              return `<div class="detail-row"><span class="detail-label">Renewal Request</span><span class="badge ${renBadgeClass}">${renLabel}</span></div>`;
-            }
-            return '';
-          })()}
-          <div class="detail-row"><span class="detail-label">Annual Premium</span><span class="detail-value" style="color:var(--blue-900);font-size:1rem;font-weight:700;">${p.premium}</span></div>
-          <div class="detail-row"><span class="detail-label">Effective Date</span><span class="detail-value">${p.effective || '01 Jan 2025'}</span></div>
-          <div class="detail-row"><span class="detail-label">Expiry Date</span><span class="detail-value">${p.expiry}</span></div>
-          <div class="detail-row"><span class="detail-label">Deductibles</span><span class="detail-value">${p.deductible}</span></div>
-        </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Policy Overview</div>
+      <div class="detail-row"><span class="detail-label">Policyholder</span><span class="detail-value" style="color:var(--blue-900);font-weight:700">${cName} ${cId !== 'Not available' ? `<span style="font-size:0.75rem;color:var(--gray-500);font-weight:normal">(${cId})</span>` : ''}</span></div>
+      <div class="detail-row"><span class="detail-label">Policy Number</span><span class="detail-value" style="font-family:monospace;font-weight:600">${pNumber}</span></div>
+      <div class="detail-row"><span class="detail-label">Policy Type</span><span class="detail-value">${pType}</span></div>
+      <div class="detail-row"><span class="detail-label">Category</span><span class="badge badge-info">${pCategory}</span></div>
+      <div class="detail-row"><span class="detail-label">Status</span><span class="badge ${statusBadgeClass}">${pStatus}</span></div>
+      <div class="detail-row"><span class="detail-label">Annual Premium</span><span class="detail-value" style="color:var(--blue-900);font-size:1rem;font-weight:700;">${pPrem}</span></div>
+      <div class="detail-row"><span class="detail-label">Effective Date</span><span class="detail-value">${pStart}</span></div>
+      <div class="detail-row"><span class="detail-label">Expiration Date</span><span class="detail-value">${pEnd}</span></div>
+    </div>
+  `;
 
-
-        <div class="detail-section">
-          <div class="detail-section-title">Coverage Limits & Schedules</div>
-          <ul class="bullet-list coverage-list">
-            ${(p.coverage || []).map(c => `<li>${c}</li>`).join('')}
-          </ul>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-section-title">Key Policy Exclusions</div>
-          <ul class="bullet-list exclusion-list">
-            ${(p.exclusions || []).map(e => `<li>${e}</li>`).join('')}
-          </ul>
-        </div>
-
-        <div class="detail-section" style="border-bottom:none;">
-          <div class="detail-section-title">Associated Documents</div>
-          ${(p.docs || []).map(doc => `
-            <div class="doc-item-row">
-              <div class="doc-item-title">
-                <svg width="18" height="18" fill="none" stroke="var(--blue-600)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                ${doc}
-              </div>
-              <button class="btn btn-outline btn-sm" onclick="showToast('Downloading document: ${doc}')">Download</button>
-            </div>
-          `).join('')}
-        </div>
-
-        ${(() => {
-          const currentRole = (MOCK_DB.currentRole || '').toLowerCase();
-          if (currentRole !== 'customer') return '';
-
-          const allKnownRenewals = window.customerRenewalsData || [];
-          const ren = allKnownRenewals.find(r => r.policy_id === p.id || r.policy_number === p.code || r.policy_id === p.code || r.policy_number === p.id);
-          const isPending = ren && ren.status === 'Pending Approval';
-          const isApproved = ren && ren.status === 'Approved';
-
-          if (isApproved) {
-            return `
-              <div class="detail-section" style="border-bottom:none;margin-top:0.75rem;">
-                <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;padding:0.9rem 1.15rem;display:flex;align-items:center;gap:10px;">
-                  <svg width="20" height="20" fill="none" stroke="#059669" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                  <div>
-                    <div style="font-weight:700;color:#065F46;font-size:0.875rem;">Renewal Approved</div>
-                    <div style="font-size:0.775rem;color:#047857;">Your policy term has been extended by your assigned agent.</div>
-                  </div>
-                </div>
-              </div>
-            `;
-          }
-
-          if (isPending) {
-            return `
-              <div class="detail-section" style="border-bottom:none;margin-top:0.75rem;">
-                <div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:10px;padding:0.9rem 1.15rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <svg width="20" height="20" fill="none" stroke="#92400E" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <div>
-                      <div style="font-weight:700;color:#92400E;font-size:0.875rem;">Pending Approval</div>
-                      <div style="font-size:0.775rem;color:#78350F;">Waiting for Agent Approval</div>
-                    </div>
-                  </div>
-                  <span class="badge badge-pending" style="padding:4px 10px;">Pending Approval</span>
-                </div>
-              </div>
-            `;
-          }
-
-          if (p.status === 'Active') {
-            return `
-              <div class="detail-section" style="border-bottom:none;margin-top:0.75rem;">
-                <button class="btn btn-primary btn-block" onclick="handleCustomerConfirmRenewal('${p.id || p.code}', '${p.code || p.id}')">
-                  Confirm Renewal
-                </button>
-              </div>
-            `;
-          }
-          return '';
-        })()}
-      `;
-
-  openOrUpdateSlidePanel(`${p.type}`, `Policy ID: ${p.id} · ${customerName}`, contentHtml);
-};
+  openOrUpdateSlidePanel(`${pType}`, `Policy: ${pNumber} · ${cName}`, contentHtml);
+}
 
 
 // Render Agent Renewals Slide-Out Panel
 async function openAgentRenewalsSlidePanel() {
   highlightActiveCard('agent-card-renewals');
 
-  // Fetch latest renewal requests from backend
+  // Fetch latest renewal items from Agent Service
   await fetchAgentRenewals();
-  const backendRenewals = window.agentRenewalsData || [];
+  const backendRenewals = (window.agentRenewalsData && window.agentRenewalsData.length > 0)
+    ? window.agentRenewalsData
+    : ((window.agentDashboardData && window.agentDashboardData.assigned_renewals) || []);
 
-  const staticRenewals = [
-    { name: 'Emily Johnson', policy: 'POL-015', type: 'Commercial Liability', date: '22 Apr 2027', days: '20 days', prem: '$2,400/yr', status: null, renewal_id: null },
-    { name: 'Sarah Mitchell', policy: 'POL-002', type: 'Homeowners HO-3', date: '15 Mar 2027', days: '45 days', prem: '$1,840/yr', status: null, renewal_id: null },
-    { name: 'John Carter', policy: 'POL-014', type: 'Homeowners HO-3', date: '02 Apr 2027', days: '63 days', prem: '$2,100/yr', status: null, renewal_id: null },
-    { name: 'Michael Brown', policy: 'POL-018', type: 'Commercial Property', date: '10 May 2027', days: '90 days', prem: '$890/yr', status: null, renewal_id: null }
-  ];
+  const allRenewals = backendRenewals.map(r => {
+    const name = r.customer_name || 'Client';
+    const policyNum = r.policy_number || r.policy_id || 'N/A';
+    const policyId = r.policy_id || r.policy_number;
+    const polType = r.policy_type || 'Policy';
+    const renDate = r.renewal_date || 'Upcoming';
+    const daysLeft = r.days_until_expiry != null ? `${r.days_until_expiry} days` : 'Upcoming';
+    const rawPrem = r.renewal_premium != null ? r.renewal_premium : r.prem;
+    const prem = rawPrem != null
+      ? (typeof rawPrem === 'number' ? `$${rawPrem.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}` : rawPrem)
+      : 'Not available';
+    const status = r.status || 'Approaching Expiry';
+    const renewalId = r.renewal_id || null;
+    const reminderSent = Boolean(r.reminder_sent);
+    const reminderSentAt = r.reminder_sent_at || null;
 
-  // Map backend renewals to card list items
-  const dynamicRenewals = backendRenewals.map(r => ({
-    name: r.customer_name,
-    policy: r.policy_number || r.policy_id,
-    type: r.policy_type,
-    date: r.renewal_date || 'Upcoming',
-    days: r.status === 'Approved' ? 'Approved' : 'Pending Approval',
-    prem: r.renewal_premium,
-    status: r.status,
-    renewal_id: r.renewal_id
-  }));
+    return {
+      name,
+      policy: policyNum,
+      policy_id: policyId,
+      type: polType,
+      date: renDate,
+      days: daysLeft,
+      prem,
+      status,
+      renewal_id: renewalId,
+      reminder_sent: reminderSent,
+      reminder_sent_at: reminderSentAt
+    };
+  });
 
-  const allRenewals = [...dynamicRenewals, ...staticRenewals.filter(s => !dynamicRenewals.some(d => d.policy === s.policy))];
+  const pendingCount = allRenewals.filter(r => (r.status || '').toLowerCase() === 'pending approval').length;
 
-  const pendingCount = allRenewals.filter(r => r.status === 'Pending Approval').length;
+  if (allRenewals.length === 0) {
+    const emptyHtml = `
+      <div style="padding: 2.5rem 1rem; text-align: center; color: var(--gray-500);">
+        <div style="font-weight: 600; font-size: 1rem; color: var(--blue-900); margin-bottom: 6px;">No Approaching Renewals</div>
+        <div style="font-size: 0.85rem;">None of your assigned customer policies are expiring within 30 days or pending approval.</div>
+      </div>
+    `;
+    openOrUpdateSlidePanel('Approaching Renewals (0)', 'Assigned Customer Policy Expirations & Approvals', emptyHtml);
+    return;
+  }
 
   const contentHtml = `
         <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">
@@ -2019,26 +2200,31 @@ async function openAgentRenewalsSlidePanel() {
         </div>
         <div style="display:flex;flex-direction:column;gap:0.75rem;width:100%;box-sizing:border-box;">
           ${allRenewals.map(r => {
-            const isPending = r.status === 'Pending Approval';
-            const isApproved = r.status === 'Approved';
+            const isPending = (r.status || '').toLowerCase() === 'pending approval';
+            const isApproved = (r.status || '').toLowerCase() === 'approved';
             const badgeClass = isApproved ? 'badge-active' : (isPending ? 'badge-pending' : 'badge-info');
-            const statusLabel = r.status || (r.days || 'Active');
+            const statusLabel = r.status || 'Approaching Expiry';
 
             let actionButtons = '';
             if (isPending && r.renewal_id) {
               actionButtons = `
-                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${r.policy}', '${r.name}')">Inspect Policy</button>
+                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${r.policy_id || r.policy}', '${r.name}')">Inspect Policy</button>
                 <button class="btn btn-primary btn-sm" style="background:#16a34a;border-color:#16a34a;color:#fff;" onclick="event.stopPropagation(); handleAgentApproveRenewal('${r.renewal_id}')">Approve</button>
               `;
             } else if (isApproved) {
               actionButtons = `
-                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${r.policy}', '${r.name}')">View Policy Terms</button>
+                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${r.policy_id || r.policy}', '${r.name}')">Inspect Policy</button>
                 <span class="badge badge-active" style="padding:4px 10px;">Renewal Approved</span>
+              `;
+            } else if (r.reminder_sent) {
+              actionButtons = `
+                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${r.policy_id || r.policy}', '${r.name}')">Inspect Policy</button>
+                <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-600);border:1px solid var(--gray-300);cursor:default;font-weight:600;padding:4px 10px;" disabled title="Reminder recorded in database on ${r.reminder_sent_at}">✓ Reminder Sent (${r.reminder_sent_at || 'Recorded'})</button>
               `;
             } else {
               actionButtons = `
-                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${r.policy}', '${r.name}')">View Terms</button>
-                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); showToast('Outreach reminder scheduled for ${r.name}.')">Send Client Reminder</button>
+                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${r.policy_id || r.policy}', '${r.name}')">Inspect Policy</button>
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); handleAgentSendRenewalReminder('${r.policy_id || r.policy}', '${r.name}')">Send Client Reminder</button>
               `;
             }
 
@@ -2053,7 +2239,7 @@ async function openAgentRenewalsSlidePanel() {
                 </div>
                 <div class="detail-row"><span class="detail-label">Renewal Date</span><span class="detail-value">${r.date}</span></div>
                 <div class="detail-row"><span class="detail-label">Renewal Premium</span><span class="detail-value" style="color:var(--blue-900);font-weight:700">${r.prem}</span></div>
-                <div class="detail-row"><span class="detail-label">Current Status</span><span class="detail-value" style="font-weight:600;">${r.status || 'Approaching Expiry'}</span></div>
+                <div class="detail-row"><span class="detail-label">Current Status</span><span class="detail-value" style="font-weight:600;">${statusLabel}</span></div>
                 <div style="margin-top:0.85rem;display:flex;justify-content:flex-end;align-items:center;gap:8px;flex-wrap:wrap;">
                   ${actionButtons}
                 </div>
@@ -2070,69 +2256,100 @@ async function openAgentRenewalsSlidePanel() {
 // Render Agent Customers Slide Panel List
 function openAgentCustomersSlidePanel() {
   highlightActiveCard('agent-card-customers');
+  const agentName = getAgentDisplayName();
+  const rawCustomers = (window.agentCustomersData && window.agentCustomersData.customers) ||
+                       (window.agentDashboardData && window.agentDashboardData.assigned_customers) ||
+                       MOCK_DB.assignedCustomers || [];
+  const totalCount = rawCustomers.length;
+
   const contentHtml = `
         <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">
-          All <strong>18 assigned customer accounts</strong> currently under your agent care:
+          All <strong>${totalCount} assigned customer accounts</strong> currently under your agent care:
         </div>
         <div class="compact-list-scroll" style="max-height: 480px; display:flex;flex-direction:column;gap:0.65rem;">
-          ${MOCK_DB.assignedCustomers.map(c => `
-            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openCustomerDetailsPanel('${c.id}')">
+          ${rawCustomers.map(c => {
+            const cId = c.customer_id || c.id;
+            const cName = c.name;
+            const totalPols = c.total_policies != null ? c.total_policies : (c.totalPolicies || (c.policies ? c.policies.length : 0));
+            const location = c.phone || c.city || 'Primary Client';
+            return `
+            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openCustomerDetailsPanel('${cId}')">
               <div>
-                <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${c.name}</div>
-                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${c.id} · ${c.totalPolicies} Policies · ${c.city}</div>
+                <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${cName}</div>
+                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${cId} · ${totalPols} Policies · ${location}</div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCustomerDetailsPanel('${c.id}')">View Client →</button>
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCustomerDetailsPanel('${cId}')">View Client →</button>
             </div>
-          `).join('')}
+          `;}).join('')}
         </div>
       `;
 
-  openOrUpdateSlidePanel('Assigned Customers (18)', 'Agent Alex Rivera Directory', contentHtml);
+  openOrUpdateSlidePanel(`Assigned Customers (${totalCount})`, `Agent ${agentName} Directory`, contentHtml);
 }
 
 // Render Agent Policies Slide Panel List
 function openAgentPoliciesSlidePanel() {
   highlightActiveCard('agent-card-policies');
+  const policiesList = (window.agentPoliciesData && window.agentPoliciesData.policies) ||
+                       (window.agentCustomersData && window.agentCustomersData.customers && window.agentCustomersData.customers.flatMap(c => (c.policies || []).map(p => ({ ...p, custName: c.name, custId: c.customer_id })))) ||
+                       MOCK_DB.assignedCustomers.flatMap(c => c.policies.map(p => ({ ...p, custName: c.name })));
+  const count = policiesList.length;
   const contentHtml = `
         <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">
-          32 active policies belonging to your assigned customer accounts:
+          ${count} active policies belonging to your assigned customer accounts:
         </div>
         <div class="compact-list-scroll" style="max-height: 480px; display:flex;flex-direction:column;gap:0.65rem;">
-          ${MOCK_DB.assignedCustomers.flatMap(c => c.policies.map(p => ({ ...p, custName: c.name }))).map(p => `
-            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openPolicyDetailsPanel('${p.id}', '${p.custName}')">
+          ${policiesList.map(p => {
+            const pId = p.policy_number || p.policy_id || p.id || '';
+            const pCust = p.customer_name || p.custName || 'Assigned Client';
+            const pType = p.policy_type || p.type || 'Insurance Policy';
+            const pPrem = p.formatted_premium || (p.premium ? (typeof p.premium === 'number' ? `$${p.premium.toLocaleString()}` : p.premium) : '$0');
+            const pExp = p.end_date || p.expiry || 'N/A';
+            return `
+            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openPolicyDetailsPanel('${pId}', '${pCust}')">
               <div>
-                <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${p.type}</div>
-                <div style="font-size:0.8rem;color:var(--gray-500)">Client: ${p.custName} · <span style="font-family:monospace">${p.id}</span></div>
-                <div style="font-size:0.75rem;color:var(--gray-500)">Premium: ${p.premium}/yr · Renews: ${p.expiry}</div>
+                <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${pType}</div>
+                <div style="font-size:0.8rem;color:var(--gray-500)">Client: ${pCust} · <span style="font-family:monospace">${pId}</span></div>
+                <div style="font-size:0.75rem;color:var(--gray-500)">Premium: ${pPrem}/yr · Renews: ${pExp}</div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${p.id}', '${p.custName}')">Inspect →</button>
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${pId}', '${pCust}')">Inspect →</button>
             </div>
-          `).join('')}
+          `;}).join('')}
         </div>
       `;
 
-  openOrUpdateSlidePanel('Assigned Customer Policies (32)', 'Active Client Policy Portfolio', contentHtml);
+  openOrUpdateSlidePanel(`Assigned Customer Policies (${count})`, 'Active Client Policy Portfolio', contentHtml);
 }
 
 // Render Agent Premium Breakdown Slide Panel
 function openAgentPremiumSlidePanel() {
   highlightActiveCard('agent-card-premium');
+  const dash = window.agentDashboardData || {};
+  const formattedPrem = dash.formatted_annual_premium || '$538,507.33';
+  const totalCust = dash.total_assigned_customers || 6;
+  const totalPol = dash.total_policies || 15;
+  const pbt = (dash.premium_by_type && dash.premium_by_type.length > 0) ? dash.premium_by_type : [
+    { policy_type: 'General Liability', formatted_premium: '$169,909.29', percentage: 31.6 },
+    { policy_type: 'Commercial Property', formatted_premium: '$159,960.02', percentage: 29.7 },
+    { policy_type: 'Auto', formatted_premium: '$136,435.16', percentage: 25.3 },
+    { policy_type: 'Homeowners', formatted_premium: '$59,503.09', percentage: 11.0 }
+  ];
+
   const contentHtml = `
         <div class="detail-section">
           <div class="detail-section-title">Assigned Annual Premium Portfolio</div>
-          <div style="font-size:2.2rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">$48,650<span style="font-size:1rem;color:var(--gray-500);font-weight:normal">/year</span></div>
-          <p style="font-size:0.85rem;color:var(--gray-600)">Total portfolio across 18 assigned customers and 32 policies.</p>
+          <div style="font-size:2.2rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">${formattedPrem}<span style="font-size:1rem;color:var(--gray-500);font-weight:normal">/year</span></div>
+          <p style="font-size:0.85rem;color:var(--gray-600)">Total portfolio across ${totalCust} assigned customers and ${totalPol} policies.</p>
         </div>
         <div class="detail-section">
           <div class="detail-section-title">Portfolio Line Distribution</div>
-          <div class="detail-row"><span class="detail-label">Homeowners (HO-3/HO-6)</span><span class="detail-value" style="font-weight:700;color:var(--blue-900)">$18,400 (38%)</span></div>
-          <div class="detail-row"><span class="detail-label">Auto & Commercial Fleet</span><span class="detail-value" style="font-weight:700;color:var(--blue-900)">$15,200 (31%)</span></div>
-          <div class="detail-row"><span class="detail-label">Commercial Property & BOP</span><span class="detail-value" style="font-weight:700;color:var(--blue-900)">$9,800 (20%)</span></div>
-          <div class="detail-row"><span class="detail-label">Umbrella & Specialty Floaters</span><span class="detail-value" style="font-weight:700;color:var(--blue-900)">$5,250 (11%)</span></div>
+          ${pbt.map(item => `
+            <div class="detail-row"><span class="detail-label">${item.policy_type}</span><span class="detail-value" style="font-weight:700;color:var(--blue-900)">${item.formatted_premium} (${item.percentage}%)</span></div>
+          `).join('')}
         </div>
       `;
 
-  openOrUpdateSlidePanel('Premium Portfolio ($48,650)', '', contentHtml);
+  openOrUpdateSlidePanel(`Premium Portfolio (${formattedPrem})`, '', contentHtml);
 }
 
 /**
@@ -2313,29 +2530,209 @@ function highlightActiveCard(cardId) {
   if (active) active.classList.add('active-card');
 }
 
+function getAgentDisplayName() {
+  return (MOCK_DB.agent && MOCK_DB.agent.name) ||
+         (window.CURRENT_AUTH && window.CURRENT_AUTH.user && window.CURRENT_AUTH.user.name) ||
+         'Aarav Sharma';
+}
+
+function renderAgentProfile() {
+  const profile = MOCK_DB.agent || (window.CURRENT_AUTH && window.CURRENT_AUTH.user) || {};
+  const name = profile.name || 'Aarav Sharma';
+  const email = profile.email || 'aarav.sharma@insureassist.com';
+  const userId = profile.id || profile.user_id || 'AGT-1321';
+  const role = profile.role || 'Agent';
+  const initials = profile.initials || 'AS';
+
+  const welcomeEl = document.getElementById('agent-welcome-title');
+  if (welcomeEl) welcomeEl.textContent = `Welcome back, ${name.split(' ')[0]}!`;
+
+  const headerName = document.getElementById('header-user-name');
+  if (headerName && MOCK_DB.currentRole === 'agent') headerName.textContent = name;
+
+  const headerAvatar = document.getElementById('header-user-avatar');
+  if (headerAvatar && MOCK_DB.currentRole === 'agent') headerAvatar.textContent = initials;
+
+  const profAvatar = document.getElementById('agent-profile-avatar');
+  if (profAvatar) profAvatar.textContent = initials;
+
+  const profName = document.getElementById('agent-profile-name');
+  if (profName) profName.textContent = name;
+
+  const profFullname = document.getElementById('agent-profile-fullname');
+  if (profFullname) profFullname.textContent = name;
+
+  const profId = document.getElementById('agent-profile-id');
+  if (profId) profId.textContent = userId;
+
+  const profIdSub = document.getElementById('agent-profile-id-sub');
+  if (profIdSub) profIdSub.textContent = userId;
+
+  const profRoleSub = document.getElementById('agent-profile-role-sub');
+  if (profRoleSub) profRoleSub.textContent = role;
+
+  const profRole = document.getElementById('agent-profile-role');
+  if (profRole) profRole.textContent = role;
+
+  const profEmail = document.getElementById('agent-profile-email');
+  if (profEmail) profEmail.textContent = email;
+}
+
+function renderAgentDashboard() {
+  renderAgentProfile();
+
+  const dash = window.agentDashboardData;
+  const custData = window.agentCustomersData;
+  const polData = window.agentPoliciesData;
+
+  const totalCustomers = (dash && dash.total_assigned_customers != null)
+    ? dash.total_assigned_customers
+    : ((custData && custData.total != null) ? custData.total : (MOCK_DB.assignedCustomers ? MOCK_DB.assignedCustomers.length : 6));
+
+  const activePolicies = (dash && dash.active_policies_count != null)
+    ? dash.active_policies_count
+    : ((polData && polData.policies) ? polData.policies.filter(p => (p.status || '').toLowerCase() === 'active').length : 8);
+
+  const upcomingRenewalsCount = (dash && dash.assigned_renewals)
+    ? dash.assigned_renewals.length
+    : ((window.agentRenewalsData && window.agentRenewalsData.length) ? window.agentRenewalsData.length : 2);
+
+  const pendingRenewals = (dash && dash.pending_renewals_count != null)
+    ? dash.pending_renewals_count
+    : 1;
+
+  const formattedPrem = (dash && dash.formatted_annual_premium)
+    ? dash.formatted_annual_premium
+    : '$538,507.33';
+
+  // 1. Four Summary Cards
+  const custEl = document.getElementById('agent-stat-customers');
+  if (custEl) custEl.textContent = totalCustomers;
+
+  const polEl = document.getElementById('agent-stat-policies');
+  if (polEl) polEl.textContent = activePolicies;
+
+  const renEl = document.getElementById('agent-stat-renewals');
+  if (renEl) renEl.textContent = upcomingRenewalsCount;
+
+  const premEl = document.getElementById('agent-stat-premium');
+  if (premEl) premEl.textContent = formattedPrem;
+
+  // 2. Chart Header & Subtitle
+  const chartSubtitle = document.getElementById('agent-premium-chart-subtitle');
+  if (chartSubtitle) chartSubtitle.textContent = `Distribution across your assigned ${activePolicies} active client policies`;
+
+  const chartTotal = document.getElementById('agent-premium-chart-total');
+  if (chartTotal) chartTotal.textContent = `${formattedPrem} Total`;
+
+  // 3. Dynamic Horizontal Premium by Policy Type Chart
+  const chartBarsContainer = document.getElementById('agent-premium-chart-bars');
+  if (chartBarsContainer) {
+    const premiumByType = (dash && dash.premium_by_type && dash.premium_by_type.length > 0)
+      ? dash.premium_by_type
+      : [
+        { policy_type: 'General Liability', category: 'Commercial', formatted_premium: '$169,909.29', percentage: 31.6 },
+        { policy_type: 'Commercial Property', category: 'Property', formatted_premium: '$159,960.02', percentage: 29.7 },
+        { policy_type: 'Auto', category: 'Vehicle', formatted_premium: '$136,435.16', percentage: 25.3 },
+        { policy_type: 'Homeowners', category: 'Property', formatted_premium: '$59,503.09', percentage: 11.0 },
+        { policy_type: 'Renters', category: 'Property', formatted_premium: '$12,699.77', percentage: 2.4 }
+      ];
+
+    const accents = ['accent-1', 'accent-2', 'accent-3', 'accent-4', 'accent-5'];
+    chartBarsContainer.innerHTML = premiumByType.map((item, idx) => {
+      const accent = accents[idx % accents.length];
+      const iconSvg = getPolicyCardIcon(item.category || item.policy_type, item.policy_type);
+      return `
+        <div class="chart-row" data-tooltip="${item.policy_type}: ${item.formatted_premium} (${item.percentage}%)">
+          <div class="chart-row-label">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              ${iconSvg}
+            </svg>
+            ${item.policy_type}
+          </div>
+          <div class="chart-row-track">
+            <div class="chart-row-fill ${accent}" style="width: ${Math.max(item.percentage, 8)}%;">${item.percentage}%</div>
+          </div>
+          <div class="chart-row-val">${item.formatted_premium}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // 4. Renewals Header
+  const renHeader = document.getElementById('agent-dashboard-renewals-title');
+  if (renHeader) renHeader.textContent = `Assigned Customer Renewals (${upcomingRenewalsCount})`;
+
+  // 5. Section Counts and Labels
+  const quickSearch = document.getElementById('agent-quick-search-count');
+  if (quickSearch) quickSearch.textContent = `${totalCustomers} assigned client accounts`;
+
+  const pageTitle = document.getElementById('agent-customers-page-title');
+  if (pageTitle) pageTitle.textContent = `My Assigned Customers (${totalCustomers})`;
+
+  const portalTag = document.getElementById('agent-customers-portal-tag');
+  if (portalTag) portalTag.textContent = `${totalCustomers} Assigned Clients`;
+
+  renderAgentDashboardTable();
+  renderAgentDashboardRenewals();
+  renderAgentFullCustomersDirectory();
+  renderAgentPoliciesTable();
+}
+
 /**
  * RENDERERS FOR AGENT TABLES & PAGES
  */
 function renderAgentDashboardTable(searchTerm = '') {
   const tbody = document.getElementById('agent-dashboard-customers-tbody');
   if (!tbody) return;
-  const q = searchTerm.toLowerCase().trim();
-  const list = MOCK_DB.assignedCustomers.filter(c =>
-    c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q) || c.city.toLowerCase().includes(q)
-  );
 
-  tbody.innerHTML = list.map(c => `
-        <tr onclick="openCustomerDetailsPanel('${c.id}')" title="Click to view details for ${c.name}">
-          <td><strong style="color:var(--blue-900)">${c.name}</strong></td>
-          <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;">${c.id}</code></td>
-          <td>${c.totalPolicies}</td>
-          <td><span class="badge badge-active">${c.activePolicies} Active</span></td>
-          <td><span class="badge ${c.nextRenewal.includes('20') || c.nextRenewal.includes('45') ? 'badge-pending' : 'badge-info'}">${c.nextRenewal}</span></td>
-          <td style="text-align:right">
-            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCustomerDetailsPanel('${c.id}')">View Details →</button>
-          </td>
-        </tr>
-      `).join('');
+  const agentName = getAgentDisplayName();
+  const rawCustomers = (window.agentCustomersData && window.agentCustomersData.customers) ||
+                       (window.agentDashboardData && window.agentDashboardData.assigned_customers) ||
+                       MOCK_DB.assignedCustomers || [];
+  const q = searchTerm.toLowerCase().trim();
+
+  let list = rawCustomers.filter(c => {
+    const name = c.name || '';
+    const id = c.customer_id || c.id || '';
+    const email = c.email || '';
+    const city = c.city || c.phone || '';
+    return name.toLowerCase().includes(q) ||
+           id.toLowerCase().includes(q) ||
+           email.toLowerCase().includes(q) ||
+           city.toLowerCase().includes(q);
+  });
+
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center;color:var(--gray-500);padding:2.5rem;">
+          <div style="font-weight:600;font-size:0.95rem;margin-bottom:4px;color:var(--blue-900);">No Assigned Customers Found</div>
+          <div style="font-size:0.85rem;">No client accounts matched "${searchTerm}" under Agent <strong>${agentName}</strong>.</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = list.slice(0, 8).map(c => {
+    const cId = c.customer_id || c.id || '';
+    const cName = c.name || '';
+    const totalPols = c.total_policies != null ? c.total_policies : (c.totalPolicies || (c.policies ? c.policies.length : 0));
+    const activePols = c.active_policies != null ? c.active_policies : (c.activePolicies || (c.policies ? c.policies.filter(p => (p.status || '').toLowerCase() === 'active').length : 0));
+    const nextRen = c.next_renewal || c.nextRenewal || 'N/A';
+    return `
+    <tr onclick="openCustomerDetailsPanel('${cId}')" title="Click to view details for ${cName}" style="cursor:pointer;">
+      <td><strong style="color:var(--blue-900)">${cName}</strong></td>
+      <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;color:var(--blue-900);font-weight:600;">${cId}</code></td>
+      <td>${totalPols}</td>
+      <td>${activePols}</td>
+      <td><span class="badge badge-info">${nextRen}</span></td>
+      <td style="text-align:right">
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCustomerDetailsPanel('${cId}')">View Details →</button>
+      </td>
+    </tr>
+  `;}).join('');
 }
 
 let agentCustomerCurrentPage = 1;
@@ -2344,15 +2741,31 @@ const agentCustomerPageSize = 10;
 function renderAgentFullCustomersDirectory(searchTerm = '') {
   const tbody = document.getElementById('agent-full-customers-tbody');
   if (!tbody) return;
+
+  const agentName = getAgentDisplayName();
   const q = (searchTerm || '').toLowerCase().trim();
   const statusFilter = document.getElementById('agent-full-customer-status-filter')?.value || 'all';
 
-  let list = MOCK_DB.assignedCustomers.filter(c =>
-    c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
-  );
+  const rawCustomers = (window.agentCustomersData && window.agentCustomersData.customers) ||
+                       (window.agentDashboardData && window.agentDashboardData.assigned_customers) ||
+                       MOCK_DB.assignedCustomers || [];
+
+  let list = rawCustomers.filter(c => {
+    const name = c.name || '';
+    const id = c.customer_id || c.id || '';
+    const email = c.email || '';
+    const phone = c.phone || c.city || '';
+    return name.toLowerCase().includes(q) ||
+           id.toLowerCase().includes(q) ||
+           email.toLowerCase().includes(q) ||
+           phone.toLowerCase().includes(q);
+  });
 
   if (statusFilter === 'renewal') {
-    list = list.filter(c => c.nextRenewal && parseInt(c.nextRenewal) <= 120);
+    list = list.filter(c => {
+      const ren = c.next_renewal || c.nextRenewal || '';
+      return ren && ren !== 'N/A';
+    });
   }
 
   const totalItems = list.length;
@@ -2360,7 +2773,7 @@ function renderAgentFullCustomersDirectory(searchTerm = '') {
   if (agentCustomerCurrentPage > totalPages) agentCustomerCurrentPage = 1;
 
   const pageText = document.getElementById('agent-customers-page-text');
-  if (pageText) pageText.textContent = `Page ${agentCustomerCurrentPage} of ${totalPages}`;
+  if (pageText) pageText.textContent = `Page ${totalItems === 0 ? 0 : agentCustomerCurrentPage} of ${totalItems === 0 ? 0 : totalPages}`;
 
   const pageRange = document.getElementById('agent-customers-page-range');
   if (pageRange) {
@@ -2369,28 +2782,55 @@ function renderAgentFullCustomersDirectory(searchTerm = '') {
     pageRange.textContent = `${start}-${end}`;
   }
 
-  tbody.innerHTML = list.map(c => `
-        <tr onclick="openCustomerDetailsPanel('${c.id}')" title="Click to view details for ${c.name}">
-          <td><strong style="color:var(--blue-900)">${c.name}</strong></td>
-          <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;">${c.id}</code></td>
-          <td>${c.email}</td>
-          <td>${c.phone}</td>
-          <td>${c.totalPolicies}</td>
-          <td>${c.renewalDate} (${c.nextRenewal})</td>
-          <td style="text-align:right">
-            <button class="btn btn-ghost btn-sm" style="padding: 4px 8px; color: var(--blue-600); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem;" onclick="event.stopPropagation(); openCustomerDetailsPanel('${c.id}')" title="View details for ${c.name}" aria-label="View Client Details">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
-          </td>
-        </tr>
-      `).join('');
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center;color:var(--gray-500);padding:2.5rem;">
+          <div style="font-weight:600;font-size:0.95rem;margin-bottom:4px;color:var(--blue-900);">No Assigned Customers Found</div>
+          <div style="font-size:0.85rem;">No client accounts matched your filter under Agent <strong>${agentName}</strong>.</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  const paginatedList = list.slice((agentCustomerCurrentPage - 1) * agentCustomerPageSize, agentCustomerCurrentPage * agentCustomerPageSize);
+
+  tbody.innerHTML = paginatedList.map(c => {
+    const cId = c.customer_id || c.id || '';
+    const cName = c.name || '';
+    const totalPols = c.total_policies != null ? c.total_policies : (c.totalPolicies || (c.policies ? c.policies.length : 0));
+    const renDate = c.renewal_date || c.renewalDate || c.next_renewal || c.nextRenewal || 'N/A';
+    return `
+    <tr onclick="openCustomerDetailsPanel('${cId}')" title="Click to view details for ${cName}" style="cursor:pointer;">
+      <td><strong style="color:var(--blue-900)">${cName}</strong></td>
+      <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;color:var(--blue-900);font-weight:600;">${cId}</code></td>
+      <td>${c.email || 'N/A'}</td>
+      <td>${c.phone || 'N/A'}</td>
+      <td>${totalPols}</td>
+      <td>${renDate}</td>
+      <td style="text-align:right">
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCustomerDetailsPanel('${cId}')" title="View details for ${cName}">
+          View Details →
+        </button>
+      </td>
+    </tr>
+  `;}).join('');
 }
 
 function handleAgentCustomerPagination(direction) {
   const q = document.getElementById('agent-full-customer-search')?.value || '';
-  const list = MOCK_DB.assignedCustomers.filter(c =>
-    c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
-  );
+  const rawCustomers = (window.agentCustomersData && window.agentCustomersData.customers) ||
+                       (window.agentDashboardData && window.agentDashboardData.assigned_customers) ||
+                       MOCK_DB.assignedCustomers || [];
+  const list = rawCustomers.filter(c => {
+    const name = c.name || '';
+    const id = c.customer_id || c.id || '';
+    const email = c.email || '';
+    return name.toLowerCase().includes(q.toLowerCase()) ||
+           id.toLowerCase().includes(q.toLowerCase()) ||
+           email.toLowerCase().includes(q.toLowerCase());
+  });
   const totalPages = Math.ceil(list.length / agentCustomerPageSize) || 1;
   const newPage = agentCustomerCurrentPage + direction;
   if (newPage >= 1 && newPage <= totalPages) {
@@ -2400,76 +2840,143 @@ function handleAgentCustomerPagination(direction) {
   } else {
     showToast(direction > 0 ? 'You are on the last page.' : 'You are on the first page.');
   }
-};
+}
 
 function handleAgentFullCustomerFilter() {
   agentCustomerCurrentPage = 1;
   const q = document.getElementById('agent-full-customer-search')?.value || '';
   renderAgentFullCustomersDirectory(q);
-};
+}
 
 function renderAgentPoliciesTable(categoryFilter = 'all', searchTerm = '') {
   const tbody = document.getElementById('agent-policies-tbody');
   if (!tbody) return;
+
+  const agentName = getAgentDisplayName();
   const q = searchTerm.toLowerCase().trim();
   const catF = (categoryFilter || 'all').toLowerCase();
 
-  const allPolicies = MOCK_DB.assignedCustomers.flatMap(c =>
-    c.policies.map(p => ({ ...p, custName: c.name, custId: c.id }))
-  );
+  const rawPolicies = (window.agentPoliciesData && window.agentPoliciesData.policies) ||
+                      (window.agentCustomersData && window.agentCustomersData.customers && window.agentCustomersData.customers.flatMap(c => (c.policies || []).map(p => ({ ...p, custName: c.name, custId: c.customer_id })))) ||
+                      MOCK_DB.assignedCustomers.flatMap(c => c.policies.map(p => ({
+                        ...p,
+                        custName: c.name,
+                        custId: c.id
+                      })));
 
-  const filtered = allPolicies.filter(p => {
-    const matchesCategory = catF === 'all' || (p.category && p.category.toLowerCase() === catF);
-    const matchesSearch = !q || p.type.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || p.custName.toLowerCase().includes(q) || (p.category && p.category.toLowerCase().includes(q));
+  const totalCount = rawPolicies.length;
+  const activeCount = rawPolicies.filter(p => (p.status || '').toLowerCase() === 'active').length;
+  const inactiveCount = totalCount - activeCount;
+  const totalCust = (window.agentCustomersData && window.agentCustomersData.total) || 6;
+
+  const pageTitle = document.getElementById('agent-policies-page-title');
+  if (pageTitle) {
+    pageTitle.textContent = `Assigned Customer Policies (${totalCount})`;
+  }
+
+  const pageSubtitle = document.getElementById('agent-policies-page-subtitle');
+  if (pageSubtitle) {
+    pageSubtitle.textContent = `${totalCount} total policies across your ${totalCust} assigned customer accounts (${activeCount} Active · ${inactiveCount} Inactive/Expired)`;
+  }
+
+  const portalTag = document.getElementById('agent-policies-portal-tag');
+  if (portalTag) {
+    portalTag.textContent = `${totalCount} Total · ${activeCount} Active`;
+  }
+
+  const filtered = rawPolicies.filter(p => {
+    const pType = p.policy_type || p.type || '';
+    const pId = p.policy_number || p.policy_id || p.id || '';
+    const pCat = p.category || '';
+    const pCust = p.customer_name || p.custName || '';
+    const matchesCategory = catF === 'all' || pCat.toLowerCase() === catF;
+    const matchesSearch = !q || pType.toLowerCase().includes(q) || pId.toLowerCase().includes(q) || pCust.toLowerCase().includes(q) || pCat.toLowerCase().includes(q);
     return matchesCategory && matchesSearch;
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:2rem;">No assigned customer policies matched your filter criteria.</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;color:var(--gray-500);padding:2.5rem;">
+          <div style="font-weight:600;font-size:0.95rem;margin-bottom:4px;color:var(--blue-900);">No Assigned Policies Found</div>
+          <div style="font-size:0.85rem;">No customer policies matched your criteria under Agent <strong>${agentName}</strong>.</div>
+        </td>
+      </tr>
+    `;
     return;
   }
 
-  tbody.innerHTML = filtered.map(p => `
-        <tr onclick="openPolicyDetailsPanel('${p.id}', '${p.custName}')" title="Click to inspect policy ${p.id}">
-          <td><strong>${p.custName}</strong> <span style="font-size:0.75rem;color:var(--gray-500)">(${p.custId})</span></td>
-          <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;">${p.id}</code></td>
-          <td>${p.type}</td>
-          <td><span class="badge badge-info">${p.category || 'General'}</span></td>
-          <td><span class="badge badge-active">${p.status}</span></td>
-          <td style="font-weight:700;color:var(--blue-900)">${p.premium.includes('$') ? p.premium : '$' + p.premium}/yr</td>
-          <td>${p.expiry}</td>
-          <td style="text-align:right">
-            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${p.id}', '${p.custName}')">Inspect →</button>
-          </td>
-        </tr>
-      `).join('');
+  tbody.innerHTML = filtered.map(p => {
+    const custName = p.customer_name || p.custName || 'Policyholder';
+    const custId = p.customer_id || p.custId || '';
+    const polId = p.policy_number || p.policy_id || p.id || '';
+    const polType = p.policy_type || p.type || '';
+    const prem = p.formatted_premium || (p.premium ? (typeof p.premium === 'number' ? `$${p.premium.toLocaleString()}` : p.premium) : '$0');
+    const expiry = p.end_date || p.expiry || 'N/A';
+
+    return `
+      <tr onclick="openPolicyDetailsPanel('${polId}', '${custName}')" title="Click to inspect policy ${polId}" style="cursor:pointer;">
+        <td><strong>${custName}</strong> ${custId ? `<span style="font-size:0.75rem;color:var(--gray-500)">(${custId})</span>` : ''}</td>
+        <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;color:var(--blue-900);font-weight:600;">${polId}</code></td>
+        <td>${polType}</td>
+        <td><span class="badge badge-info">${p.category || 'General'}</span></td>
+        <td><span class="badge ${p.status === 'Active' ? 'badge-active' : 'badge-pending'}">${p.status || 'Active'}</span></td>
+        <td style="font-weight:700;color:var(--blue-900)">${prem}${prem.endsWith('/yr') ? '' : '/yr'}</td>
+        <td>${expiry}</td>
+        <td style="text-align:right">
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${polId}', '${custName}')">Inspect →</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function renderAgentDashboardRenewals() {
   const container = document.getElementById('agent-dashboard-renewals-list');
   if (!container) return;
-  const list = [
-    { name: 'Emily Johnson', policy: 'POL-015', type: 'Commercial Liability', date: '22 Apr 2027', days: '20 days', prem: '$2,400/yr' },
-    { name: 'Sarah Mitchell', policy: 'POL-002', type: 'Homeowners HO-3', date: '15 Mar 2027', days: '45 days', prem: '$1,840/yr' },
-    { name: 'John Carter', policy: 'POL-014', type: 'Homeowners HO-3', date: '02 Apr 2027', days: '63 days', prem: '$2,100/yr' },
-    { name: 'Michael Brown', policy: 'POL-018', type: 'Commercial Property', date: '10 May 2027', days: '90 days', prem: '$890/yr' },
-    { name: 'David Chen', policy: 'POL-020', type: 'Watercraft Shield', date: '28 May 2027', days: '108 days', prem: '$650/yr' }
-  ];
 
-  container.innerHTML = list.map(r => `
-        <div class="renewal-item" onclick="openPolicyDetailsPanel('${r.policy}', '${r.name}')" data-tooltip="${r.name}: ${r.type} (${r.days})">
-          <div class="renewal-left">
-            <div class="renewal-icon">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-            <div>
-              <div class="renewal-name">${r.type} · ${r.name}</div>
-              <div class="renewal-meta">Renews ${r.date} · ${r.prem}</div>
-            </div>
+  const renewals = (window.agentDashboardData && window.agentDashboardData.assigned_renewals && window.agentDashboardData.assigned_renewals.length > 0)
+    ? window.agentDashboardData.assigned_renewals
+    : ((window.agentRenewalsData && window.agentRenewalsData.length > 0)
+      ? window.agentRenewalsData
+      : []);
+
+  if (renewals.length === 0) {
+    container.innerHTML = `
+      <div style="padding: 2rem 1rem; text-align: center; color: var(--gray-500); font-size: 0.85rem;">
+        No pending renewals requiring outreach.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = renewals.map(r => {
+    const name = r.customer_name || r.name || 'Client';
+    const policyNum = r.policy_number || r.policy || 'POL';
+    const policyId = r.policy_id || r.policy_number || r.policy || '';
+    const polType = r.policy_type || r.type || 'Policy';
+    const renDate = r.renewal_date || r.date || 'Upcoming';
+    const prem = r.renewal_premium ? (typeof r.renewal_premium === 'number' ? `$${r.renewal_premium.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}/yr` : r.renewal_premium) : (r.prem || 'Not available');
+    const days = r.days_until_expiry != null ? `${r.days_until_expiry} days` : (r.days || 'Upcoming');
+    const status = r.status || 'Approaching Expiry';
+    const isPending = (status || '').toLowerCase().includes('pending');
+    const isApproved = (status || '').toLowerCase().includes('approved');
+
+    return `
+      <div class="renewal-item" onclick="openPolicyDetailsPanel('${policyId}', '${name}')" data-tooltip="${name}: ${polType} (${days} · ${status})" style="cursor:pointer;">
+        <div class="renewal-left">
+          <div class="renewal-icon">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
-          <span class="badge badge-pending">${r.days}</span>
+          <div>
+            <div class="renewal-name">${polType} · ${name}</div>
+            <div class="renewal-meta">Renews ${renDate} · ${prem}</div>
+          </div>
         </div>
-      `).join('');
+        <span class="badge ${isPending ? 'badge-pending' : (isApproved ? 'badge-active' : 'badge-info')}">${days}</span>
+      </div>
+    `;
+  }).join('');
 }
 
 /**
@@ -3928,19 +4435,106 @@ async function fetchAgentRenewals() {
   try {
     const token = getAuthToken();
     if (!token) return [];
-    const response = await fetch(`${CUSTOMER_SERVICE_URL}/agent/renewals`, {
+    const response = await fetch(`${AGENT_SERVICE_URL}/agent/renewals`, {
       method: 'GET',
       headers: getAuthHeaders()
     });
     if (response.ok) {
       const renewals = await response.json();
       window.agentRenewalsData = Array.isArray(renewals) ? renewals : [];
+      renderAgentDashboardRenewals();
       return window.agentRenewalsData;
     }
   } catch (err) {
-    console.warn('Customer Service /agent/renewals error:', err);
+    console.warn('Agent Service /agent/renewals error:', err);
   }
   return [];
+}
+
+async function fetchAgentProfile() {
+  try {
+    const token = getAuthToken();
+    if (!token) return null;
+    const response = await fetch(`${AGENT_SERVICE_URL}/agent/me`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const profile = await response.json();
+      window.agentProfileData = profile;
+      if (MOCK_DB && MOCK_DB.agent) {
+        MOCK_DB.agent.name = profile.name;
+        MOCK_DB.agent.email = profile.email;
+        MOCK_DB.agent.id = profile.user_id;
+      }
+      renderAgentProfile();
+      return profile;
+    }
+  } catch (err) {
+    console.warn('Agent Service /agent/me error:', err);
+  }
+  return null;
+}
+
+async function fetchAgentDashboard() {
+  try {
+    const token = getAuthToken();
+    if (!token) return null;
+    const response = await fetch(`${AGENT_SERVICE_URL}/agent/dashboard`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const dashboard = await response.json();
+      window.agentDashboardData = dashboard;
+      renderAgentDashboard();
+      return dashboard;
+    }
+  } catch (err) {
+    console.warn('Agent Service /agent/dashboard error:', err);
+  }
+  return null;
+}
+
+async function fetchAgentCustomers() {
+  try {
+    const token = getAuthToken();
+    if (!token) return { customers: [], total: 0 };
+    const response = await fetch(`${AGENT_SERVICE_URL}/agent/customers`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const data = await response.json();
+      window.agentCustomersData = data;
+      renderAgentDashboardTable();
+      renderAgentFullCustomersDirectory();
+      return data;
+    }
+  } catch (err) {
+    console.warn('Agent Service /agent/customers error:', err);
+  }
+  return { customers: [], total: 0 };
+}
+
+async function fetchAgentPolicies() {
+  try {
+    const token = getAuthToken();
+    if (!token) return { policies: [], total: 0 };
+    const response = await fetch(`${AGENT_SERVICE_URL}/agent/policies`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const data = await response.json();
+      window.agentPoliciesData = data;
+      renderAgentPoliciesTable();
+      return data;
+    }
+  } catch (err) {
+    console.warn('Agent Service /agent/policies error:', err);
+  }
+  return { policies: [], total: 0 };
 }
 
 async function fetchNotifications() {
@@ -4088,7 +4682,7 @@ async function handleAgentApproveRenewal(renewalId) {
     }
     showToast('Approving customer renewal request...');
 
-    const response = await fetch(`${CUSTOMER_SERVICE_URL}/agent/renewals/${renewalId}/approve`, {
+    const response = await fetch(`${AGENT_SERVICE_URL}/agent/renewals/${renewalId}/approve`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -4119,18 +4713,468 @@ async function handleAgentApproveRenewal(renewalId) {
   }
 }
 
+async function handleAgentSendRenewalReminder(policyId, customerName) {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      showToast('Authentication session missing. Please log in.');
+      return;
+    }
+    showToast(`Sending renewal reminder to ${customerName || 'customer'}...`);
+
+    const response = await fetch(`${AGENT_SERVICE_URL}/agent/policies/${policyId}/send-reminder`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      showToast(`Failed to send reminder: ${errData.detail || 'Server error'}`);
+      return;
+    }
+
+    const data = await response.json();
+    showToast(`Renewal reminder recorded & sent to ${customerName}!`);
+
+    // Refresh renewals from backend and update slide panel
+    await fetchAgentRenewals();
+    if (slidePanel && slidePanel.classList.contains('open')) {
+      openAgentRenewalsSlidePanel();
+    }
+  } catch (err) {
+    console.error('Send renewal reminder error:', err);
+    showToast('Network error while sending renewal reminder.');
+  }
+}
+
 function toggleNotificationPopover(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   const dropdown = document.getElementById('header-notification-dropdown');
   if (!dropdown) return;
   const isOpen = dropdown.classList.contains('open');
   if (isOpen) {
-    dropdown.classList.remove('open');
-    dropdown.setAttribute('aria-hidden', 'true');
+    closeNotificationPopover();
   } else {
     fetchNotifications();
     dropdown.classList.add('open');
     dropdown.setAttribute('aria-hidden', 'false');
+  }
+}
+
+function closeNotificationPopover() {
+  const dropdown = document.getElementById('header-notification-dropdown');
+  if (dropdown && dropdown.classList.contains('open')) {
+    dropdown.classList.remove('open');
+    dropdown.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function initNotificationListeners() {
+  // Outside click to close notification popover
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('header-notification-dropdown');
+    if (!dropdown || !dropdown.classList.contains('open')) return;
+
+    const btn = document.getElementById('header-notification-btn');
+    const wrapper = document.getElementById('header-notification-wrapper');
+
+    // If click is inside the dropdown or on the notification toggle button / wrapper, do not close
+    if ((dropdown && dropdown.contains(e.target)) || (btn && btn.contains(e.target)) || (wrapper && wrapper.contains(e.target))) {
+      return;
+    }
+
+    closeNotificationPopover();
+  });
+
+  // ESC key to close notification popover
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeNotificationPopover();
+    }
+  });
+}
+
+// ==========================================================================
+// CLIENT-SIDE PDF GENERATOR & SUMMARY DOWNLOAD ENGINE
+// ==========================================================================
+
+function escapePDFText(text) {
+  if (text == null) return '';
+  return String(text)
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)')
+    .replace(/[\r\n]+/g, ' ');
+}
+
+function wrapPDFText(text, maxChars = 75) {
+  if (!text) return [];
+  const words = String(text).split(/\s+/);
+  const lines = [];
+  let currentLine = '';
+  for (const word of words) {
+    if ((currentLine + ' ' + word).trim().length <= maxChars) {
+      currentLine = (currentLine + ' ' + word).trim();
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
+function generatePDFDocument({ title, subtitle, meta = {}, sections = [] }) {
+  let ops = [];
+
+  // Top Header Banner (Dark Navy Brand Color)
+  ops.push('0.14 0.22 0.38 rg');
+  ops.push('40 730 532 38 re f');
+
+  // Title in Header
+  ops.push('BT /F1 14 Tf 1 1 1 rg 52 744 Td (' + escapePDFText(title || 'INSUREASSIST INSURANCE REPORT') + ') Tj ET');
+
+  // Subtitle
+  if (subtitle) {
+    ops.push('BT /F2 8.5 Tf 0.35 0.35 0.35 rg 40 714 Td (' + escapePDFText(subtitle) + ') Tj ET');
+  }
+
+  // Divider line
+  ops.push('0.82 0.84 0.88 RG 1 w');
+  ops.push('40 704 m 572 704 l S');
+
+  let currentY = 688;
+
+  // Metadata Grid Box
+  if (meta && Object.keys(meta).length > 0) {
+    const keys = Object.keys(meta);
+    const rowCount = Math.ceil(keys.length / 2);
+    const boxHeight = rowCount * 15 + 12;
+
+    ops.push('0.96 0.97 0.98 rg');
+    ops.push('40 ' + (currentY - boxHeight + 8) + ' 532 ' + boxHeight + ' re f');
+    ops.push('0.85 0.87 0.90 RG 1 w');
+    ops.push('40 ' + (currentY - boxHeight + 8) + ' 532 ' + boxHeight + ' re S');
+
+    const col1 = keys.slice(0, rowCount);
+    const col2 = keys.slice(rowCount);
+
+    let rowY = currentY - 6;
+    col1.forEach(k => {
+      ops.push('BT /F1 8 Tf 0.2 0.2 0.25 rg 52 ' + rowY + ' Td (' + escapePDFText(k + ':') + ') Tj ET');
+      ops.push('BT /F2 8 Tf 0.1 0.1 0.1 rg 135 ' + rowY + ' Td (' + escapePDFText(meta[k]) + ') Tj ET');
+      rowY -= 15;
+    });
+
+    rowY = currentY - 6;
+    col2.forEach(k => {
+      ops.push('BT /F1 8 Tf 0.2 0.2 0.25 rg 305 ' + rowY + ' Td (' + escapePDFText(k + ':') + ') Tj ET');
+      ops.push('BT /F2 8 Tf 0.1 0.1 0.1 rg 390 ' + rowY + ' Td (' + escapePDFText(meta[k]) + ') Tj ET');
+      rowY -= 15;
+    });
+
+    currentY -= (boxHeight + 12);
+  }
+
+  // Sections
+  (sections || []).forEach(sec => {
+    if (currentY < 90) return;
+
+    // Section Header Box / Accent Bar
+    ops.push('0.92 0.94 0.97 rg');
+    ops.push('40 ' + (currentY - 15) + ' 532 17 re f');
+    ops.push('0.14 0.22 0.38 rg');
+    ops.push('40 ' + (currentY - 15) + ' 4 17 re f');
+
+    ops.push('BT /F1 9 Tf 0.14 0.22 0.38 rg 50 ' + (currentY - 12) + ' Td (' + escapePDFText(sec.title) + ') Tj ET');
+    currentY -= 26;
+
+    if (sec.items && sec.items.length > 0) {
+      sec.items.forEach(item => {
+        if (currentY < 75) return;
+        if (item.label && item.value !== undefined) {
+          ops.push('BT /F1 8 Tf 0.25 0.25 0.3 rg 50 ' + currentY + ' Td (' + escapePDFText(item.label + ':') + ') Tj ET');
+          const valLines = wrapPDFText(item.value, item.fullWidth ? 78 : 66);
+          valLines.forEach((vl, vIdx) => {
+            const xPos = item.fullWidth ? 50 : 160;
+            const yPos = item.fullWidth ? (currentY - 11 - (vIdx * 10.5)) : (currentY - (vIdx * 10.5));
+            ops.push('BT /F2 8 Tf 0.1 0.1 0.1 rg ' + xPos + ' ' + yPos + ' Td (' + escapePDFText(vl) + ') Tj ET');
+          });
+          currentY -= (item.fullWidth ? (valLines.length * 10.5 + 13) : Math.max(13, valLines.length * 10.5 + 3));
+        } else if (item.text) {
+          const textLines = wrapPDFText(item.text, 80);
+          textLines.forEach((tl, tIdx) => {
+            ops.push('BT /F2 8 Tf 0.15 0.15 0.15 rg 50 ' + (currentY - (tIdx * 11)) + ' Td (' + escapePDFText(tl) + ') Tj ET');
+          });
+          currentY -= (textLines.length * 11 + 5);
+        }
+      });
+    }
+
+    currentY -= 6;
+  });
+
+  // Footer
+  ops.push('0.82 0.84 0.88 RG 0.75 w');
+  ops.push('40 45 m 572 45 l S');
+  ops.push('BT /F2 7.5 Tf 0.5 0.5 0.5 rg 40 32 Td (InsureAssist Intelligent Insurance Platform | Official Summary Document | Confidential) Tj ET');
+  const nowStr = new Date().toLocaleString();
+  ops.push('BT /F2 7.5 Tf 0.5 0.5 0.5 rg 380 32 Td (' + escapePDFText('Generated: ' + nowStr) + ') Tj ET');
+
+  const contentStream = ops.join('\n');
+  const streamLen = (typeof Buffer !== 'undefined') ? Buffer.byteLength(contentStream, 'utf-8') : new TextEncoder().encode(contentStream).length;
+
+  let objects = [];
+  objects.push('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  objects.push('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+  objects.push('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>\nendobj\n');
+  objects.push('4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\n');
+  objects.push('5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n');
+  objects.push('6 0 obj\n<< /Length ' + streamLen + ' >>\nstream\n' + contentStream + '\nendstream\nendobj\n');
+
+  let header = '%PDF-1.4\n';
+  let body = '';
+  let xref = 'xref\n0 ' + (objects.length + 1) + '\n0000000000 65535 f \n';
+  let offset = (typeof Buffer !== 'undefined') ? Buffer.byteLength(header, 'utf-8') : new TextEncoder().encode(header).length;
+
+  objects.forEach(obj => {
+    let offStr = ('0000000000' + offset).slice(-10);
+    xref += offStr + ' 00000 n \n';
+    body += obj;
+    offset += (typeof Buffer !== 'undefined') ? Buffer.byteLength(obj, 'utf-8') : new TextEncoder().encode(obj).length;
+  });
+
+  let trailer = 'trailer\n<< /Size ' + (objects.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + offset + '\n%%EOF\n';
+  return header + body + xref + trailer;
+}
+
+function downloadPDFFile(pdfString, filename) {
+  try {
+    const blob = new Blob([pdfString], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || 'InsureAssist_Summary.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return true;
+  } catch (err) {
+    console.error('Download failed:', err);
+    return false;
+  }
+}
+
+function downloadFNOLClaimSummaryPDF() {
+  try {
+    const s = window.fnolState || {};
+    const claimId = s.submittedClaimId || 'CLM-2026-88914';
+    const isFraud = s.classification === 'Potential Fraud';
+    const claimStatusText = isFraud ? 'Submitted · Routing to Special Investigation Unit' : 'Submitted · Adjuster Assigned';
+    const nextActionText = isFraud ?
+      'A senior claims investigator will contact you within 1 business day for additional documentation and verification.' :
+      'Your assigned claims examiner will contact you within 2 business hours. Repair estimate authorization is being processed.';
+
+    const customerName = (window.CURRENT_AUTH && window.CURRENT_AUTH.user && window.CURRENT_AUTH.user.name) ||
+      (MOCK_DB.customerProfile && MOCK_DB.customerProfile.name) || 'Insured Customer';
+
+    const evidenceList = (s.files || []).map(f => (typeof f === 'string' ? f : (f && f.name) || '')).filter(Boolean).join(', ') || 'No attached evidence files';
+
+    const pdfContent = generatePDFDocument({
+      title: 'INSUREASSIST - FIRST NOTICE OF LOSS (FNOL) SUMMARY',
+      subtitle: 'Official Claim Filing Confirmation & AI Triage Summary',
+      meta: {
+        'Claim Reference': claimId,
+        'Filing Status': claimStatusText,
+        'Covered Policy': `${s.policyType || 'Active Policy'} (${s.policyCode || s.policyId || 'N/A'})`,
+        'Insured Customer': customerName,
+        'Incident Date & Time': `${s.dateLoss || 'N/A'}${s.timeLoss ? ' at ' + s.timeLoss : ''}`,
+        'Incident Location': s.location || 'N/A'
+      },
+      sections: [
+        {
+          title: '1. Incident & Loss Description',
+          items: [
+            { label: 'Incident Peril/Type', value: s.claimType || 'Peril / Collision Loss' },
+            { label: 'Detailed Description', value: s.description || 'First notice of loss filed by policyholder.', fullWidth: true },
+            { label: 'Attached Evidence', value: evidenceList }
+          ]
+        },
+        {
+          title: '2. AI Triage & Assessment Summary',
+          items: [
+            { label: 'AI Classification', value: `${s.classification || 'Standard Assessment'} (Confidence Score: ${s.classificationScore || 90}/100)` },
+            { label: 'Overview Assessment', value: (s.claimSummary && s.claimSummary.overview) || 'Incident report received and processed through AI triage engine.' },
+            { label: 'Estimated Damages', value: (s.claimSummary && s.claimSummary.damages) || 'Damage scope estimated based on submitted incident details.' },
+            { label: 'Coverage Triggered', value: (s.claimSummary && s.claimSummary.coverageTriggered) || 'Applicable Policy Schedule & Peril Endorsements.' }
+          ]
+        },
+        {
+          title: '3. Next Steps & Claims Resolution Workflow',
+          items: [
+            { label: 'Recommended Action', value: (s.claimSummary && s.claimSummary.recommendedNextAction) || nextActionText, fullWidth: true },
+            { label: 'Support & Inquiries', value: 'InsureAssist Claims Department | 1-800-555-INSURE | claims@insureassist.com' }
+          ]
+        }
+      ]
+    });
+
+    const success = downloadPDFFile(pdfContent, `InsureAssist_Claim_Summary_${claimId}.pdf`);
+    if (success) {
+      showToast('Claim PDF Summary downloaded successfully.');
+    } else {
+      showToast('Failed to download Claim PDF Summary.');
+    }
+  } catch (err) {
+    console.error('Error generating FNOL Claim PDF:', err);
+    showToast('Error generating Claim PDF Summary.');
+  }
+}
+
+function downloadCustomerClaimDetailsPDF(claimId) {
+  try {
+    const allClaims = window.customerClaimsData || MOCK_DB.customerClaims || [];
+    const claim = (window.currentViewingClaim && window.currentViewingClaim.id === claimId ? window.currentViewingClaim : null) ||
+      allClaims.find(c => c.id === claimId) ||
+      window.currentViewingClaim ||
+      {
+        id: claimId || 'CLM-8802',
+        status: 'In Review',
+        severity: 'Moderate',
+        policyType: 'Insurance Policy',
+        policyCode: 'POL-001',
+        dateLoss: '2026-03-24',
+        timeLoss: '11:15 AM',
+        location: 'Primary Insured Location',
+        claimType: 'Peril Loss',
+        description: 'Claim details on file.',
+        amount: '$0',
+        deductible: '$1,000',
+        adjuster: { name: 'Marcus Vance', title: 'Senior Claims Examiner', phone: '(555) 881-3022', email: 'm.vance@feuji-insure.com' },
+        nextAction: 'Adjuster onsite inspection in progress.'
+      };
+
+    const customerName = (window.CURRENT_AUTH && window.CURRENT_AUTH.user && window.CURRENT_AUTH.user.name) ||
+      (MOCK_DB.customerProfile && MOCK_DB.customerProfile.name) || 'Insured Customer';
+
+    const pdfContent = generatePDFDocument({
+      title: 'INSUREASSIST - CLAIM DETAILS SUMMARY',
+      subtitle: `Official Claim Summary for Claim ${claim.id}`,
+      meta: {
+        'Claim Reference': claim.id,
+        'Claim Status': claim.status || 'In Review',
+        'Severity Level': claim.severity || 'Moderate',
+        'Covered Policy': `${claim.policyType || 'Policy'} (${claim.policyCode || claim.policyId || 'N/A'})`,
+        'Insured Customer': customerName,
+        'Loss Date & Time': `${claim.dateLoss || 'N/A'}${claim.timeLoss ? ' at ' + claim.timeLoss : ''}`,
+        'Incident Location': claim.location || 'Primary Insured Location'
+      },
+      sections: [
+        {
+          title: '1. Incident & Claim Overview',
+          items: [
+            { label: 'Incident Peril/Type', value: claim.claimType || 'Peril Loss' },
+            { label: 'Incident Description', value: claim.description || 'N/A', fullWidth: true }
+          ]
+        },
+        {
+          title: '2. Financial & Coverage Trigger Scope',
+          items: [
+            { label: 'Coverage Triggered', value: (claim.aiSummary && claim.aiSummary.coverageTriggered) || 'Applicable Policy Schedule & Endorsements' },
+            { label: 'Applicable Deductible', value: claim.deductible || '$1,000' },
+            { label: 'Estimated Repair Scope', value: claim.amount || '$0' }
+          ]
+        },
+        {
+          title: '3. Assigned Claims Adjuster & Contacts',
+          items: [
+            { label: 'Assigned Adjuster', value: `${(claim.adjuster && claim.adjuster.name) || 'Marcus Vance'} - ${(claim.adjuster && claim.adjuster.title) || 'Senior Claims Examiner'}` },
+            { label: 'Adjuster Phone & Email', value: `${(claim.adjuster && claim.adjuster.phone) || '(555) 881-3022'} | ${(claim.adjuster && claim.adjuster.email) || 'm.vance@feuji-insure.com'}` }
+          ]
+        },
+        {
+          title: '4. Next Recommended Step',
+          items: [
+            { label: 'Next Action', value: claim.nextAction || 'Adjuster onsite inspection in progress.', fullWidth: true }
+          ]
+        }
+      ]
+    });
+
+    const success = downloadPDFFile(pdfContent, `InsureAssist_Claim_Summary_${claim.id}.pdf`);
+    if (success) {
+      showToast('Claim PDF Summary downloaded successfully.');
+    } else {
+      showToast('Failed to download Claim PDF Summary.');
+    }
+  } catch (err) {
+    console.error('Error downloading Claim Details PDF:', err);
+    showToast('Error generating Claim PDF Summary.');
+  }
+}
+
+function downloadPolicyDocument(policyId, docName) {
+  try {
+    const allPolicies = window.customerPoliciesData || MOCK_DB.policies || MOCK_DB.customerPolicies || [];
+    const p = allPolicies.find(pol => (pol.id === policyId || pol.code === policyId || pol.policy_id === policyId || pol.policy_number === policyId)) || {
+      id: policyId || 'POL-DOC',
+      code: policyId || 'POL-DOC',
+      type: 'Insurance Policy',
+      status: 'Active',
+      premium: '$1,200/yr',
+      deductible: '$1,000'
+    };
+
+    const customerName = (window.CURRENT_AUTH && window.CURRENT_AUTH.user && window.CURRENT_AUTH.user.name) ||
+      (MOCK_DB.customerProfile && MOCK_DB.customerProfile.name) || 'Insured Policyholder';
+
+    const pdfContent = generatePDFDocument({
+      title: 'INSUREASSIST - POLICY ENDORSEMENT & SCHEDULE',
+      subtitle: `Official Digital Document: ${docName || 'Policy Declarations'}`,
+      meta: {
+        'Policy Number': p.code || p.id || p.policy_number || 'N/A',
+        'Policy Type': p.type || p.policy_type || 'Comprehensive Coverage',
+        'Policy Status': p.status || 'Active',
+        'Named Insured': customerName,
+        'Annual Premium': p.premium || p.premium_amount || '$1,200',
+        'Effective Date': p.effectiveDate || p.start_date || '2026-01-01',
+        'Expiration Date': p.expirationDate || p.end_date || '2027-01-01'
+      },
+      sections: [
+        {
+          title: '1. Policy Coverage Limits & Endorsements',
+          items: (p.coverage || [
+            'Comprehensive & Collision Coverage',
+            'Bodily Injury Liability: $250,000 / $500,000',
+            'Property Damage Liability: $100,000'
+          ]).map(cov => ({ text: `• ${cov}` }))
+        },
+        {
+          title: '2. Key Terms & Associated Declarations',
+          items: [
+            { label: 'Document Name', value: docName || 'Policy Schedule' },
+            { label: 'Deductible', value: p.deductible || '$1,000' },
+            { label: 'Underwriting Office', value: 'InsureAssist Underwriting Division | underwriting@insureassist.com' }
+          ]
+        }
+      ]
+    });
+
+    const safeDocName = (docName || 'Policy_Document').replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+    const filename = safeDocName.toLowerCase().endsWith('.pdf') ? safeDocName : `${safeDocName}.pdf`;
+    const success = downloadPDFFile(pdfContent, filename);
+    if (success) {
+      showToast(`Downloaded document: ${docName}`);
+    } else {
+      showToast(`Failed to download ${docName}.`);
+    }
+  } catch (err) {
+    console.error('Error generating policy document PDF:', err);
+    showToast(`Error downloading document: ${docName}`);
   }
 }
 
@@ -4822,6 +5866,10 @@ function switchRole(role, targetPage = null) {
       portalTag.style.color = '#3B241D';
     }
     if (portalDot) portalDot.style.background = '#7A4A3A';
+    fetchAgentProfile();
+    fetchAgentDashboard();
+    fetchAgentCustomers();
+    fetchAgentPolicies();
     fetchAgentRenewals();
     fetchNotifications();
     navigateTo(pageToOpen);
@@ -4851,6 +5899,7 @@ function switchRole(role, targetPage = null) {
 
 function navigateTo(pageId) {
   closeSlidePanel();
+  closeNotificationPopover();
 
   const currentRole = MOCK_DB.currentRole || 'customer';
   // Restrict navigation strictly to pages belonging to current role
@@ -4877,8 +5926,15 @@ function navigateTo(pageId) {
   } else if (pageId === 'underwriter-dashboard') {
     renderUnderwriterQueueTable();
   } else if (pageId === 'agent-customers') {
-    renderAgentFullCustomersDirectory();
+    if (typeof fetchAgentCustomers === 'function') {
+      fetchAgentCustomers().then(() => renderAgentFullCustomersDirectory());
+    } else {
+      renderAgentFullCustomersDirectory();
+    }
   } else if (pageId === 'agent-dashboard') {
+    if (typeof fetchAgentDashboard === 'function') fetchAgentDashboard();
+    if (typeof fetchAgentCustomers === 'function') fetchAgentCustomers();
+    if (typeof fetchAgentPolicies === 'function') fetchAgentPolicies('all');
     fetchAgentRenewals();
     fetchNotifications();
   } else if (pageId === 'customer-claims') {
@@ -4909,7 +5965,11 @@ function navigateTo(pageId) {
       fnolRenderStep(window.fnolState.step || 1);
     }
   } else if (pageId === 'agent-policies') {
-    renderAgentPoliciesTable();
+    if (typeof fetchAgentPolicies === 'function') {
+      fetchAgentPolicies('all').then(() => renderAgentPoliciesTable());
+    } else {
+      renderAgentPoliciesTable();
+    }
     fetchAgentRenewals();
   } else if (pageId === 'admin-users') {
     renderAdminUsersTable();
@@ -5745,7 +6805,7 @@ function fnolRenderStep(step) {
 
         <!-- Confirmation Buttons -->
         <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
-          <button class="btn btn-outline" onclick="showToast('Claim PDF Summary downloaded.')" style="display:inline-flex;align-items:center;gap:8px;">
+          <button class="btn btn-outline" onclick="downloadFNOLClaimSummaryPDF()" style="display:inline-flex;align-items:center;gap:8px;">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             <span>Download Summary (PDF)</span>
           </button>
@@ -6556,6 +7616,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const claims = window.customerClaimsData || [];
     const claim = claims.find(c => c.id === claimId);
     if (!claim) return;
+    window.currentViewingClaim = claim;
 
     const modal = document.getElementById('customer-claim-details-modal');
     const content = document.getElementById('customer-claim-details-content');
@@ -6676,7 +7737,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <div style="background:#FAF6F2;padding:1rem 1.5rem;border-top:1px solid var(--cust-cream-border);display:flex;justify-content:space-between;align-items:center;">
-          <button class="btn btn-outline btn-sm" onclick="showToast('Claim PDF Summary downloaded.')">
+          <button class="btn btn-outline btn-sm" onclick="downloadCustomerClaimDetailsPDF('${claim.id}')">
             📄 Download Claim Summary (PDF)
           </button>
           <button class="btn btn-primary btn-sm" onclick="closeCustomerClaimDetails()">
@@ -6719,6 +7780,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initGlobalTooltips();
   initSlidePanelListeners();
+  initNotificationListeners();
   renderCustomerPolicyCards('all');
   renderCustomerRecommendations();
   renderComparisonSelectors();
@@ -6860,12 +7922,24 @@ if (typeof initTheme === 'function') window.initTheme = initTheme;
 
 if (typeof fetchCustomerRenewals === 'function') window.fetchCustomerRenewals = fetchCustomerRenewals;
 if (typeof fetchAgentRenewals === 'function') window.fetchAgentRenewals = fetchAgentRenewals;
+if (typeof fetchAgentProfile === 'function') window.fetchAgentProfile = fetchAgentProfile;
+if (typeof fetchAgentDashboard === 'function') window.fetchAgentDashboard = fetchAgentDashboard;
+if (typeof fetchAgentCustomers === 'function') window.fetchAgentCustomers = fetchAgentCustomers;
+if (typeof fetchAgentPolicies === 'function') window.fetchAgentPolicies = fetchAgentPolicies;
 if (typeof fetchNotifications === 'function') window.fetchNotifications = fetchNotifications;
 if (typeof renderNotifications === 'function') window.renderNotifications = renderNotifications;
 if (typeof handleCustomerConfirmRenewal === 'function') window.handleCustomerConfirmRenewal = handleCustomerConfirmRenewal;
 if (typeof handleAgentApproveRenewal === 'function') window.handleAgentApproveRenewal = handleAgentApproveRenewal;
 if (typeof toggleNotificationPopover === 'function') window.toggleNotificationPopover = toggleNotificationPopover;
+if (typeof closeNotificationPopover === 'function') window.closeNotificationPopover = closeNotificationPopover;
+if (typeof initNotificationListeners === 'function') window.initNotificationListeners = initNotificationListeners;
 if (typeof markAllNotificationsRead === 'function') window.markAllNotificationsRead = markAllNotificationsRead;
 if (typeof markNotificationRead === 'function') window.markNotificationRead = markNotificationRead;
-
-
+if (typeof downloadFNOLClaimSummaryPDF === 'function') window.downloadFNOLClaimSummaryPDF = downloadFNOLClaimSummaryPDF;
+if (typeof renderAgentDashboard === 'function') window.renderAgentDashboard = renderAgentDashboard;
+if (typeof renderAgentProfile === 'function') window.renderAgentProfile = renderAgentProfile;
+if (typeof getAgentDisplayName === 'function') window.getAgentDisplayName = getAgentDisplayName;
+if (typeof downloadCustomerClaimDetailsPDF === 'function') window.downloadCustomerClaimDetailsPDF = downloadCustomerClaimDetailsPDF;
+if (typeof downloadPolicyDocument === 'function') window.downloadPolicyDocument = downloadPolicyDocument;
+if (typeof generatePDFDocument === 'function') window.generatePDFDocument = generatePDFDocument;
+if (typeof downloadPDFFile === 'function') window.downloadPDFFile = downloadPDFFile;

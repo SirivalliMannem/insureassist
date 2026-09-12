@@ -30,15 +30,30 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     except Exception:
         pass
 
-    # 2. Check synthetic hashes from Excel dataset (format: $2b$12$synthetic_hash_<id>)
-    if hashed_password.startswith("$2b$12$synthetic_hash_"):
-        suffix = hashed_password.replace("$2b$12$", "")
-        if plain_password in [suffix, hashed_password, "Test@123", "password"]:
-            return True
+    # 2. Development-only fallbacks (synthetic dataset hashes & plaintext fallback)
+    # Strictly disabled in production/staging environments
+    if (getattr(settings, "APP_ENV", "") or "").strip().lower() == "development":
+        # Check synthetic hashes from Excel seed dataset (format: $2b$12$synthetic_hash_<id>)
+        if hashed_password.startswith("$2b$12$synthetic_hash_"):
+            suffix = hashed_password.replace("$2b$12$", "")
+            valid_synthetic_passwords = [
+                suffix,
+                hashed_password,
+                "Test@123",
+                "test@123",
+                "Password@123",
+                "password@123",
+                "password",
+                "Password",
+                "password123",
+                "Test1234"
+            ]
+            if plain_password in valid_synthetic_passwords:
+                return True
 
-    # 3. Direct match fallback
-    if plain_password == hashed_password:
-        return True
+        # Direct match fallback for development seed data
+        if plain_password == hashed_password:
+            return True
 
     return False
 
