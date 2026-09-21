@@ -12,7 +12,11 @@ from app.schemas.agent import (
     AgentCustomersListResponse,
     AgentPoliciesListResponse,
     AgentPolicyDetailResponse,
-    ReminderResponse
+    ReminderResponse,
+    AgentApplicationResponse,
+    AgentApplicationsListResponse,
+    ForwardApplicationRequest,
+    RequestMoreInfoRequest
 )
 from app.services.agent_service import AgentService
 
@@ -153,4 +157,108 @@ async def send_policy_renewal_reminder(
     Send renewal outreach reminder for an expiring policy.
     """
     return AgentService.send_renewal_reminder(policy_id, current_agent, db)
+
+
+# =========================================================================
+# Policy Application Intake, Verification & Underwriter Forwarding
+# =========================================================================
+
+@router.get(
+    "/applications",
+    response_model=AgentApplicationsListResponse,
+    summary="List Customer Policy Applications (Agent Intake)",
+    description="Returns submitted policy applications from assigned customers for Agent intake and document verification."
+)
+async def get_agent_applications(
+    status: Optional[str] = None,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve applications in Agent queue.
+    """
+    return AgentService.get_applications(current_agent, db, status_filter=status)
+
+
+@router.get(
+    "/applications/{application_id}",
+    response_model=AgentApplicationResponse,
+    summary="Get Specific Policy Application Details",
+    description="Returns complete application details, risk answers, and uploaded documents for Agent review."
+)
+async def get_agent_application_detail(
+    application_id: str,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve detailed application record for Agent review.
+    """
+    return AgentService.get_application_detail(application_id, current_agent, db)
+
+
+@router.post(
+    "/applications/{application_id}/forward",
+    response_model=AgentApplicationResponse,
+    summary="Forward Verified Application to Underwriter",
+    description="Validates application & documents, updates status to FORWARDED_TO_UNDERWRITER, records Agent timestamp and audit notes, and routes to Underwriter queue."
+)
+async def forward_application_to_underwriter(
+    application_id: str,
+    forward_in: ForwardApplicationRequest,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Agent forwards verified application to Underwriter.
+    """
+    return AgentService.forward_to_underwriter(application_id, forward_in, current_agent, db)
+
+
+@router.post(
+    "/applications/{application_id}/request-info",
+    response_model=AgentApplicationResponse,
+    summary="Request Additional Info / Missing Documents from Customer",
+    description="Updates application status to MORE_INFORMATION_REQUIRED, stores Agent request notes, and creates customer notification."
+)
+async def request_more_application_info(
+    application_id: str,
+    req_in: RequestMoreInfoRequest,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Agent requests missing documents or answers from customer.
+    """
+    return AgentService.request_more_information(application_id, req_in, current_agent, db)
+
+
+@router.get(
+    "/applications/{application_id}/reviewer",
+    summary="Get Application Reviewer / Forwarder",
+    description="Returns the agent who reviewed/forwarded a specific application from applications.forwarded_by_agent_id."
+)
+async def get_application_reviewer_info(
+    application_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Get application reviewing/forwarding agent.
+    """
+    return AgentService.get_application_reviewer(application_id, db)
+
+
+@router.get(
+    "/customers/{customer_id}/assigned-agent",
+    summary="Get Customer Assigned Agent (Static Assignment)",
+    description="Returns the customer's static assigned agent from customer_agent_assignments or explicit Unassigned status."
+)
+async def get_customer_assigned_agent_info(
+    customer_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Get customer assigned agent from customer_agent_assignments.
+    """
+    return AgentService.get_customer_assigned_agent(customer_id, db)
 

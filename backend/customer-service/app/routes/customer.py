@@ -14,7 +14,10 @@ from app.schemas.customer import (
     RenewalCreationRequest,
     RenewalResponse,
     RenewalApprovalResponse,
-    NotificationResponse
+    NotificationResponse,
+    PolicyApplicationRequest,
+    PolicyApplicationResponse,
+    ProvideMoreInfoRequest
 )
 from app.services.customer_service import CustomerService
 
@@ -52,6 +55,36 @@ async def get_customer_profile(
     Retrieve authenticated customer profile details.
     """
     return CustomerService.get_profile(current_customer, db)
+
+
+@router.get(
+    "/assigned-agent",
+    summary="Get Authenticated Customer Assigned Agent",
+    description="Returns the statically assigned agent from customer_agent_assignments or explicit Unassigned status."
+)
+async def get_customer_assigned_agent(
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve statically assigned agent for authenticated customer.
+    """
+    return CustomerService.get_assigned_agent(current_customer, db)
+
+
+@router.get(
+    "/{customer_id}/assigned-agent",
+    summary="Get Customer Assigned Agent By ID",
+    description="Returns the statically assigned agent from customer_agent_assignments or explicit Unassigned status for a given customer."
+)
+async def get_assigned_agent_by_id(
+    customer_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve statically assigned agent for any customer by ID.
+    """
+    return CustomerService.get_assigned_agent_by_id(customer_id, db)
 
 
 @router.get(
@@ -140,6 +173,80 @@ async def list_customer_renewals(
     Retrieve list of customer's active and historical renewal requests.
     """
     return CustomerService.get_customer_renewals(current_customer, db)
+
+
+# =========================================================================
+# Customer Policy Applications Workflow (Intake & Tracking)
+# =========================================================================
+
+@router.post(
+    "/applications",
+    response_model=PolicyApplicationResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Submit Policy Application",
+    description="Customer submits an application for a new insurance policy with coverage selections, property/risk data, and uploaded documents."
+)
+async def submit_policy_application(
+    application_in: PolicyApplicationRequest,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Persist new policy application and linked pending policy into PostgreSQL.
+    """
+    return CustomerService.submit_application(application_in, current_customer, db)
+
+
+@router.get(
+    "/applications",
+    response_model=List[PolicyApplicationResponse],
+    summary="List Customer Policy Applications",
+    description="Retrieves all policy applications submitted by the authenticated customer with live statuses."
+)
+async def list_customer_applications(
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve list of policy applications submitted by authenticated customer.
+    """
+    return CustomerService.get_customer_applications(current_customer, db)
+
+
+@router.get(
+    "/applications/{application_id}",
+    response_model=PolicyApplicationResponse,
+    summary="Get Application Details",
+    description="Retrieves full details of a specific policy application submitted by the authenticated customer."
+)
+async def get_customer_application_detail(
+    application_id: str,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve single policy application details.
+    """
+    return CustomerService.get_application_detail(application_id, current_customer, db)
+
+
+@router.post(
+    "/applications/{application_id}/provide-info",
+    response_model=PolicyApplicationResponse,
+    summary="Provide Requested Application Info & Documents",
+    description="Customer uploads missing documents or details requested by the Agent, returning application to Agent Review."
+)
+async def customer_provide_more_info(
+    application_id: str,
+    req_in: ProvideMoreInfoRequest,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Customer resubmits requested info/documents.
+    """
+    return CustomerService.provide_more_information(application_id, req_in, current_customer, db)
+
 
 
 # =========================================================================

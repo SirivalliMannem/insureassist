@@ -11,6 +11,27 @@ class HealthResponse(BaseModel):
     version: str = Field(..., description="Semantic version", example="1.0.0")
 
 
+class AssignedAgentItem(BaseModel):
+    """
+    Schema for statically assigned agent details from customer_agent_assignments.
+    """
+    agent_id: str = Field(..., description="Agent User ID", example="1321")
+    name: str = Field(..., description="Agent full name", example="Aarav Nair")
+    email: str = Field(..., description="Agent email address", example="aarav_nair1321@example.com")
+    phone: Optional[str] = Field(None, description="Agent contact phone", example="(555) 876-5432")
+    role: Optional[str] = Field("Agent", description="User role", example="Agent")
+
+
+class CustomerAssignedAgentResponse(BaseModel):
+    """
+    Schema for customer assigned agent response derived strictly from customer_agent_assignments.
+    """
+    customer_id: str = Field(..., description="Customer unique ID", example="CUST-001")
+    customer_name: str = Field(..., description="Customer full name", example="Sarah Mitchell")
+    assigned_agent: Optional[AssignedAgentItem] = Field(None, description="Statically assigned agent object or null if unassigned")
+    assignment_status: str = Field(..., description="Assignment status (e.g. Active, Unassigned)", example="Unassigned")
+
+
 class CustomerProfileResponse(BaseModel):
     """
     Schema for customer profile data.
@@ -22,6 +43,8 @@ class CustomerProfileResponse(BaseModel):
     address: str = Field(..., description="Primary residence address", example="742 Evergreen Terrace, Springfield, OR")
     active_policies_count: int = Field(default=0, description="Total number of active policies")
     open_claims_count: int = Field(default=0, description="Total number of open claims")
+    assigned_agent: Optional[AssignedAgentItem] = Field(None, description="Assigned agent from customer_agent_assignments")
+    assignment_status: str = Field(default="Unassigned", description="Static assignment status", example="Unassigned")
 
 
 class PolicySummaryResponse(BaseModel):
@@ -128,4 +151,71 @@ class NotificationResponse(BaseModel):
     status: Optional[str] = Field(None, description="Workflow status")
     is_read: bool = Field(default=False, description="Whether notification was read")
     created_at: str = Field(..., description="Timestamp of notification")
+
+
+class DocumentItem(BaseModel):
+    """
+    Schema for uploaded document metadata in application.
+    """
+    doc_type: str = Field(..., description="Document category type", example="ID Proof")
+    file_name: str = Field(..., description="Uploaded file name", example="drivers_license.pdf")
+    file_size: Optional[str] = Field(None, description="Formatted file size", example="1.2 MB")
+    file_data: Optional[str] = Field(None, description="Optional base64 or stored URL")
+    uploaded_at: Optional[str] = Field(None, description="Upload timestamp")
+
+
+class PolicyApplicationRequest(BaseModel):
+    """
+    Schema for customer submitting a new policy application.
+    """
+    policy_type: str = Field(..., description="Target policy type/line of business", example="Homeowners")
+    product_name: str = Field(..., description="Selected product title", example="Homeowners Premier Protection (HO-3)")
+    coverage_tier: Optional[str] = Field("Standard", description="Selected coverage tier: Basic, Standard, Enhanced, Premium")
+    coverage_limit: Optional[float] = Field(None, description="Primary coverage limit amount")
+    deductible: Optional[float] = Field(None, description="Selected policy deductible")
+    duration_months: Optional[int] = Field(12, description="Policy term duration in months (6, 12, 24)")
+    start_date: Optional[str] = Field(None, description="Requested effective start date (YYYY-MM-DD)")
+    estimated_premium: Optional[float] = Field(None, description="Calculated annual/term premium")
+    applicant_info: Optional[dict] = Field(None, description="Pre-filled & verified applicant details")
+    policy_specific_data: Optional[dict] = Field(None, description="Property/vehicle/business answers")
+    documents: Optional[List[DocumentItem]] = Field(default=[], description="Uploaded supporting documents")
+
+
+class PolicyApplicationResponse(BaseModel):
+    """
+    Schema for policy application details and confirmation.
+    """
+    application_id: str = Field(..., description="Unique application reference ID", example="APP-2026-10482")
+    customer_id: str = Field(..., description="Customer ID", example="50001")
+    customer_name: str = Field(..., description="Customer full name")
+    policy_type: str = Field(..., description="Policy line of business")
+    product_name: str = Field(..., description="Product title")
+    coverage_tier: str = Field(..., description="Selected coverage tier")
+    coverage_limit: Optional[str] = Field(None, description="Formatted coverage limit")
+    deductible: Optional[str] = Field(None, description="Formatted deductible")
+    duration_months: int = Field(..., description="Duration in months")
+    start_date: Optional[str] = Field(None, description="Effective start date")
+    estimated_premium: str = Field(..., description="Formatted estimated premium")
+    status: str = Field(..., description="Application lifecycle status (Submitted, Under Review, Approved, Rejected)")
+    policy_id: Optional[str] = Field(None, description="Associated Pending Policy ID")
+    applicant_info: Optional[dict] = Field(None, description="Applicant profile summary")
+    policy_specific_data: Optional[dict] = Field(None, description="Specific risk details")
+    documents: List[dict] = Field(default=[], description="Uploaded documents")
+    forwarded_by_agent_id: Optional[str] = Field(None, description="Agent ID who forwarded application")
+    forwarded_at: Optional[str] = Field(None, description="Timestamp when forwarded to underwriter")
+    agent_notes: Optional[str] = Field(None, description="Notes from reviewing agent or requested missing info")
+    verification_status: Optional[str] = Field("Pending Verification", description="Document & application verification status")
+    created_at: str = Field(..., description="Submission ISO timestamp")
+    updated_at: str = Field(..., description="Last update timestamp")
+
+
+class ProvideMoreInfoRequest(BaseModel):
+    """
+    Schema for customer providing additional requested information or uploaded documents.
+    """
+    additional_notes: Optional[str] = Field(None, description="Customer explanation/notes")
+    documents: Optional[List[DocumentItem]] = Field(default=[], description="New or updated uploaded documents")
+    updated_answers: Optional[dict] = Field(default={}, description="Updated risk or policy answers")
+
+
 

@@ -1,6 +1,8 @@
 const AUTH_SERVICE_URL = 'http://127.0.0.1:8001';
 const CUSTOMER_SERVICE_URL = 'http://127.0.0.1:8002';
 const AGENT_SERVICE_URL = 'http://127.0.0.1:8003';
+const UNDERWRITER_SERVICE_URL = 'http://127.0.0.1:8004';
+const ADMIN_SERVICE_URL = 'http://127.0.0.1:8005';
 
 /**
      * MOCK DATA REPOSITORIES (ORGANIZED SEPARATELY)
@@ -24,355 +26,8 @@ const MOCK_DB = {
     }
   },
 
-  // Underwriting Queue Data (53 Lifetime Submissions with 14 Pending)
-  underwriterQueue: [
-    // 14 PENDING (1 High, 7 Medium, 6 Low)
-    {
-      id: 'UW-1001', customer: 'Sarah Mitchell', product: 'Home Insurance', riskLevel: 'Medium', riskScore: 48, premium: '$1,840', submitted: 'Today', status: 'Pending',
-      requestedCoverage: '$350,000 Dwelling Replacement', deductible: '$1,000', effectiveDate: '15 Apr 2026',
-      riskFactors: ['Property age: 12 years (modern copper wiring & updated roof)', 'Previous claims: 1 minor wind loss in 2023 ($2,400 paid)', 'Requested coverage: $350,000 (Adequate 100% replacement ratio)', 'Location risk: Moderate (Midwest wind/hail zone)'],
-      coverages: ['Dwelling ($350,000)', 'Personal Property ($175,000)', 'Personal Liability ($500,000)', 'Loss of Use ($70,000)'],
-      exclusions: ['Flood & Rising Water', 'Earth Movement / Seismic', 'Wear, Tear & Deterioration'],
-      documents: ['Application Form (PDF)', 'Property Inspection (PDF)', 'Identification (PDF)', 'Loss History Report (PDF)']
-    },
-    {
-      id: 'UW-1002', customer: 'John Carter', product: 'Auto Insurance', riskLevel: 'High', riskScore: 78, premium: '$1,260', submitted: 'Yesterday', status: 'Pending',
-      requestedCoverage: '$500,000 Combined Single Limit', deductible: '$500 Collision / $250 Comp', effectiveDate: '01 May 2026',
-      riskFactors: ['2 speeding violations on MVR within preceding 24 months', 'High performance vehicle (2024 BMW M340i, 382 hp)', 'High density metropolitan commuter territory', 'Telematics score: 62/100 (Frequent rapid braking events)'],
-      coverages: ['Bodily Injury ($250k/$500k)', 'Property Damage ($100,000)', 'Comprehensive ($250 Ded)', 'Collision ($500 Ded)'],
-      exclusions: ['Track/Racing Use', 'Commercial rideshare delivery without endorsement', 'Unlisted regular drivers'],
-      documents: ['Auto Application (PDF)', 'Motor Vehicle Record (PDF)', 'Driver License Verification', 'Telematics Log (PDF)']
-    },
-    {
-      id: 'UW-1003', customer: 'Emily Johnson', product: 'Commercial Property', riskLevel: 'Low', riskScore: 18, premium: '$1,850', submitted: '2 days ago', status: 'Pending',
-      requestedCoverage: '$1,000,000 Commercial Property & Building', deductible: '$2,500', effectiveDate: '10 May 2026',
-      riskFactors: ['Fire resistive steel frame commercial construction (2021)', 'Monitored central station fire and burglar alarm systems', 'Clean 5-year commercial property loss run record', 'Located 0.5 miles from municipal fire hydrant station'],
-      coverages: ['Commercial Building ($1,000,000)', 'Business Personal Property ($500,000)', 'Equipment Breakdown Rider'],
-      exclusions: ['Flood and surface water', 'Government seizure or condemnation'],
-      documents: ['Commercial Property App (PDF)', 'Building Inspection Report (PDF)', 'Alarm Certification', 'Loss Run History']
-    },
-    {
-      id: 'UW-1006', customer: 'Lisa Anderson', product: 'Home Insurance', riskLevel: 'Medium', riskScore: 42, premium: '$2,100', submitted: '3 days ago', status: 'Pending',
-      requestedCoverage: '$420,000 HO-3 Special Form', deductible: '$1,500', effectiveDate: '20 May 2026',
-      riskFactors: ['Proximity to coastal waterway: 4.8 miles', 'Hurricane impact straps and secondary water barrier roof (2022)', 'In-ground swimming pool with self-closing locking perimeter fence', 'No prior water damage or hail claims'],
-      coverages: ['Dwelling ($420,000)', 'Other Structures ($42,000)', 'Personal Property ($210,000)', 'Personal Liability ($500,000)'],
-      exclusions: ['Flood & Rising Water', 'Earthquake', 'Sewer Back-up without Rider'],
-      documents: ['Residential App (PDF)', 'Wind Mitigation Certificate', 'Pool Safety Verification', 'CLUE Property Loss Report']
-    },
-    {
-      id: 'UW-1007', customer: 'James Wilson', product: 'Business Insurance', riskLevel: 'Medium', riskScore: 58, premium: '$3,200', submitted: '4 days ago', status: 'Pending',
-      requestedCoverage: '$1,500,000 Commercial General Liability', deductible: '$2,500', effectiveDate: '01 Jun 2026',
-      riskFactors: ['Regional commercial distribution warehouse', 'Clean 3-year loss run history', 'Modern surveillance and fire detection network', 'Standard commercial terms apply'],
-      coverages: ['General Liability ($1,500,000)', 'Property Damage ($500,000)', 'Product Liability ($1,000,000)'],
-      exclusions: ['Hazardous materials', 'Nuclear hazard'],
-      documents: ['Commercial App (PDF)', 'Premises Inspection (PDF)', 'Loss Runs (PDF)']
-    },
-    {
-      id: 'UW-1011', customer: 'Jessica Taylor', product: 'Home Insurance', riskLevel: 'Low', riskScore: 16, premium: '$1,420', submitted: '4 days ago', status: 'Pending',
-      requestedCoverage: '$320,000 HO-3 Policy', deductible: '$1,000', effectiveDate: '15 Jun 2026',
-      riskFactors: ['Suburban single-family dwelling built 2018', 'Gated community with 24/7 security patrol', 'Zero prior claims in 10-year homeowner history', 'Tile roofing with hail-resistant rating'],
-      coverages: ['Dwelling ($320,000)', 'Personal Property ($160,000)', 'Liability ($300,000)'], exclusions: ['Flood', 'Earthquake'], documents: ['App Form (PDF)', 'Inspection (PDF)']
-    },
-    {
-      id: 'UW-1012', customer: 'Robert Martinez', product: 'Auto Insurance', riskLevel: 'Medium', riskScore: 38, premium: '$1,150', submitted: '5 days ago', status: 'Pending',
-      requestedCoverage: '$250k/$500k Auto Liability', deductible: '$500', effectiveDate: '20 Jun 2026',
-      riskFactors: ['Clean MVR for principal driver', 'Secondary driver has 1 minor parking incident in 2024', 'Garage kept vehicle with anti-theft tracking'],
-      coverages: ['Bodily Injury ($250k/$500k)', 'Collision ($500)', 'Comprehensive ($250)'], exclusions: ['Unapproved drivers'], documents: ['Auto App (PDF)', 'MVR Record']
-    },
-    {
-      id: 'UW-1013', customer: 'Amanda Wilson', product: 'Home Insurance', riskLevel: 'Low', riskScore: 22, premium: '$1,650', submitted: '5 days ago', status: 'Pending',
-      requestedCoverage: '$380,000 Homeowners HO-3', deductible: '$1,000', effectiveDate: '25 Jun 2026',
-      riskFactors: ['Brick construction built 2015', 'Central heating/AC with smart thermostat monitoring', 'Deadbolt locks and connected smoke detectors'],
-      coverages: ['Dwelling ($380,000)', 'Contents ($190,000)', 'Liability ($500,000)'], exclusions: ['Flood', 'Earthquake'], documents: ['App Form', 'Inspection Report']
-    },
-    {
-      id: 'UW-1014', customer: 'Brian Anderson', product: 'Commercial Property', riskLevel: 'Medium', riskScore: 45, premium: '$2,400', submitted: '6 days ago', status: 'Pending',
-      requestedCoverage: '$1,200,000 Commercial Retail Space', deductible: '$2,500', effectiveDate: '01 Jul 2026',
-      riskFactors: ['Boutique retail clothing shop in downtown district', 'Sprinkler system inspected annually', 'Clean 5-year claims record'],
-      coverages: ['Building ($1,200,000)', 'Inventory BPP ($400,000)'], exclusions: ['Flood', 'Riot/Civil Commotion'], documents: ['ACORD 125', 'Building Inspection']
-    },
-    {
-      id: 'UW-1015', customer: 'Catherine Lee', product: 'Home Insurance', riskLevel: 'Low', riskScore: 14, premium: '$1,350', submitted: '1 week ago', status: 'Pending',
-      requestedCoverage: '$290,000 HO-3 Policy', deductible: '$1,000', effectiveDate: '05 Jul 2026',
-      riskFactors: ['Newly constructed home in master-planned neighborhood', 'Impact-resistant windows and smart water shutoff valve', 'Excellent credit score (>780)'],
-      coverages: ['Dwelling ($290,000)', 'Personal Property ($145,000)', 'Liability ($500,000)'], exclusions: ['Flood'], documents: ['Application (PDF)', 'Builder Warranty']
-    },
-    {
-      id: 'UW-1016', customer: 'Daniel White', product: 'Auto Insurance', riskLevel: 'Low', riskScore: 20, premium: '$980', submitted: '1 week ago', status: 'Pending',
-      requestedCoverage: '$300k Combined Single Limit', deductible: '$500', effectiveDate: '10 Jul 2026',
-      riskFactors: ['Electric vehicle (2024 Tesla Model Y)', 'Commute distance < 15 miles/day', 'Driver age 42 with flawless 10-year driving record'],
-      coverages: ['CSL Liability ($300k)', 'Collision ($500 Ded)', 'EV Battery Protection'], exclusions: ['Track Racing'], documents: ['Auto App Form', 'MVR Verification']
-    },
-    {
-      id: 'UW-1017', customer: 'Elizabeth Harris', product: 'Umbrella Liability', riskLevel: 'Low', riskScore: 12, premium: '$450', submitted: '1 week ago', status: 'Pending',
-      requestedCoverage: '$2,000,000 Personal Umbrella', deductible: '$1,000', effectiveDate: '15 Jul 2026',
-      riskFactors: ['Underlying policies with standard carrier in good standing', 'No recreational property hazards or teenage drivers', 'Zero prior liability claims'],
-      coverages: ['Personal Umbrella Excess ($2,000,000)'], exclusions: ['Business activities'], documents: ['Umbrella App', 'Underlying Dec Pages']
-    },
-    {
-      id: 'UW-1018', customer: 'George Clark', product: 'Home Insurance', riskLevel: 'Medium', riskScore: 50, premium: '$2,250', submitted: '1 week ago', status: 'Pending',
-      requestedCoverage: '$450,000 HO-3 Coverage', deductible: '$1,500', effectiveDate: '20 Jul 2026',
-      riskFactors: ['Property age: 28 years with recent roof replacement (2023)', 'Finished basement with sump pump battery backup', 'Suburban wooded lot'],
-      coverages: ['Dwelling ($450,000)', 'Personal Property ($225,000)', 'Liability ($500,000)'], exclusions: ['Flood', 'Seismic'], documents: ['Home App (PDF)', 'Roof Inspection']
-    },
-    {
-      id: 'UW-1019', customer: 'Hannah Lewis', product: 'Business Insurance', riskLevel: 'Medium', riskScore: 52, premium: '$3,800', submitted: '2 weeks ago', status: 'Pending',
-      requestedCoverage: '$1,000,000 Professional Office BOP', deductible: '$2,000', effectiveDate: '01 Aug 2026',
-      riskFactors: ['Architecture and design firm office', 'Monitored alarm and electronic badge entry', 'No heavy equipment or hazardous operations'],
-      coverages: ['Commercial Property ($1,000,000)', 'General Liability ($2,000,000)'], exclusions: ['E&O (requires separate policy)'], documents: ['BOP Form', 'Lease Agreement']
-    },
-
-    // 6 NEEDS MORE INFORMATION (2 High, 4 Medium)
-    {
-      id: 'UW-1004', customer: 'Michael Brown', product: 'Business Insurance', riskLevel: 'High', riskScore: 82, premium: '$4,500', submitted: '3 days ago', status: 'Needs More Information',
-      requestedCoverage: '$2,000,000 Commercial General Liability', deductible: '$5,000', effectiveDate: '15 May 2026',
-      riskFactors: ['Light industrial manufacturing facility with warehouse storage', 'Flammable solvent storage on premises', 'Annual revenue: $4.2M (32 on-site shop floor employees)', 'Pending: Updated fire suppression & certified annual sprinkler test'],
-      coverages: ['Commercial General Liability ($2,000,000)', 'Business Personal Property ($850,000)', 'Business Income Interruption ($400,000)'],
-      exclusions: ['Pollution & Asbestos Liability', 'Cyber Extortion', 'Professional Errors & Omissions'],
-      documents: ['Commercial App (ACORD 125)', 'Premises Inspection Log', 'Fire Sprinkler Test (Missing)', 'Financial Statements (PDF)']
-    },
-    {
-      id: 'UW-1009', customer: 'Robert Taylor', product: 'Home Insurance', riskLevel: 'High', riskScore: 88, premium: '$6,400', submitted: '1 week ago', status: 'Needs More Information',
-      requestedCoverage: '$1,850,000 High-Value Estate', deductible: '$5,000', effectiveDate: '01 Jun 2026',
-      riskFactors: ['Historic stone masonry estate built in 1928', 'Custom imported woodworking and antique slate roofing', 'Wildfire interface zone rating: Moderate-High', 'Missing: Specialist fine arts appraisal and electrical modernization certificate'],
-      coverages: ['Dwelling Guaranteed Replacement ($1,850,000)', 'Fine Arts Rider ($250,000)', 'Personal Liability ($1,000,000)'],
-      exclusions: ['Wear/Tear on Historic Features', 'Seismic', 'Flood'],
-      documents: ['High Value Estate App', 'Historic Property Survey', 'Fine Arts Appraisal (Missing)', 'Electrical Inspection Notice']
-    },
-    {
-      id: 'UW-1020', customer: 'Ian Walker', product: 'Commercial Property', riskLevel: 'Medium', riskScore: 55, premium: '$3,100', submitted: '1 week ago', status: 'Needs More Information',
-      requestedCoverage: '$1,500,000 Warehouse Facility', deductible: '$5,000', effectiveDate: '10 Jun 2026',
-      riskFactors: ['Distribution warehouse for consumer goods', 'Forklift charging station verification needed', 'Pending updated fire egress documentation'],
-      coverages: ['Building ($1,500,000)', 'Equipment ($500,000)'], exclusions: ['Flood', 'Contamination'], documents: ['Warehouse App', 'Safety Inspection (Pending)']
-    },
-    {
-      id: 'UW-1021', customer: 'Julia Hall', product: 'Auto Insurance', riskLevel: 'Medium', riskScore: 44, premium: '$1,450', submitted: '2 weeks ago', status: 'Needs More Information',
-      requestedCoverage: '$500,000 Commercial Van Policy', deductible: '$1,000', effectiveDate: '15 Jun 2026',
-      riskFactors: ['Catering business delivery van', 'Awaiting verified driver list MVR confirmation', 'Clean operating record past 36 months'],
-      coverages: ['Commercial Auto CSL ($500,000)', 'Cargo Rider ($25,000)'], exclusions: ['Rideshare use'], documents: ['Commercial Auto App', 'Driver Licenses (Pending)']
-    },
-    {
-      id: 'UW-1022', customer: 'Kevin Young', product: 'Home Insurance', riskLevel: 'Medium', riskScore: 49, premium: '$2,350', submitted: '2 weeks ago', status: 'Needs More Information',
-      requestedCoverage: '$520,000 Coastal Residence', deductible: '$2,500', effectiveDate: '20 Jun 2026',
-      riskFactors: ['Property located 2.5 miles from shoreline', 'Storm shutter certification needed', 'Elevated foundation with modern tie-downs'],
-      coverages: ['Dwelling ($520,000)', 'Contents ($260,000)', 'Liability ($500,000)'], exclusions: ['Flood', 'Wave Surge'], documents: ['Coastal App', 'Shutter Certification (Pending)']
-    },
-    {
-      id: 'UW-1023', customer: 'Laura King', product: 'Business Insurance', riskLevel: 'Medium', riskScore: 46, premium: '$2,900', submitted: '3 weeks ago', status: 'Needs More Information',
-      requestedCoverage: '$1,000,000 Medical Clinic BOP', deductible: '$2,500', effectiveDate: '01 Jul 2026',
-      riskFactors: ['Outpatient physical therapy clinic', 'Biohazard disposal protocol log required', 'No overnight inpatient accommodations'],
-      coverages: ['Property ($1,000,000)', 'General Liability ($2,000,000)'], exclusions: ['Medical Malpractice'], documents: ['Clinic App', 'Biohazard Disposal Log (Pending)']
-    },
-
-    // 5 REJECTED (1 High, 4 Medium/Low)
-    {
-      id: 'UW-1010', customer: 'William Clark', product: 'Business Insurance', riskLevel: 'High', riskScore: 94, premium: '$12,500', submitted: '2 weeks ago', status: 'Rejected',
-      requestedCoverage: '$3,500,000 Commercial Property', deductible: '$10,000', effectiveDate: 'Declined',
-      riskFactors: ['Wood recycling and timber processing facility', 'Severe unmitigated combustible dust accumulation', 'Inadequate municipal water pressure for hydrant fire suppression', '3 industrial fire claims with prior carriers in 4 years'],
-      coverages: ['Building & Machinery ($3,500,000)', 'Business Interruption ($1,000,000)'],
-      exclusions: ['Unsprinklered structures', 'Dust ignition liability'],
-      documents: ['Commercial Application', 'Risk Engineering Inspection Report', 'Decline Notice Letter (PDF)']
-    },
-    {
-      id: 'UW-1024', customer: 'Nicholas Green', product: 'Auto Insurance', riskLevel: 'Medium', riskScore: 64, premium: '$3,200', submitted: '3 weeks ago', status: 'Rejected',
-      requestedCoverage: '$500,000 Auto Policy', deductible: '$1,000', effectiveDate: 'Declined',
-      riskFactors: ['Multiple major moving violations within 12 months', 'Suspended license history with prior carrier', 'Exceeds standard underwriting loss ratio guidelines'],
-      coverages: ['Liability ($500k)'], exclusions: ['All coverage'], documents: ['MVR Report', 'Decline Notice']
-    },
-    {
-      id: 'UW-1025', customer: 'Olivia Baker', product: 'Home Insurance', riskLevel: 'Medium', riskScore: 62, premium: '$4,100', submitted: '1 month ago', status: 'Rejected',
-      requestedCoverage: '$600,000 Homeowners HO-3', deductible: '$2,500', effectiveDate: 'Declined',
-      riskFactors: ['Severe unaddressed foundation subsidence and structural cracking', 'Prior water damage claim history with unverified repairs', 'Inspector recommended structural rebuild before binding'],
-      coverages: ['Dwelling ($600,000)'], exclusions: ['Structural failure'], documents: ['Property Inspection', 'Decline Notice']
-    },
-    {
-      id: 'UW-1026', customer: 'Patrick Adams', product: 'Commercial Property', riskLevel: 'Medium', riskScore: 60, premium: '$5,500', submitted: '1 month ago', status: 'Rejected',
-      requestedCoverage: '$2,000,000 Commercial Building', deductible: '$5,000', effectiveDate: 'Declined',
-      riskFactors: ['Unoccupied commercial building vacant for >180 days', 'Broken security perimeter and disconnected fire alarms', 'Underwriting guidelines prohibit vacant industrial property binding without endorsement'],
-      coverages: ['Building ($2,000,000)'], exclusions: ['Vandalism', 'Freeze'], documents: ['Vacancy Survey', 'Decline Notice']
-    },
-    {
-      id: 'UW-1027', customer: 'Quinn Scott', product: 'Business Insurance', riskLevel: 'Medium', riskScore: 58, premium: '$4,800', submitted: '1 month ago', status: 'Rejected',
-      requestedCoverage: '$1,500,000 Bar & Nightclub BOP', deductible: '$5,000', effectiveDate: 'Declined',
-      riskFactors: ['Late-night entertainment venue with dancing and live pyrotechnics', 'Multiple open assault liability claims with previous insurer', 'Outside core risk appetite guidelines'],
-      coverages: ['General Liability ($1,500,000)'], exclusions: ['Liquor liability claims'], documents: ['Nightclub Survey', 'Decline Notice']
-    },
-
-    // 28 APPROVED (19 Low, 9 Medium)
-    {
-      id: 'UW-1005', customer: 'David Chen', product: 'Umbrella Liability', riskLevel: 'Low', riskScore: 15, premium: '$650', submitted: '4 days ago', status: 'Approved',
-      requestedCoverage: '$3,000,000 Personal Excess Umbrella', deductible: '$1,000 (SIR)', effectiveDate: '01 Apr 2026',
-      riskFactors: ['Underlying auto ($500k) and homeowners ($500k) limits verified', '0 personal liability claims in 15-year insured history', 'No high-risk recreational vehicles or watercraft', 'Clean civil public background record'],
-      coverages: ['Worldwide Excess Liability ($3,000,000)', 'Excess Uninsured Motorist Protection ($1,000,000)'],
-      exclusions: ['Intentional Acts', 'Commercial business operations', 'Aircraft ownership'],
-      documents: ['Umbrella Application Form', 'Underlying Policy Dec Pages', 'Motor Vehicle Reports', 'Underwriter Approval Signoff']
-    },
-    {
-      id: 'UW-1008', customer: 'Maria Rodriguez', product: 'Business Insurance', riskLevel: 'Low', riskScore: 20, premium: '$1,240', submitted: '1 week ago', status: 'Approved',
-      requestedCoverage: '$750,000 Business Owners Policy', deductible: '$1,000', effectiveDate: '15 Mar 2026',
-      riskFactors: ['Low-hazard professional consulting firm office space', 'Strict premises security and access controls', 'No retail foot traffic or hazardous machinery on site', 'Clean civil liability background check'],
-      coverages: ['Commercial General Liability ($1,000,000)', 'Office Contents ($250,000)', 'Business Income Interruption'],
-      exclusions: ['Off-premises utility failure', 'Professional malpractice (requires separate E&O)'],
-      documents: ['BOP Application Form', 'Office Lease Verification', 'Approved Policy Packet (PDF)']
-    },
-    {
-      id: 'UW-1028', customer: 'Rachel Murphy', product: 'Home Insurance', riskLevel: 'Low', riskScore: 14, premium: '$1,480', submitted: '1 week ago', status: 'Approved',
-      requestedCoverage: '$360,000 HO-3 Policy', deductible: '$1,000', effectiveDate: '15 Mar 2026',
-      riskFactors: ['Suburban residential home with modern security', 'Zero claims in past 10 years', 'Preferred credit tier 1'],
-      coverages: ['Dwelling ($360,000)', 'Personal Property ($180,000)'], exclusions: ['Flood'], documents: ['Application Form', 'Binder Packet']
-    },
-    {
-      id: 'UW-1029', customer: 'Samuel Reed', product: 'Auto Insurance', riskLevel: 'Low', riskScore: 17, premium: '$1,050', submitted: '1 week ago', status: 'Approved',
-      requestedCoverage: '$250k/$500k Auto Comprehensive', deductible: '$500', effectiveDate: '20 Mar 2026',
-      riskFactors: ['Clean MVR for all listed operators', 'Garaged in low-theft zip code', 'Anti-theft GPS enabled'],
-      coverages: ['Bodily Injury ($250k/$500k)', 'Property Damage ($100k)'], exclusions: ['Commercial use'], documents: ['Auto App', 'MVR Clearance']
-    },
-    {
-      id: 'UW-1030', customer: 'Theresa Bell', product: 'Commercial Property', riskLevel: 'Low', riskScore: 19, premium: '$2,100', submitted: '1 week ago', status: 'Approved',
-      requestedCoverage: '$1,100,000 Commercial Office Unit', deductible: '$2,500', effectiveDate: '22 Mar 2026',
-      riskFactors: ['Modern medical office building unit', 'Central fire alarm with 24/7 monitoring', 'No hazardous materials'],
-      coverages: ['Building ($1,100,000)', 'BPP ($300,000)'], exclusions: ['Flood'], documents: ['ACORD App', 'Inspection Log']
-    },
-    {
-      id: 'UW-1031', customer: 'Tyler Hughes', product: 'Home Insurance', riskLevel: 'Low', riskScore: 16, premium: '$1,520', submitted: '2 weeks ago', status: 'Approved',
-      requestedCoverage: '$340,000 HO-3 Form', deductible: '$1,000', effectiveDate: '25 Mar 2026',
-      riskFactors: ['Single story brick ranch home', 'Upgraded architectural shingle roof (2023)', 'Monitored security system'],
-      coverages: ['Dwelling ($340,000)', 'Personal Property ($170,000)'], exclusions: ['Flood'], documents: ['Inspection Report', 'Approval Letter']
-    },
-    {
-      id: 'UW-1032', customer: 'Victoria Price', product: 'Umbrella Liability', riskLevel: 'Low', riskScore: 11, premium: '$400', submitted: '2 weeks ago', status: 'Approved',
-      requestedCoverage: '$1,000,000 Excess Umbrella', deductible: '$1,000', effectiveDate: '28 Mar 2026',
-      riskFactors: ['Underlying auto and home limits exceed minimum requirements', 'Clean liability history', 'Zero claims'],
-      coverages: ['Excess Liability ($1,000,000)'], exclusions: ['Business operations'], documents: ['Umbrella Binder', 'Dec Pages']
-    },
-    {
-      id: 'UW-1033', customer: 'Walter Sanders', product: 'Auto Insurance', riskLevel: 'Low', riskScore: 18, premium: '$920', submitted: '2 weeks ago', status: 'Approved',
-      requestedCoverage: '$300,000 CSL Auto', deductible: '$500', effectiveDate: '01 Apr 2026',
-      riskFactors: ['Preferred driver profile', 'Vehicle stored in private locked garage', 'Telematics safety score 92/100'],
-      coverages: ['CSL Liability ($300k)', 'Comprehensive/Collision'], exclusions: ['Rideshare'], documents: ['MVR Record', 'Policy Document']
-    },
-    {
-      id: 'UW-1034', customer: 'Yvonne Foster', product: 'Home Insurance', riskLevel: 'Low', riskScore: 15, premium: '$1,680', submitted: '2 weeks ago', status: 'Approved',
-      requestedCoverage: '$390,000 HO-3 Policy', deductible: '$1,000', effectiveDate: '01 Apr 2026',
-      riskFactors: ['Single family home built 2020', 'Automatic main water shutoff system', 'Zero prior loss history'],
-      coverages: ['Dwelling ($390,000)', 'Contents ($195,000)', 'Liability ($500k)'], exclusions: ['Earthquake'], documents: ['App Form', 'Inspection Verification']
-    },
-    {
-      id: 'UW-1035', customer: 'Zachary Morgan', product: 'Commercial Property', riskLevel: 'Low', riskScore: 22, premium: '$2,750', submitted: '2 weeks ago', status: 'Approved',
-      requestedCoverage: '$1,400,000 Commercial Office Space', deductible: '$2,500', effectiveDate: '05 Apr 2026',
-      riskFactors: ['Accounting firm multi-tenant office building', 'Sprinkler certified log current', 'Clean 5-year commercial record'],
-      coverages: ['Building ($1,400,000)', 'BPP ($450,000)'], exclusions: ['Flood'], documents: ['Commercial Inspection', 'Approval Certificate']
-    },
-    {
-      id: 'UW-1036', customer: 'Abigail Bailey', product: 'Home Insurance', riskLevel: 'Low', riskScore: 13, premium: '$1,390', submitted: '3 weeks ago', status: 'Approved',
-      requestedCoverage: '$310,000 Residential HO-3', deductible: '$1,000', effectiveDate: '08 Apr 2026',
-      riskFactors: ['Master-planned residential community', 'Underground utilities and municipal fire hydrant across street', 'Excellent credit rating'],
-      coverages: ['Dwelling ($310,000)', 'Personal Property ($155,000)'], exclusions: ['Flood'], documents: ['App Form', 'Binder Packet']
-    },
-    {
-      id: 'UW-1037', customer: 'Brandon Cooper', product: 'Auto Insurance', riskLevel: 'Low', riskScore: 19, premium: '$1,120', submitted: '3 weeks ago', status: 'Approved',
-      requestedCoverage: '$250k/$500k Personal Auto', deductible: '$500', effectiveDate: '10 Apr 2026',
-      riskFactors: ['2 drivers over age 35 with 0 infractions past 7 years', 'Suburban low-density territory', 'Factory anti-theft immobilizer'],
-      coverages: ['Liability ($250k/$500k)', 'Full Comprehensive & Collision'], exclusions: ['Commercial use'], documents: ['Driver Records', 'Approval Dec Page']
-    },
-    {
-      id: 'UW-1038', customer: 'Chloe Richardson', product: 'Home Insurance', riskLevel: 'Low', riskScore: 15, premium: '$1,740', submitted: '3 weeks ago', status: 'Approved',
-      requestedCoverage: '$400,000 HO-3 Dwelling', deductible: '$1,000', effectiveDate: '12 Apr 2026',
-      riskFactors: ['Brick veneer single family home built 2017', 'Fully enclosed perimeter fencing', 'Smart security alarm with video monitoring'],
-      coverages: ['Dwelling ($400,000)', 'Contents ($200,000)', 'Liability ($500,000)'], exclusions: ['Flood', 'Earthquake'], documents: ['Home App', 'Approved Binder']
-    },
-    {
-      id: 'UW-1039', customer: 'Dominic Cox', product: 'Business Insurance', riskLevel: 'Low', riskScore: 21, premium: '$1,650', submitted: '3 weeks ago', status: 'Approved',
-      requestedCoverage: '$1,000,000 Tech Consulting BOP', deductible: '$1,500', effectiveDate: '15 Apr 2026',
-      riskFactors: ['Software engineering consultancy office', 'No inventory storage on site', 'Secure badge access only'],
-      coverages: ['Commercial Liability ($1,000,000)', 'Electronic Equipment ($150,000)'], exclusions: ['Product liability'], documents: ['BOP Binder', 'Lease Proof']
-    },
-    {
-      id: 'UW-1040', customer: 'Eva Ward', product: 'Home Insurance', riskLevel: 'Low', riskScore: 18, premium: '$1,580', submitted: '3 weeks ago', status: 'Approved',
-      requestedCoverage: '$350,000 HO-3 Policy', deductible: '$1,000', effectiveDate: '18 Apr 2026',
-      riskFactors: ['Suburban subdivision dwelling', 'Modern copper plumbing with backflow preventer', 'Clean loss history past 10 years'],
-      coverages: ['Dwelling ($350,000)', 'Personal Property ($175,000)'], exclusions: ['Flood'], documents: ['Inspection Report', 'Approval Letter']
-    },
-    {
-      id: 'UW-1041', customer: 'Felix Torres', product: 'Auto Insurance', riskLevel: 'Low', riskScore: 16, premium: '$990', submitted: '4 weeks ago', status: 'Approved',
-      requestedCoverage: '$500,000 Combined Single Limit', deductible: '$500', effectiveDate: '20 Apr 2026',
-      riskFactors: ['Single operator with clean driving record', 'Low annual mileage (<8,000 miles/yr)', 'Garage parked'],
-      coverages: ['CSL Auto ($500k)', 'Comprehensive & Collision'], exclusions: ['Racing'], documents: ['MVR Report', 'Approval Signoff']
-    },
-    {
-      id: 'UW-1042', customer: 'Grace Peterson', product: 'Commercial Property', riskLevel: 'Low', riskScore: 24, premium: '$2,850', submitted: '4 weeks ago', status: 'Approved',
-      requestedCoverage: '$1,300,000 Retail Storefront', deductible: '$2,500', effectiveDate: '22 Apr 2026',
-      riskFactors: ['Bookstore in commercial strip shopping center', 'Full automatic fire suppression sprinkler system', 'Clean 5-year claims experience'],
-      coverages: ['Building ($1,300,000)', 'BPP ($350,000)'], exclusions: ['Flood'], documents: ['ACORD Form', 'Sprinkler Inspection']
-    },
-    {
-      id: 'UW-1043', customer: 'Henry Gray', product: 'Home Insurance', riskLevel: 'Low', riskScore: 14, premium: '$1,620', submitted: '4 weeks ago', status: 'Approved',
-      requestedCoverage: '$370,000 HO-3 Policy', deductible: '$1,000', effectiveDate: '25 Apr 2026',
-      riskFactors: ['Single-family residence built 2019', 'Impact resistant roof shingles and storm gutters', 'No prior claims'],
-      coverages: ['Dwelling ($370,000)', 'Personal Property ($185,000)', 'Liability ($500,000)'], exclusions: ['Flood', 'Earthquake'], documents: ['App Form', 'Binder Packet']
-    },
-    {
-      id: 'UW-1044', customer: 'Isla Ramirez', product: 'Umbrella Liability', riskLevel: 'Low', riskScore: 12, premium: '$420', submitted: '4 weeks ago', status: 'Approved',
-      requestedCoverage: '$1,500,000 Personal Umbrella', deductible: '$1,000', effectiveDate: '28 Apr 2026',
-      riskFactors: ['Underlying policies with top tier rating verified', 'No high risk swimming pools or dangerous dog breeds', 'Zero liability claims'],
-      coverages: ['Excess Liability ($1,500,000)'], exclusions: ['Business activities'], documents: ['Umbrella Binder', 'Underlying Dec Pages']
-    },
-    // 9 Medium Risk Approved
-    {
-      id: 'UW-1045', customer: 'Jacob James', product: 'Home Insurance', riskLevel: 'Medium', riskScore: 35, premium: '$1,920', submitted: '4 weeks ago', status: 'Approved',
-      requestedCoverage: '$410,000 HO-3 Coverage', deductible: '$1,500', effectiveDate: '01 May 2026',
-      riskFactors: ['Property age: 22 years with new electrical panel (2022)', '1 weather claim 4 years ago resolved', 'Monitored security'],
-      coverages: ['Dwelling ($410,000)', 'Contents ($205,000)'], exclusions: ['Flood'], documents: ['Electrical Certification', 'Approval Signoff']
-    },
-    {
-      id: 'UW-1046', customer: 'Kayla Watson', product: 'Auto Insurance', riskLevel: 'Medium', riskScore: 32, premium: '$1,280', submitted: '1 month ago', status: 'Approved',
-      requestedCoverage: '$250k/$500k Auto Policy', deductible: '$500', effectiveDate: '01 May 2026',
-      riskFactors: ['Clean MVR for 36 months after 1 minor non-moving infraction', 'Suburban driving territory', 'Anti-theft GPS equipped'],
-      coverages: ['Liability ($250k/$500k)', 'Collision/Comp'], exclusions: ['Rideshare'], documents: ['MVR Clearance', 'Auto Policy Binder']
-    },
-    {
-      id: 'UW-1047', customer: 'Lucas Brooks', product: 'Commercial Property', riskLevel: 'Medium', riskScore: 38, premium: '$3,200', submitted: '1 month ago', status: 'Approved',
-      requestedCoverage: '$1,600,000 Commercial Plaza', deductible: '$3,000', effectiveDate: '05 May 2026',
-      riskFactors: ['Mixed-use commercial and professional building', 'Security cameras and centralized alarm monitoring', 'Clean 3-year loss history'],
-      coverages: ['Building ($1,600,000)', 'BPP ($500,000)'], exclusions: ['Flood'], documents: ['Inspection Survey', 'Approved Dec Page']
-    },
-    {
-      id: 'UW-1048', customer: 'Mia Kelly', product: 'Home Insurance', riskLevel: 'Medium', riskScore: 36, premium: '$1,860', submitted: '1 month ago', status: 'Approved',
-      requestedCoverage: '$390,000 Residential HO-3', deductible: '$1,500', effectiveDate: '08 May 2026',
-      riskFactors: ['Swimming pool with locking gate and safety cover verified', 'Roof replaced in 2021', 'Preferred credit tier 1'],
-      coverages: ['Dwelling ($390,000)', 'Liability ($500,000)'], exclusions: ['Flood'], documents: ['Pool Inspection', 'Binder Packet']
-    },
-    {
-      id: 'UW-1049', customer: 'Noah Sanders', product: 'Business Insurance', riskLevel: 'Medium', riskScore: 40, premium: '$2,450', submitted: '1 month ago', status: 'Approved',
-      requestedCoverage: '$1,000,000 Retail Store BOP', deductible: '$2,000', effectiveDate: '10 May 2026',
-      riskFactors: ['General retail boutique in suburban shopping center', 'Fire extinguishers inspected and certified', 'Clean civil record'],
-      coverages: ['General Liability ($1,000,000)', 'BPP ($300,000)'], exclusions: ['Off-premises power'], documents: ['BOP Application', 'Approval Letter']
-    },
-    {
-      id: 'UW-1050', customer: 'Penelope Price', product: 'Auto Insurance', riskLevel: 'Medium', riskScore: 30, premium: '$1,190', submitted: '1 month ago', status: 'Approved',
-      requestedCoverage: '$300,000 CSL Auto', deductible: '$500', effectiveDate: '12 May 2026',
-      riskFactors: ['Principal driver has clean record past 5 years', 'Vehicle equipped with forward collision warning and automatic braking', 'Garaged nightly'],
-      coverages: ['CSL Auto ($300k)', 'Comprehensive & Collision'], exclusions: ['Track Racing'], documents: ['MVR Report', 'Policy Binder']
-    },
-    {
-      id: 'UW-1051', customer: 'Quentin Bennett', product: 'Home Insurance', riskLevel: 'Medium', riskScore: 34, premium: '$1,780', submitted: '1 month ago', status: 'Approved',
-      requestedCoverage: '$375,000 HO-3 Coverage', deductible: '$1,000', effectiveDate: '15 May 2026',
-      riskFactors: ['Suburban home with smart security sensors', 'No claims in past 7 years', 'Roof inspected and certified in good order'],
-      coverages: ['Dwelling ($375,000)', 'Personal Property ($185,000)'], exclusions: ['Flood'], documents: ['Home Survey', 'Approval Dec']
-    },
-    {
-      id: 'UW-1052', customer: 'Ruby Wood', product: 'Commercial Property', riskLevel: 'Medium', riskScore: 42, premium: '$3,600', submitted: '1 month ago', status: 'Approved',
-      requestedCoverage: '$1,800,000 Commercial Office Building', deductible: '$5,000', effectiveDate: '18 May 2026',
-      riskFactors: ['Multi-tenant professional office building', 'Sprinkler certified log current', 'Clean 5-year commercial claims history'],
-      coverages: ['Building ($1,800,000)', 'BPP ($600,000)'], exclusions: ['Flood'], documents: ['ACORD Form', 'Inspection Signoff']
-    },
-    {
-      id: 'UW-1053', customer: 'Thomas Barnes', product: 'Home Insurance', riskLevel: 'Medium', riskScore: 33, premium: '$1,820', submitted: '1 month ago', status: 'Approved',
-      requestedCoverage: '$385,000 HO-3 Special Form', deductible: '$1,000', effectiveDate: '20 May 2026',
-      riskFactors: ['Single family home with modern electrical panel and copper plumbing', 'Fenced yard and security cameras', 'Zero claims in 8 years'],
-      coverages: ['Dwelling ($385,000)', 'Personal Property ($190,000)', 'Personal Liability ($500,000)'], exclusions: ['Flood', 'Earthquake'], documents: ['Application Form', 'Binder Packet']
-    }
-  ],
+  // Underwriting Queue Data (Empty - loaded from real database)
+  underwriterQueue: [],
 
   // Agent Workspace Data (Aarav Sharma)
   agent: {
@@ -2086,8 +1741,9 @@ async function openPolicyDetailsPanel(policyId, customerName = '') {
     return;
   }
 
-  // 3. Fallback to cached agent/customer policy lists if API call was not available
+  // 3. Fallback to cached admin/agent/customer policy lists if API call was not available
   const allKnownPolicies = [
+    ...(window.adminPoliciesData && window.adminPoliciesData.policies ? window.adminPoliciesData.policies : []),
     ...(window.agentPoliciesData && window.agentPoliciesData.policies ? window.agentPoliciesData.policies : []),
     ...(window.customerPoliciesData || []),
     ...(MOCK_DB.assignedCustomers ? MOCK_DB.assignedCustomers.flatMap(c => c.policies.map(p => ({ ...p, customer_name: c.name, customer_id: c.id }))) : []),
@@ -2109,12 +1765,14 @@ async function openPolicyDetailsPanel(policyId, customerName = '') {
   const cName = p.customer_name || p.custName || customerName || 'Policyholder';
   const cId = p.customer_id || p.custId || 'Not available';
   const pStatus = p.status || 'Active';
-  const pCategory = p.category || 'General';
+  const pCategory = p.category || (pType.includes('Auto') ? 'Vehicle' : (pType.includes('Home') ? 'Property' : (pType.includes('Commercial') ? 'Commercial' : 'General')));
   const pPrem = p.formatted_premium || (p.premium ? (typeof p.premium === 'number' ? `$${p.premium.toLocaleString()}/yr` : p.premium) : 'Not available');
   const pStart = p.start_date || p.effective || 'Not available';
   const pEnd = p.end_date || p.expiry || 'Not available';
+  const pAgent = p.assigned_agent || p.agent_name || 'Unassigned';
+  const pEmail = p.customer_email || '';
 
-  const statusBadgeClass = (pStatus.toLowerCase() === 'active') ? 'badge-active' : 'badge-pending';
+  const statusBadgeClass = (pStatus.toLowerCase() === 'active') ? 'badge-active' : (pStatus.toLowerCase() === 'expired' ? 'badge-risk-high' : 'badge-pending');
 
   const contentHtml = `
     <div class="policy-context-desc-box" style="margin-bottom: 1.25rem; padding: 0.95rem 1.15rem; background: var(--blue-50); border: 1px solid var(--blue-100); border-radius: 8px;">
@@ -2126,11 +1784,13 @@ async function openPolicyDetailsPanel(policyId, customerName = '') {
     <div class="detail-section">
       <div class="detail-section-title">Policy Overview</div>
       <div class="detail-row"><span class="detail-label">Policyholder</span><span class="detail-value" style="color:var(--blue-900);font-weight:700">${cName} ${cId !== 'Not available' ? `<span style="font-size:0.75rem;color:var(--gray-500);font-weight:normal">(${cId})</span>` : ''}</span></div>
+      ${pEmail ? `<div class="detail-row"><span class="detail-label">Customer Email</span><span class="detail-value">${pEmail}</span></div>` : ''}
       <div class="detail-row"><span class="detail-label">Policy Number</span><span class="detail-value" style="font-family:monospace;font-weight:600">${pNumber}</span></div>
       <div class="detail-row"><span class="detail-label">Policy Type</span><span class="detail-value">${pType}</span></div>
       <div class="detail-row"><span class="detail-label">Category</span><span class="badge badge-info">${pCategory}</span></div>
       <div class="detail-row"><span class="detail-label">Status</span><span class="badge ${statusBadgeClass}">${pStatus}</span></div>
       <div class="detail-row"><span class="detail-label">Annual Premium</span><span class="detail-value" style="color:var(--blue-900);font-size:1rem;font-weight:700;">${pPrem}</span></div>
+      <div class="detail-row"><span class="detail-label">Assigned Agent</span><span class="detail-value" style="font-weight:600;color:var(--blue-900);">${pAgent}</span></div>
       <div class="detail-row"><span class="detail-label">Effective Date</span><span class="detail-value">${pStart}</span></div>
       <div class="detail-row"><span class="detail-label">Expiration Date</span><span class="detail-value">${pEnd}</span></div>
     </div>
@@ -2358,25 +2018,34 @@ function openAgentPremiumSlidePanel() {
 function openAdminUsersSlidePanel(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   highlightActiveCard('card-admin-users');
+  const stats = window.adminStatsData || {};
+  const total = stats.total_users || 501;
+  const customers = stats.customer_user_count || 321;
+  const agents = stats.agent_count || 70;
+  const underwriters = stats.underwriter_count || 45;
+  const admins = stats.admin_count || 15;
+
+  const usersList = (window.adminUsersData && window.adminUsersData.users) ? window.adminUsersData.users : [];
+
   const contentHtml = `
         <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">
-          Showing enterprise distribution across <strong>248 registered accounts</strong>:
+          Showing enterprise distribution across <strong>${total} registered accounts</strong> from PostgreSQL database:
         </div>
         <div class="detail-section" style="margin-bottom:1rem;">
-          <div class="detail-row"><span class="detail-label">Customers</span><span class="detail-value" style="font-weight:700;color:var(--blue-900)">180 (73%)</span></div>
-          <div class="detail-row"><span class="detail-label">Licensed Agents</span><span class="detail-value" style="font-weight:700;color:#0d9488">32 (13%)</span></div>
-          <div class="detail-row"><span class="detail-label">Risk Underwriters</span><span class="detail-value" style="font-weight:700;color:#7c3aed">24 (10%)</span></div>
-          <div class="detail-row"><span class="detail-label">System Administrators</span><span class="detail-value" style="font-weight:700;color:#0f172a">12 (5%)</span></div>
+          <div class="detail-row"><span class="detail-label">Customers</span><span class="detail-value" style="font-weight:700;color:var(--blue-900)">${customers} (${Math.round((customers / (total || 1)) * 100)}%)</span></div>
+          <div class="detail-row"><span class="detail-label">Licensed Agents</span><span class="detail-value" style="font-weight:700;color:#0d9488">${agents} (${Math.round((agents / (total || 1)) * 100)}%)</span></div>
+          <div class="detail-row"><span class="detail-label">Risk Underwriters</span><span class="detail-value" style="font-weight:700;color:#7c3aed">${underwriters} (${Math.round((underwriters / (total || 1)) * 100)}%)</span></div>
+          <div class="detail-row"><span class="detail-label">System Administrators</span><span class="detail-value" style="font-weight:700;color:#0f172a">${admins} (${Math.round((admins / (total || 1)) * 100)}%)</span></div>
         </div>
-        <div style="font-size:0.825rem;font-weight:700;color:var(--blue-900);margin-bottom:0.5rem;">Sample Registered User Accounts:</div>
+        <div style="font-size:0.825rem;font-weight:700;color:var(--blue-900);margin-bottom:0.5rem;">Database User Accounts:</div>
         <div class="compact-list-scroll" style="max-height: 400px; display:flex;flex-direction:column;gap:0.65rem;margin-bottom:1rem;">
-          ${MOCK_DB.users.map(u => `
-            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openUserDetailsPanel('${u.id}')">
+          ${usersList.slice(0, 15).map(u => `
+            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openUserDetailsPanel('${u.user_id || u.id}')">
               <div>
                 <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${u.name}</div>
-                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${u.id} · <span class="badge" style="font-size:0.7rem;padding:2px 6px;">${u.role}</span> · ${u.email}</div>
+                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${u.user_id || u.id} · <span class="badge" style="font-size:0.7rem;padding:2px 6px;">${u.role}</span> · ${u.email}</div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openUserDetailsPanel('${u.id}')">Inspect →</button>
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openUserDetailsPanel('${u.user_id || u.id}')">Inspect →</button>
             </div>
           `).join('')}
         </div>
@@ -2385,109 +2054,123 @@ function openAdminUsersSlidePanel(e) {
           <button class="btn btn-primary btn-block btn-sm" onclick="navigateTo('admin-users'); closeSlidePanel();">Open User Directory →</button>
         </div>
       `;
-  openOrUpdateSlidePanel('Total Registered Users (248)', 'Enterprise Identity Directory', contentHtml);
+  openOrUpdateSlidePanel(`Total Registered Users (${total})`, 'Enterprise Identity Directory', contentHtml);
 };
 
 function openAdminCustomersSlidePanel(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   highlightActiveCard('card-admin-customers');
-  const customers = MOCK_DB.users.filter(u => u.role === 'Customer');
+  const stats = window.adminStatsData || {};
+  const totalCust = stats.total_customers || stats.customer_user_count || 321;
+  const usersList = ((window.adminUsersData && window.adminUsersData.users) ? window.adminUsersData.users : []).filter(u => (u.role || '').toLowerCase() === 'customer');
+
   const contentHtml = `
         <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">
-          <strong>180 registered customers</strong> across active property, vehicle, and commercial policies.
+          <strong>${totalCust} registered customers</strong> across active property, vehicle, and commercial policies.
         </div>
         <div class="compact-list-scroll" style="max-height: 460px; display:flex;flex-direction:column;gap:0.65rem;">
-          ${customers.map(u => `
-            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openUserDetailsPanel('${u.id}')">
+          ${usersList.slice(0, 15).map(u => `
+            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openUserDetailsPanel('${u.user_id || u.id}')">
               <div>
                 <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${u.name}</div>
-                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${u.id} · ${u.email} · ${u.policiesCount || 2} Policies</div>
+                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${u.user_id || u.id} · ${u.email}</div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openUserDetailsPanel('${u.id}')">Inspect →</button>
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openUserDetailsPanel('${u.user_id || u.id}')">Inspect →</button>
             </div>
           `).join('')}
         </div>
         <div style="margin-top:1.25rem;">
-          <button class="btn btn-primary btn-block btn-sm" onclick="const f=document.getElementById('admin-user-role-filter');if(f){f.value='Customer';renderAdminUsersTable('Customer','all','');}navigateTo('admin-users');closeSlidePanel();">View All Customers in Directory →</button>
+          <button class="btn btn-primary btn-block btn-sm" onclick="const f=document.getElementById('admin-user-role-filter');if(f){f.value='Customer';fetchAdminUsers('Customer','all','');}navigateTo('admin-users');closeSlidePanel();">View All Customers in Directory →</button>
         </div>
       `;
-  openOrUpdateSlidePanel('Total Customers (180)', 'Registered Policyholders', contentHtml);
+  openOrUpdateSlidePanel(`Total Customers (${totalCust})`, 'Registered Policyholders', contentHtml);
 };
 
 function openAdminAgentsSlidePanel(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   highlightActiveCard('card-admin-agents');
-  const agents = MOCK_DB.users.filter(u => u.role === 'Agent');
+  const stats = window.adminStatsData || {};
+  const totalAgents = stats.agent_count || 70;
+  const usersList = ((window.adminUsersData && window.adminUsersData.users) ? window.adminUsersData.users : []).filter(u => (u.role || '').toLowerCase().startsWith('agent'));
+
   const contentHtml = `
         <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">
-          <strong>32 licensed insurance agents</strong> actively managing client advisory portfolios.
+          <strong>${totalAgents} licensed insurance agents</strong> actively managing client advisory portfolios.
         </div>
         <div class="compact-list-scroll" style="max-height: 460px; display:flex;flex-direction:column;gap:0.65rem;">
-          ${agents.map(u => `
-            <div class="panel-policy-list-item" style="border-left:3px solid #0d9488;cursor:pointer;" onclick="openUserDetailsPanel('${u.id}')">
+          ${usersList.slice(0, 15).map(u => `
+            <div class="panel-policy-list-item" style="border-left:3px solid #0d9488;cursor:pointer;" onclick="openUserDetailsPanel('${u.user_id || u.id}')">
               <div>
                 <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${u.name}</div>
-                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${u.id} · ${u.assignedInfo}</div>
+                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${u.user_id || u.id} · ${u.email} · Agent</div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openUserDetailsPanel('${u.id}')">Inspect →</button>
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openUserDetailsPanel('${u.user_id || u.id}')">Inspect →</button>
             </div>
           `).join('')}
         </div>
         <div style="margin-top:1.25rem;">
-          <button class="btn btn-primary btn-block btn-sm" onclick="const f=document.getElementById('admin-user-role-filter');if(f){f.value='Agent';renderAdminUsersTable('Agent','all','');}navigateTo('admin-users');closeSlidePanel();">Manage Agents in Directory →</button>
+          <button class="btn btn-primary btn-block btn-sm" onclick="const f=document.getElementById('admin-user-role-filter');if(f){f.value='Agent';fetchAdminUsers('Agent','all','');}navigateTo('admin-users');closeSlidePanel();">Manage Agents in Directory →</button>
         </div>
       `;
-  openOrUpdateSlidePanel('Total Agents (32)', 'Licensed Advisory Brokers', contentHtml);
+  openOrUpdateSlidePanel(`Total Agents (${totalAgents})`, 'Licensed Advisory Brokers', contentHtml);
 };
 
 function openAdminUnderwritersSlidePanel(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   highlightActiveCard('card-admin-underwriters');
-  const underwriters = MOCK_DB.users.filter(u => u.role === 'Underwriter');
+  const stats = window.adminStatsData || {};
+  const totalUw = stats.underwriter_count || 45;
+  const usersList = ((window.adminUsersData && window.adminUsersData.users) ? window.adminUsersData.users : []).filter(u => (u.role || '').toLowerCase().includes('underwriter'));
+
   const contentHtml = `
         <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">
-          <strong>24 risk assessment underwriters</strong> managing application queues.
+          <strong>${totalUw} risk assessment underwriters</strong> managing application queues.
         </div>
         <div class="compact-list-scroll" style="max-height: 460px; display:flex;flex-direction:column;gap:0.65rem;">
-          ${underwriters.map(u => `
-            <div class="panel-policy-list-item" style="border-left:3px solid #7c3aed;cursor:pointer;" onclick="openUserDetailsPanel('${u.id}')">
+          ${usersList.slice(0, 15).map(u => `
+            <div class="panel-policy-list-item" style="border-left:3px solid #7c3aed;cursor:pointer;" onclick="openUserDetailsPanel('${u.user_id || u.id}')">
               <div>
                 <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${u.name}</div>
-                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${u.id} · ${u.assignedInfo}</div>
+                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${u.user_id || u.id} · ${u.email} · Underwriter</div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openUserDetailsPanel('${u.id}')">Inspect →</button>
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openUserDetailsPanel('${u.user_id || u.id}')">Inspect →</button>
             </div>
           `).join('')}
         </div>
         <div style="margin-top:1.25rem;">
-          <button class="btn btn-primary btn-block btn-sm" onclick="const f=document.getElementById('admin-user-role-filter');if(f){f.value='Underwriter';renderAdminUsersTable('Underwriter','all','');}navigateTo('admin-users');closeSlidePanel();">Manage Underwriters in Directory →</button>
+          <button class="btn btn-primary btn-block btn-sm" onclick="const f=document.getElementById('admin-user-role-filter');if(f){f.value='Underwriter';fetchAdminUsers('Underwriter','all','');}navigateTo('admin-users');closeSlidePanel();">Manage Underwriters in Directory →</button>
         </div>
       `;
-  openOrUpdateSlidePanel('Total Underwriters (24)', 'Risk Decision Officers', contentHtml);
+  openOrUpdateSlidePanel(`Total Underwriters (${totalUw})`, 'Risk Decision Officers', contentHtml);
 };
 
 function openAdminPoliciesSlidePanel(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   highlightActiveCard('card-admin-policies');
+  const stats = window.adminStatsData || {};
+  const total = stats.total_policies || 791;
+  const active = stats.active_policies || 357;
+  const pending = stats.pending_renewals || 1;
+  const policiesList = ((window.adminPoliciesData && window.adminPoliciesData.policies) ? window.adminPoliciesData.policies : []);
+
   const contentHtml = `
         <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">
-          Platform repository holds <strong>426 total insurance policies</strong>:
+          Platform repository holds <strong>${total} total insurance policies</strong> from PostgreSQL:
         </div>
         <div class="detail-section" style="margin-bottom:1rem;">
-          <div class="detail-row"><span class="detail-label">Active Policies</span><span class="detail-value" style="font-weight:700;color:#059669">378 (89%)</span></div>
-          <div class="detail-row"><span class="detail-label">Pending Approval</span><span class="detail-value" style="font-weight:700;color:#d97706">24 (6%)</span></div>
-          <div class="detail-row"><span class="detail-label">Expired Policies</span><span class="detail-value" style="font-weight:700;color:var(--gray-500)">14 (3%)</span></div>
-          <div class="detail-row"><span class="detail-label">Cancelled Policies</span><span class="detail-value" style="font-weight:700;color:#dc2626">10 (2%)</span></div>
+          <div class="detail-row"><span class="detail-label">Active Policies</span><span class="detail-value" style="font-weight:700;color:#059669">${active} (${Math.round((active / (total || 1)) * 100)}%)</span></div>
+          <div class="detail-row"><span class="detail-label">Pending Renewals</span><span class="detail-value" style="font-weight:700;color:#d97706">${pending}</span></div>
+          <div class="detail-row"><span class="detail-label">Other Statuses</span><span class="detail-value" style="font-weight:700;color:var(--gray-500)">${total - active}</span></div>
         </div>
         <div style="font-size:0.825rem;font-weight:700;color:var(--blue-900);margin-bottom:0.5rem;">Sample Policies in Ledger:</div>
         <div class="compact-list-scroll" style="max-height: 400px; display:flex;flex-direction:column;gap:0.65rem;margin-bottom:1rem;">
-          ${MOCK_DB.allPolicies.map(p => `
-            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openPolicyDetailsPanel('${p.id}', '${p.customer}')">
+          ${policiesList.slice(0, 15).map(p => `
+            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openPolicyDetailsPanel('${p.policy_id || p.id}', '${p.customer_name || p.customer}')">
               <div>
-                <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${p.type} · ${p.customer}</div>
-                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${p.id} · ${p.premium} · <span class="badge ${p.status === 'Active' ? 'badge-active' : 'badge-pending'}" style="font-size:0.7rem;padding:2px 6px;">${p.status}</span></div>
+                <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${p.policy_type || p.type} · ${p.customer_name || p.customer}</div>
+                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${p.policy_number || p.id} · ${p.premium} · <span class="badge ${p.status === 'Active' ? 'badge-active' : 'badge-pending'}" style="font-size:0.7rem;padding:2px 6px;">${p.status}</span></div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${p.id}', '${p.customer}')">Inspect →</button>
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${p.policy_id || p.id}', '${p.customer_name || p.customer}')">Inspect →</button>
             </div>
           `).join('')}
         </div>
@@ -2495,33 +2178,36 @@ function openAdminPoliciesSlidePanel(e) {
           <button class="btn btn-primary btn-block btn-sm" onclick="navigateTo('admin-policies'); closeSlidePanel();">Open Policy Management Ledger →</button>
         </div>
       `;
-  openOrUpdateSlidePanel('Total Policies (426)', 'Enterprise Policy Repository', contentHtml);
+  openOrUpdateSlidePanel(`Total Policies (${total})`, 'Enterprise Policy Repository', contentHtml);
 };
 
 function openAdminActivePoliciesSlidePanel(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   highlightActiveCard('card-admin-active');
-  const activePolicies = MOCK_DB.allPolicies.filter(p => p.status === 'Active');
+  const stats = window.adminStatsData || {};
+  const activeCount = stats.active_policies || 357;
+  const policiesList = ((window.adminPoliciesData && window.adminPoliciesData.policies) ? window.adminPoliciesData.policies : []).filter(p => p.status === 'Active');
+
   const contentHtml = `
         <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">
-          Showing <strong>378 active in-force policies</strong> currently bound in the platform.
+          Showing <strong>${activeCount} active in-force policies</strong> currently bound in the platform.
         </div>
         <div class="compact-list-scroll" style="max-height: 460px; display:flex;flex-direction:column;gap:0.65rem;">
-          ${activePolicies.map(p => `
-            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openPolicyDetailsPanel('${p.id}', '${p.customer}')">
+          ${policiesList.slice(0, 15).map(p => `
+            <div class="panel-policy-list-item" style="cursor:pointer;" onclick="openPolicyDetailsPanel('${p.policy_id || p.id}', '${p.customer_name || p.customer}')">
               <div>
-                <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${p.type} · ${p.customer}</div>
-                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${p.id} · ${p.premium} · Agent: ${p.agent}</div>
+                <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${p.policy_type || p.type} · ${p.customer_name || p.customer}</div>
+                <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${p.policy_number || p.id} · ${p.premium}</div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${p.id}', '${p.customer}')">Inspect →</button>
+              <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${p.policy_id || p.id}', '${p.customer_name || p.customer}')">Inspect →</button>
             </div>
           `).join('')}
         </div>
         <div style="margin-top:1.25rem;">
-          <button class="btn btn-primary btn-block btn-sm" onclick="const s=document.getElementById('admin-policy-status-filter');if(s){s.value='Active';renderAdminPoliciesTable('all','Active','');}navigateTo('admin-policies');closeSlidePanel();">View All Active Policies in Ledger →</button>
+          <button class="btn btn-primary btn-block btn-sm" onclick="const s=document.getElementById('admin-policy-status-filter');if(s){s.value='Active';fetchAdminPolicies('all','Active','');}navigateTo('admin-policies');closeSlidePanel();">View All Active Policies in Ledger →</button>
         </div>
       `;
-  openOrUpdateSlidePanel('Active Policies (378)', 'In-Force Insurance Contracts', contentHtml);
+  openOrUpdateSlidePanel(`Active Policies (${activeCount})`, 'In-Force Insurance Contracts', contentHtml);
 };
 
 function highlightActiveCard(cardId) {
@@ -2628,22 +2314,55 @@ function renderAgentDashboard() {
   // 3. Dynamic Horizontal Premium by Policy Type Chart
   const chartBarsContainer = document.getElementById('agent-premium-chart-bars');
   if (chartBarsContainer) {
-    const premiumByType = (dash && dash.premium_by_type && dash.premium_by_type.length > 0)
+    let premiumByType = (dash && dash.premium_by_type && dash.premium_by_type.length > 0)
       ? dash.premium_by_type
-      : [
-        { policy_type: 'General Liability', category: 'Commercial', formatted_premium: '$169,909.29', percentage: 31.6 },
-        { policy_type: 'Commercial Property', category: 'Property', formatted_premium: '$159,960.02', percentage: 29.7 },
-        { policy_type: 'Auto', category: 'Vehicle', formatted_premium: '$136,435.16', percentage: 25.3 },
-        { policy_type: 'Homeowners', category: 'Property', formatted_premium: '$59,503.09', percentage: 11.0 },
-        { policy_type: 'Renters', category: 'Property', formatted_premium: '$12,699.77', percentage: 2.4 }
-      ];
+      : null;
+
+    if (!premiumByType || premiumByType.length === 0) {
+      const rawPolicies = (window.agentPoliciesData && window.agentPoliciesData.policies)
+        ? window.agentPoliciesData.policies
+        : ((window.agentCustomersData && window.agentCustomersData.customers)
+          ? window.agentCustomersData.customers.flatMap(c => (c.policies || []))
+          : (MOCK_DB.assignedCustomers || []).flatMap(c => (c.policies || [])));
+
+      const activePols = rawPolicies.filter(p => (p.status || '').toLowerCase() === 'active');
+      const totalBookValue = activePols.reduce((sum, p) => {
+        const val = typeof p.premium === 'number' ? p.premium : parseFloat(String(p.premium || '0').replace(/[^0-9.]/g, '')) || 0;
+        return sum + val;
+      }, 0);
+
+      const typeMap = {};
+      activePols.forEach(p => {
+        const pt = p.policy_type || p.type || 'Standard Policy';
+        const cat = p.category || 'General';
+        const val = typeof p.premium === 'number' ? p.premium : parseFloat(String(p.premium || '0').replace(/[^0-9.]/g, '')) || 0;
+        if (!typeMap[pt]) {
+          typeMap[pt] = { policy_type: pt, category: cat, total_premium: 0, count: 0 };
+        }
+        typeMap[pt].total_premium += val;
+        typeMap[pt].count += 1;
+      });
+
+      premiumByType = Object.values(typeMap).map(item => {
+        const pct = totalBookValue > 0 ? Math.round((item.total_premium / totalBookValue) * 1000) / 10 : 0;
+        return {
+          policy_type: item.policy_type,
+          category: item.category,
+          total_premium: item.total_premium,
+          formatted_premium: `$${item.total_premium.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          count: item.count,
+          percentage: pct
+        };
+      }).sort((a, b) => b.total_premium - a.total_premium);
+    }
 
     const accents = ['accent-1', 'accent-2', 'accent-3', 'accent-4', 'accent-5'];
     chartBarsContainer.innerHTML = premiumByType.map((item, idx) => {
       const accent = accents[idx % accents.length];
       const iconSvg = getPolicyCardIcon(item.category || item.policy_type, item.policy_type);
+      const pctValue = (typeof item.percentage === 'number') ? item.percentage : parseFloat(item.percentage) || 0;
       return `
-        <div class="chart-row" data-tooltip="${item.policy_type}: ${item.formatted_premium} (${item.percentage}%)">
+        <div class="chart-row" data-tooltip="${item.policy_type}: ${item.formatted_premium} (${pctValue}%)">
           <div class="chart-row-label">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               ${iconSvg}
@@ -2651,7 +2370,9 @@ function renderAgentDashboard() {
             ${item.policy_type}
           </div>
           <div class="chart-row-track">
-            <div class="chart-row-fill ${accent}" style="width: ${Math.max(item.percentage, 8)}%;">${item.percentage}%</div>
+            <div class="chart-row-fill ${accent}" style="width: ${pctValue}%;">
+              <span class="chart-row-pct">${pctValue}%</span>
+            </div>
           </div>
           <div class="chart-row-val">${item.formatted_premium}</div>
         </div>
@@ -2723,13 +2444,13 @@ function renderAgentDashboardTable(searchTerm = '') {
     const nextRen = c.next_renewal || c.nextRenewal || 'N/A';
     return `
     <tr onclick="openCustomerDetailsPanel('${cId}')" title="Click to view details for ${cName}" style="cursor:pointer;">
-      <td><strong style="color:var(--blue-900)">${cName}</strong></td>
-      <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;color:var(--blue-900);font-weight:600;">${cId}</code></td>
-      <td>${totalPols}</td>
-      <td>${activePols}</td>
-      <td><span class="badge badge-info">${nextRen}</span></td>
+      <td title="${cName}"><strong style="color:var(--blue-900)">${cName}</strong></td>
+      <td title="${cId}"><code style="font-size:0.775rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;color:var(--blue-900);font-weight:600;">${cId}</code></td>
+      <td title="${totalPols} total policies">${totalPols}</td>
+      <td title="${activePols} active policies">${activePols}</td>
+      <td title="${nextRen}"><span class="badge badge-info">${nextRen}</span></td>
       <td style="text-align:right">
-        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCustomerDetailsPanel('${cId}')">View Details →</button>
+        <button class="btn btn-outline btn-sm table-action-btn" onclick="event.stopPropagation(); openCustomerDetailsPanel('${cId}')" title="View details for ${cName}">View Details →</button>
       </td>
     </tr>
   `;}).join('');
@@ -2750,6 +2471,40 @@ function renderAgentFullCustomersDirectory(searchTerm = '') {
                        (window.agentDashboardData && window.agentDashboardData.assigned_customers) ||
                        MOCK_DB.assignedCustomers || [];
 
+  const totalAssigned = (window.agentCustomersData && window.agentCustomersData.total != null)
+    ? window.agentCustomersData.total
+    : rawCustomers.length;
+
+  // 1. Dynamic Page Heading & Badge
+  const pageTitle = document.getElementById('agent-customers-page-title');
+  if (pageTitle) {
+    pageTitle.textContent = `My Assigned Customers (${totalAssigned})`;
+  }
+
+  const portalTag = document.getElementById('agent-customers-portal-tag');
+  if (portalTag) {
+    portalTag.textContent = `${totalAssigned} Assigned Clients`;
+  }
+
+  // 2. Dynamic Status Dropdown Counts
+  const totalActive = rawCustomers.filter(c => (c.status || 'active').toLowerCase() === 'active').length || rawCustomers.length;
+  const totalRenewals = rawCustomers.filter(c => {
+    const ren = c.next_renewal || c.nextRenewal || c.renewal_date || '';
+    return ren && ren !== 'N/A';
+  }).length;
+
+  const filterSelect = document.getElementById('agent-full-customer-status-filter');
+  if (filterSelect) {
+    const currentVal = filterSelect.value || 'all';
+    filterSelect.innerHTML = `
+      <option value="all">All Statuses (${totalAssigned})</option>
+      <option value="active">Active Clients (${totalActive})</option>
+      <option value="renewal">Upcoming Renewal (${totalRenewals})</option>
+    `;
+    filterSelect.value = currentVal;
+  }
+
+  // 3. Filtering logic
   let list = rawCustomers.filter(c => {
     const name = c.name || '';
     const id = c.customer_id || c.id || '';
@@ -2763,23 +2518,34 @@ function renderAgentFullCustomersDirectory(searchTerm = '') {
 
   if (statusFilter === 'renewal') {
     list = list.filter(c => {
-      const ren = c.next_renewal || c.nextRenewal || '';
+      const ren = c.next_renewal || c.nextRenewal || c.renewal_date || '';
       return ren && ren !== 'N/A';
     });
+  } else if (statusFilter === 'active') {
+    list = list.filter(c => (c.status || 'active').toLowerCase() === 'active');
   }
 
+  // 4. Pagination calculations
   const totalItems = list.length;
   const totalPages = Math.ceil(totalItems / agentCustomerPageSize) || 1;
   if (agentCustomerCurrentPage > totalPages) agentCustomerCurrentPage = 1;
 
   const pageText = document.getElementById('agent-customers-page-text');
-  if (pageText) pageText.textContent = `Page ${totalItems === 0 ? 0 : agentCustomerCurrentPage} of ${totalItems === 0 ? 0 : totalPages}`;
+  if (pageText) {
+    pageText.textContent = `Page ${totalItems === 0 ? 0 : agentCustomerCurrentPage} of ${totalItems === 0 ? 0 : totalPages}`;
+  }
 
-  const pageRange = document.getElementById('agent-customers-page-range');
-  if (pageRange) {
-    const start = totalItems === 0 ? 0 : (agentCustomerCurrentPage - 1) * agentCustomerPageSize + 1;
-    const end = Math.min(agentCustomerCurrentPage * agentCustomerPageSize, totalItems);
-    pageRange.textContent = `${start}-${end}`;
+  const start = totalItems === 0 ? 0 : (agentCustomerCurrentPage - 1) * agentCustomerPageSize + 1;
+  const end = Math.min(agentCustomerCurrentPage * agentCustomerPageSize, totalItems);
+
+  const pageInfo = document.getElementById('agent-customers-pagination-info');
+  if (pageInfo) {
+    pageInfo.innerHTML = `Showing <strong id="agent-customers-page-range">${start}-${end}</strong> of <strong id="agent-customers-page-total">${totalItems}</strong> customers`;
+  } else {
+    const pageRange = document.getElementById('agent-customers-page-range');
+    if (pageRange) pageRange.textContent = `${start}-${end}`;
+    const pageTotal = document.getElementById('agent-customers-page-total');
+    if (pageTotal) pageTotal.textContent = `${totalItems}`;
   }
 
   if (list.length === 0) {
@@ -2799,18 +2565,20 @@ function renderAgentFullCustomersDirectory(searchTerm = '') {
   tbody.innerHTML = paginatedList.map(c => {
     const cId = c.customer_id || c.id || '';
     const cName = c.name || '';
+    const cEmail = c.email || 'N/A';
+    const cPhone = c.phone || 'N/A';
     const totalPols = c.total_policies != null ? c.total_policies : (c.totalPolicies || (c.policies ? c.policies.length : 0));
     const renDate = c.renewal_date || c.renewalDate || c.next_renewal || c.nextRenewal || 'N/A';
     return `
     <tr onclick="openCustomerDetailsPanel('${cId}')" title="Click to view details for ${cName}" style="cursor:pointer;">
-      <td><strong style="color:var(--blue-900)">${cName}</strong></td>
-      <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;color:var(--blue-900);font-weight:600;">${cId}</code></td>
-      <td>${c.email || 'N/A'}</td>
-      <td>${c.phone || 'N/A'}</td>
-      <td>${totalPols}</td>
-      <td>${renDate}</td>
+      <td title="${cName}"><strong style="color:var(--blue-900)">${cName}</strong></td>
+      <td title="${cId}"><code style="font-size:0.775rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;color:var(--blue-900);font-weight:600;">${cId}</code></td>
+      <td title="${cEmail}">${cEmail}</td>
+      <td title="${cPhone}">${cPhone}</td>
+      <td title="${totalPols} total policies">${totalPols}</td>
+      <td title="${renDate}">${renDate}</td>
       <td style="text-align:right">
-        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openCustomerDetailsPanel('${cId}')" title="View details for ${cName}">
+        <button class="btn btn-outline btn-sm table-action-btn" onclick="event.stopPropagation(); openCustomerDetailsPanel('${cId}')" title="View details for ${cName}">
           View Details →
         </button>
       </td>
@@ -2820,17 +2588,30 @@ function renderAgentFullCustomersDirectory(searchTerm = '') {
 
 function handleAgentCustomerPagination(direction) {
   const q = document.getElementById('agent-full-customer-search')?.value || '';
+  const statusFilter = document.getElementById('agent-full-customer-status-filter')?.value || 'all';
   const rawCustomers = (window.agentCustomersData && window.agentCustomersData.customers) ||
                        (window.agentDashboardData && window.agentDashboardData.assigned_customers) ||
                        MOCK_DB.assignedCustomers || [];
-  const list = rawCustomers.filter(c => {
+  let list = rawCustomers.filter(c => {
     const name = c.name || '';
     const id = c.customer_id || c.id || '';
     const email = c.email || '';
+    const phone = c.phone || c.city || '';
     return name.toLowerCase().includes(q.toLowerCase()) ||
            id.toLowerCase().includes(q.toLowerCase()) ||
-           email.toLowerCase().includes(q.toLowerCase());
+           email.toLowerCase().includes(q.toLowerCase()) ||
+           phone.toLowerCase().includes(q.toLowerCase());
   });
+
+  if (statusFilter === 'renewal') {
+    list = list.filter(c => {
+      const ren = c.next_renewal || c.nextRenewal || c.renewal_date || '';
+      return ren && ren !== 'N/A';
+    });
+  } else if (statusFilter === 'active') {
+    list = list.filter(c => (c.status || 'active').toLowerCase() === 'active');
+  }
+
   const totalPages = Math.ceil(list.length / agentCustomerPageSize) || 1;
   const newPage = agentCustomerCurrentPage + direction;
   if (newPage >= 1 && newPage <= totalPages) {
@@ -2846,6 +2627,20 @@ function handleAgentFullCustomerFilter() {
   agentCustomerCurrentPage = 1;
   const q = document.getElementById('agent-full-customer-search')?.value || '';
   renderAgentFullCustomersDirectory(q);
+}
+
+function getAgentPolicyStatusClass(status) {
+  const s = (status || '').toLowerCase().trim();
+  if (s === 'active' || s === 'approved') return 'status-active';
+  if (s.includes('cancel') || s.includes('expired') || s.includes('reject') || s.includes('inactive')) return 'status-cancelled';
+  if (s.includes('pending') || s.includes('review') || s.includes('expir')) return 'status-pending';
+  return 'status-other';
+}
+
+function handleAgentPolicyFilters() {
+  const searchVal = document.getElementById('agent-policy-search')?.value || '';
+  const catVal = document.getElementById('agent-policy-category-filter')?.value || 'all';
+  renderAgentPoliciesTable(catVal, searchVal);
 }
 
 function renderAgentPoliciesTable(categoryFilter = 'all', searchTerm = '') {
@@ -2913,18 +2708,21 @@ function renderAgentPoliciesTable(categoryFilter = 'all', searchTerm = '') {
     const polType = p.policy_type || p.type || '';
     const prem = p.formatted_premium || (p.premium ? (typeof p.premium === 'number' ? `$${p.premium.toLocaleString()}` : p.premium) : '$0');
     const expiry = p.end_date || p.expiry || 'N/A';
+    const cat = p.category || 'General';
+    const status = p.status || 'Active';
+    const statusClass = getAgentPolicyStatusClass(status);
 
     return `
       <tr onclick="openPolicyDetailsPanel('${polId}', '${custName}')" title="Click to inspect policy ${polId}" style="cursor:pointer;">
-        <td><strong>${custName}</strong> ${custId ? `<span style="font-size:0.75rem;color:var(--gray-500)">(${custId})</span>` : ''}</td>
-        <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;color:var(--blue-900);font-weight:600;">${polId}</code></td>
-        <td>${polType}</td>
-        <td><span class="badge badge-info">${p.category || 'General'}</span></td>
-        <td><span class="badge ${p.status === 'Active' ? 'badge-active' : 'badge-pending'}">${p.status || 'Active'}</span></td>
-        <td style="font-weight:700;color:var(--blue-900)">${prem}${prem.endsWith('/yr') ? '' : '/yr'}</td>
-        <td>${expiry}</td>
-        <td style="text-align:right">
-          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${polId}', '${custName}')">Inspect →</button>
+        <td title="${custName}${custId ? ` (${custId})` : ''}"><strong>${custName}</strong> ${custId ? `<span style="font-size:0.75rem;color:var(--gray-500)">(${custId})</span>` : ''}</td>
+        <td title="${polId}"><code style="font-size:0.775rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;color:var(--blue-900);font-weight:600;">${polId}</code></td>
+        <td title="${polType}">${polType}</td>
+        <td title="${cat}"><span class="category-text">${cat}</span></td>
+        <td title="${status}"><span class="status-text ${statusClass}">${status}</span></td>
+        <td title="${prem}/yr" style="font-weight:700;color:var(--blue-900)">${prem}${prem.endsWith('/yr') ? '' : '/yr'}</td>
+        <td title="${expiry}">${expiry}</td>
+        <td class="action-cell" style="text-align:right">
+          <button class="btn btn-outline btn-sm table-action-btn inspect-button" onclick="event.stopPropagation(); openPolicyDetailsPanel('${polId}', '${custName}')" title="Inspect ${polId}">Inspect →</button>
         </td>
       </tr>
     `;
@@ -2979,41 +2777,69 @@ function renderAgentDashboardRenewals() {
   }).join('');
 }
 
-/**
- * RENDERERS FOR UNDERWRITER QUEUE & DECISION PANELS
- */
+// Underwriter Status Mapping & Badge Class Helpers
+function mapUnderwriterStatus(rawStatus) {
+  if (!rawStatus) return 'Pending Review';
+  const s = String(rawStatus).trim();
+  const lower = s.toLowerCase();
+
+  if (lower === 'approved' || lower === 'active') return 'Approved';
+  if (lower === 'rejected' || lower === 'cancelled' || lower === 'declined') return 'Rejected';
+  if (lower === 'info required' || lower === 'needs more information' || lower.includes('information') || lower.includes('info_required')) return 'Info Required';
+  if (lower === 'pending approval') return 'Pending Approval';
+  if (lower === 'pending review' || lower === 'forwarded' || lower === 'forwarded_to_underwriter' || lower === 'submitted' || lower === 'pending') {
+    return 'Pending Review';
+  }
+  return s;
+}
+
+function getUnderwriterStatusBadgeClass(status) {
+  const s = mapUnderwriterStatus(status);
+  if (s === 'Approved') return 'badge-active';
+  if (s === 'Rejected') return 'badge-risk-high';
+  if (s === 'Info Required') return 'badge-info';
+  if (s === 'Pending Approval') return 'badge-pending-approval';
+  return 'badge-pending-review';
+}
+
 function renderUnderwriterQueueTable(statusFilter = 'all', riskFilter = 'all', productFilter = 'all', searchTerm = '') {
   const tbody = document.getElementById('underwriter-queue-tbody');
   if (!tbody) return;
   const q = searchTerm.toLowerCase().trim();
 
-  const filtered = MOCK_DB.underwriterQueue.filter(item => {
-    const matchesStatus = statusFilter === 'all' || item.status.toLowerCase() === statusFilter.toLowerCase();
-    const matchesRisk = riskFilter === 'all' || item.riskLevel.toLowerCase() === riskFilter.toLowerCase();
-    const matchesProduct = productFilter === 'all' || item.product.toLowerCase().includes(productFilter.toLowerCase());
-    const matchesSearch = item.id.toLowerCase().includes(q) || item.customer.toLowerCase().includes(q) || item.product.toLowerCase().includes(q);
+  const queue = window.underwriterQueueData || [];
+
+  const filtered = queue.filter(item => {
+    const mappedStatus = mapUnderwriterStatus(item.status);
+    const matchesStatus = statusFilter === 'all' || mappedStatus.toLowerCase() === statusFilter.toLowerCase();
+    const matchesRisk = riskFilter === 'all' || (item.risk_level || item.riskLevel || '').toLowerCase() === riskFilter.toLowerCase();
+    const matchesProduct = productFilter === 'all' || (item.product || item.policy_type || '').toLowerCase().includes(productFilter.toLowerCase());
+    const matchesSearch = !q || (item.id || '').toLowerCase().includes(q) || (item.customer || '').toLowerCase().includes(q) || (item.product || item.policy_type || '').toLowerCase().includes(q);
     return matchesStatus && matchesRisk && matchesProduct && matchesSearch;
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:2rem;">No underwriting applications matched your filter criteria.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:2rem;">No underwriting applications matched your filter criteria.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = filtered.map(item => {
-    const riskBadgeClass = item.riskLevel === 'Low' ? 'badge-risk-low' : item.riskLevel === 'Medium' ? 'badge-risk-medium' : 'badge-risk-high';
-    const statusBadgeClass = item.status === 'Approved' ? 'badge-active' : item.status === 'Needs More Information' ? 'badge-info' : item.status === 'Rejected' ? 'badge-risk-high' : 'badge-pending';
+    const riskLevel = item.risk_level || item.riskLevel || 'Low';
+    const riskScore = item.risk_score || item.riskScore || 20;
+    const riskBadgeClass = riskLevel === 'Low' ? 'badge-risk-low' : riskLevel === 'Medium' ? 'badge-risk-medium' : 'badge-risk-high';
+    const premium = item.premium || 'N/A';
+    const submitted = item.submitted_date || item.submitted || 'Recent';
+
     return `
           <tr onclick="openUnderwriterReviewPanel('${item.id}')" title="Click to review application ${item.id}">
             <td><code style="font-size:0.825rem;font-weight:700;background:var(--blue-50);color:var(--blue-800);padding:3px 8px;border-radius:4px;">${item.id}</code></td>
             <td><strong style="color:var(--blue-900)">${item.customer}</strong></td>
-            <td>${item.product}</td>
-            <td><span class="badge ${riskBadgeClass}">● ${item.riskLevel} (${item.riskScore})</span></td>
-            <td style="font-weight:700;color:var(--blue-900)">${item.premium}/yr</td>
-            <td><span style="font-size:0.825rem;color:var(--gray-600)">${item.submitted}</span></td>
-            <td><span class="badge ${statusBadgeClass}" id="status-badge-${item.id}">${item.status}</span></td>
+            <td>${item.product || item.policy_type || 'Policy'}</td>
+            <td><span class="badge ${riskBadgeClass}">● ${riskLevel} (${riskScore})</span></td>
+            <td style="font-weight:700;color:var(--blue-900)">${premium}</td>
+            <td><span style="font-size:0.825rem;color:var(--gray-600)">${submitted}</span></td>
             <td style="text-align:right">
-              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openUnderwriterReviewPanel('${item.id}')" data-tooltip="Review ${item.id} (${item.customer})">Review →</button>
+              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openUnderwriterReviewPanel('${item.id}')" data-tooltip="Review ${item.id} (${item.customer})">Review</button>
             </td>
           </tr>
         `;
@@ -3024,25 +2850,27 @@ let uwQueueCurrentPage = 1;
 const UW_PAGE_SIZE = 10;
 
 function updateUnderwriterFilterCounts() {
-  if (!MOCK_DB || !MOCK_DB.underwriterQueue) return;
-  const total = MOCK_DB.underwriterQueue.length;
-  const pending = MOCK_DB.underwriterQueue.filter(i => i.status === 'Pending').length;
-  const info = MOCK_DB.underwriterQueue.filter(i => i.status === 'Needs More Information').length;
-  const approved = MOCK_DB.underwriterQueue.filter(i => i.status === 'Approved').length;
-  const rejected = MOCK_DB.underwriterQueue.filter(i => i.status === 'Rejected').length;
+  const queue = window.underwriterQueueData || [];
+  const total = queue.length;
+  const pendingReview = queue.filter(i => mapUnderwriterStatus(i.status) === 'Pending Review').length;
+  const pendingApproval = queue.filter(i => mapUnderwriterStatus(i.status) === 'Pending Approval').length;
+  const approved = queue.filter(i => mapUnderwriterStatus(i.status) === 'Approved').length;
+  const infoReq = queue.filter(i => mapUnderwriterStatus(i.status) === 'Info Required').length;
+  const rejected = queue.filter(i => mapUnderwriterStatus(i.status) === 'Rejected').length;
 
-  const low = MOCK_DB.underwriterQueue.filter(i => i.riskLevel === 'Low').length;
-  const med = MOCK_DB.underwriterQueue.filter(i => i.riskLevel === 'Medium').length;
-  const high = MOCK_DB.underwriterQueue.filter(i => i.riskLevel === 'High').length;
+  const low = queue.filter(i => (i.risk_level || i.riskLevel || '').toLowerCase() === 'low').length;
+  const med = queue.filter(i => (i.risk_level || i.riskLevel || '').toLowerCase() === 'medium').length;
+  const high = queue.filter(i => (i.risk_level || i.riskLevel || '').toLowerCase() === 'high').length;
 
   const statusSelect = document.getElementById('uw-full-status-filter');
   if (statusSelect) {
     const cur = statusSelect.value || 'all';
     statusSelect.innerHTML = `
           <option value="all">All Statuses (${total})</option>
-          <option value="Pending">Pending (${pending})</option>
-          <option value="Needs More Information">Needs More Info (${info})</option>
+          <option value="Pending Review">Pending Review (${pendingReview})</option>
+          <option value="Pending Approval">Pending Approval (${pendingApproval})</option>
           <option value="Approved">Approved (${approved})</option>
+          <option value="Info Required">Info Required (${infoReq})</option>
           <option value="Rejected">Rejected (${rejected})</option>
         `;
     statusSelect.value = cur;
@@ -3059,6 +2887,22 @@ function updateUnderwriterFilterCounts() {
         `;
     riskSelect.value = cur;
   }
+
+  const productSelect = document.getElementById('uw-full-product-filter');
+  if (productSelect) {
+    const cur = productSelect.value || 'all';
+    const prodCounts = {};
+    queue.forEach(i => {
+      const p = i.product || i.policy_type || 'General';
+      prodCounts[p] = (prodCounts[p] || 0) + 1;
+    });
+    let optionsHtml = `<option value="all">Product: All (${total})</option>`;
+    Object.keys(prodCounts).sort().forEach(p => {
+      optionsHtml += `<option value="${p}">${p} (${prodCounts[p]})</option>`;
+    });
+    productSelect.innerHTML = optionsHtml;
+    productSelect.value = cur;
+  }
 }
 
 function renderUnderwriterFullQueue(statusFilter, riskFilter, productFilter, searchTerm, keepPage = false) {
@@ -3073,12 +2917,14 @@ function renderUnderwriterFullQueue(statusFilter, riskFilter, productFilter, sea
   const searchVal = searchTerm !== undefined ? searchTerm : (document.getElementById('uw-full-queue-search')?.value || '');
 
   const q = (searchVal || '').toLowerCase().trim();
+  const queue = window.underwriterQueueData || [];
 
-  const filtered = MOCK_DB.underwriterQueue.filter(item => {
-    const matchesStatus = statusVal === 'all' || item.status.toLowerCase() === statusVal.toLowerCase();
-    const matchesRisk = riskVal === 'all' || item.riskLevel.toLowerCase() === riskVal.toLowerCase();
-    const matchesProduct = prodVal === 'all' || item.product.toLowerCase().includes(prodVal.toLowerCase());
-    const matchesSearch = !q || item.id.toLowerCase().includes(q) || item.customer.toLowerCase().includes(q) || item.product.toLowerCase().includes(q);
+  const filtered = queue.filter(item => {
+    const mappedStatus = mapUnderwriterStatus(item.status);
+    const matchesStatus = statusVal === 'all' || mappedStatus.toLowerCase() === statusVal.toLowerCase();
+    const matchesRisk = riskVal === 'all' || (item.risk_level || item.riskLevel || '').toLowerCase() === riskVal.toLowerCase();
+    const matchesProduct = prodVal === 'all' || (item.product || item.policy_type || '').toLowerCase().includes(prodVal.toLowerCase());
+    const matchesSearch = !q || (item.id || '').toLowerCase().includes(q) || (item.customer || '').toLowerCase().includes(q) || (item.product || item.policy_type || '').toLowerCase().includes(q);
     return matchesStatus && matchesRisk && matchesProduct && matchesSearch;
   });
 
@@ -3103,24 +2949,27 @@ function renderUnderwriterFullQueue(statusFilter, riskFilter, productFilter, sea
   }
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:2.5rem;">No underwriting applications matched your filter criteria.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:2.5rem;">No underwriting applications matched your filter criteria.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = pagedItems.map(item => {
-    const riskBadgeClass = item.riskLevel === 'Low' ? 'badge-risk-low' : item.riskLevel === 'Medium' ? 'badge-risk-medium' : 'badge-risk-high';
-    const statusBadgeClass = item.status === 'Approved' ? 'badge-active' : item.status === 'Needs More Information' ? 'badge-info' : item.status === 'Rejected' ? 'badge-risk-high' : 'badge-pending';
+    const riskLevel = item.risk_level || item.riskLevel || 'Low';
+    const riskScore = item.risk_score || item.riskScore || 20;
+    const riskBadgeClass = riskLevel === 'Low' ? 'badge-risk-low' : riskLevel === 'Medium' ? 'badge-risk-medium' : 'badge-risk-high';
+    const premium = item.premium || 'N/A';
+    const submitted = item.submitted_date || item.submitted || 'Recent';
+
     return `
           <tr onclick="openUnderwriterReviewPanel('${item.id}')" title="Click to review application ${item.id}">
             <td><code style="font-size:0.825rem;font-weight:700;background:var(--blue-50);color:var(--blue-800);padding:3px 8px;border-radius:4px;">${item.id}</code></td>
             <td><strong style="color:var(--blue-900)">${item.customer}</strong></td>
-            <td>${item.product}</td>
-            <td><span class="badge ${riskBadgeClass}">● ${item.riskLevel} (${item.riskScore})</span></td>
-            <td style="font-weight:700;color:var(--blue-900)">${item.premium}/yr</td>
-            <td><span style="font-size:0.825rem;color:var(--gray-600)">${item.submitted}</span></td>
-            <td><span class="badge ${statusBadgeClass}" id="status-badge-${item.id}">${item.status}</span></td>
+            <td>${item.product || item.policy_type || 'Policy'}</td>
+            <td><span class="badge ${riskBadgeClass}">● ${riskLevel} (${riskScore})</span></td>
+            <td style="font-weight:700;color:var(--blue-900)">${premium}</td>
+            <td><span style="font-size:0.825rem;color:var(--gray-600)">${submitted}</span></td>
             <td style="text-align:right">
-              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openUnderwriterReviewPanel('${item.id}')">Review Case →</button>
+              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); openUnderwriterReviewPanel('${item.id}')" data-tooltip="Review ${item.id} (${item.customer})">Review</button>
             </td>
           </tr>
         `;
@@ -3134,11 +2983,13 @@ function handleUnderwriterQueuePagination(delta) {
   const prodVal = document.getElementById('uw-full-product-filter')?.value || 'all';
 
   const q = (searchVal || '').toLowerCase().trim();
-  const filtered = MOCK_DB.underwriterQueue.filter(item => {
-    const matchesStatus = statusVal === 'all' || item.status.toLowerCase() === statusVal.toLowerCase();
-    const matchesRisk = riskVal === 'all' || item.riskLevel.toLowerCase() === riskVal.toLowerCase();
-    const matchesProduct = prodVal === 'all' || item.product.toLowerCase().includes(prodVal.toLowerCase());
-    const matchesSearch = item.id.toLowerCase().includes(q) || item.customer.toLowerCase().includes(q) || item.product.toLowerCase().includes(q);
+  const queue = window.underwriterQueueData || [];
+  const filtered = queue.filter(item => {
+    const mappedStatus = mapUnderwriterStatus(item.status);
+    const matchesStatus = statusVal === 'all' || mappedStatus.toLowerCase() === statusVal.toLowerCase();
+    const matchesRisk = riskVal === 'all' || (item.risk_level || item.riskLevel || '').toLowerCase() === riskVal.toLowerCase();
+    const matchesProduct = prodVal === 'all' || (item.product || item.policy_type || '').toLowerCase().includes(prodVal.toLowerCase());
+    const matchesSearch = !q || (item.id || '').toLowerCase().includes(q) || (item.customer || '').toLowerCase().includes(q) || (item.product || item.policy_type || '').toLowerCase().includes(q);
     return matchesStatus && matchesRisk && matchesProduct && matchesSearch;
   });
 
@@ -3150,173 +3001,1254 @@ function handleUnderwriterQueuePagination(delta) {
   }
 };
 
-// Open Underwriting Review Slide-Out Panel (Req 8, 9, 10, 11, 12)
+// Open Underwriting Review Slide-Out Panel (Real Database Backed)
 function openUnderwriterReviewPanel(appId) {
-  const app = MOCK_DB.underwriterQueue.find(item => item.id === appId);
+  const queue = window.underwriterQueueData || [];
+  const app = queue.find(item => item.id === appId || item.policy_id === appId);
   if (!app) return;
 
-  const riskPinPosition = app.riskLevel === 'Low' ? '15%' : app.riskLevel === 'Medium' ? '50%' : '85%';
-  const riskBadgeClass = app.riskLevel === 'Low' ? 'badge-risk-low' : app.riskLevel === 'Medium' ? 'badge-risk-medium' : 'badge-risk-high';
-  const statusBadgeClass = app.status === 'Approved' ? 'badge-active' : app.status === 'Needs More Information' ? 'badge-info' : app.status === 'Rejected' ? 'badge-risk-high' : 'badge-pending';
+  const riskLevel = app.risk_level || app.riskLevel || 'Low';
+  const riskScore = app.risk_score || app.riskScore || 20;
+  const riskPinPosition = riskLevel === 'Low' ? '15%' : riskLevel === 'Medium' ? '50%' : '85%';
+  const riskBadgeClass = riskLevel === 'Low' ? 'badge-risk-low' : riskLevel === 'Medium' ? 'badge-risk-medium' : 'badge-risk-high';
+  const status = mapUnderwriterStatus(app.status);
+  const statusBadgeClass = getUnderwriterStatusBadgeClass(status);
+  const coverages = app.coverages && app.coverages.length > 0 ? app.coverages : ['Comprehensive Property & Peril Coverage', 'Standard Liability Terms'];
+  const exclusions = app.exclusions && app.exclusions.length > 0 ? app.exclusions : ['Intentional damages', 'Unregistered perils'];
+  const documents = app.documents && app.documents.length > 0 ? app.documents : ['Policy Schedule', 'Coverage Certificate'];
 
   const contentHtml = `
         <!-- Application Meta Overview -->
         <div class="detail-section">
           <div class="detail-section-title">Application Details</div>
-          <div class="detail-row"><span class="detail-label">Application ID</span><span class="detail-value" style="font-family:monospace;font-weight:700;color:var(--blue-900)">${app.id}</span></div>
+          <div class="detail-row"><span class="detail-label">Application / Policy ID</span><span class="detail-value" style="font-family:monospace;font-weight:700;color:var(--blue-900)">${app.id}</span></div>
           <div class="detail-row"><span class="detail-label">Applicant Customer</span><span class="detail-value" style="font-weight:700;color:var(--blue-900)">${app.customer}</span></div>
-          <div class="detail-row"><span class="detail-label">Product Type</span><span class="detail-value">${app.product}</span></div>
-          <div class="detail-row"><span class="detail-label">Requested Coverage</span><span class="detail-value" style="font-weight:700;color:var(--blue-900)">${app.requestedCoverage}</span></div>
-          <div class="detail-row"><span class="detail-label">Calculated Premium</span><span class="detail-value" style="color:var(--blue-700);font-weight:700;font-size:1rem">${app.premium}/yr</span></div>
-          <div class="detail-row"><span class="detail-label">Standard Deductible</span><span class="detail-value">${app.deductible}</span></div>
-          <div class="detail-row"><span class="detail-label">Proposed Effective Date</span><span class="detail-value">${app.effectiveDate}</span></div>
+          <div class="detail-row"><span class="detail-label">Customer Email</span><span class="detail-value">${app.customer_email || 'Verified Insured'}</span></div>
+          <div class="detail-row"><span class="detail-label">Product Type</span><span class="detail-value">${app.product || app.policy_type}</span></div>
+          <div class="detail-row"><span class="detail-label">Calculated Premium</span><span class="detail-value" style="color:var(--blue-700);font-weight:700;font-size:1rem">${app.premium}</span></div>
+          <div class="detail-row"><span class="detail-label">Effective Date</span><span class="detail-value">${app.effective_date || app.end_date || 'Standard Term'}</span></div>
+          <div class="detail-row"><span class="detail-label">Days to Expiry / Renewal</span><span class="detail-value" style="font-weight:700;">${app.days_remaining != null ? app.days_remaining + ' days' : 'Current'}</span></div>
           <div class="detail-row">
             <span class="detail-label">Current Case Status</span>
-            <span class="badge ${statusBadgeClass}" id="panel-status-badge">${app.status}</span>
+            <span class="badge ${statusBadgeClass}" id="panel-status-badge">${status}</span>
           </div>
         </div>
 
-        <!-- 9. RISK ASSESSMENT & VISUAL GAUGE -->
+        <!-- RISK ASSESSMENT & VISUAL GAUGE (Muted & Accessible) -->
         <div class="detail-section">
-          <div class="detail-section-title">Risk Assessment (${app.riskLevel} Risk · Score ${app.riskScore}/100)</div>
+          <div class="detail-section-title">Risk Assessment (${riskLevel} Risk · Score ${riskScore}/100)</div>
           
           <div class="risk-gauge-box">
             <div class="risk-gauge-labels">
-              <span style="color:#059669;">LOW</span>
-              <span style="color:#d97706;">MEDIUM</span>
-              <span style="color:#dc2626;">HIGH</span>
+              <span class="risk-label-low">LOW (0–25)</span>
+              <span class="risk-label-medium">MEDIUM (26–75)</span>
+              <span class="risk-label-high">HIGH (76–100)</span>
             </div>
             <div class="risk-gauge-track">
-              <div class="risk-gauge-pin" style="left: ${riskPinPosition};" data-tooltip="Score: ${app.riskScore}/100 (${app.riskLevel} Risk)"></div>
+              <div class="risk-gauge-pin" style="left: ${riskPinPosition};" data-tooltip="Score: ${riskScore}/100 (${riskLevel} Risk)"></div>
             </div>
           </div>
 
-          <div style="font-size:0.825rem;font-weight:700;color:var(--gray-700);margin-bottom:0.5rem;">Identified Risk Factors:</div>
+          <div style="font-size:0.825rem;font-weight:700;color:var(--gray-700);margin-bottom:0.5rem;">Identified Risk Profile:</div>
           <ul class="bullet-list coverage-list">
-            ${app.riskFactors.map(rf => `<li>${rf}</li>`).join('')}
+            <li>Calculated underwriting premium: <strong>${app.premium}</strong></li>
+            <li>Policy risk categorization: <span class="badge ${riskBadgeClass}">● ${riskLevel} Risk</span></li>
+            <li>Automated actuarial tier: <strong>Score ${riskScore}/100</strong></li>
           </ul>
         </div>
 
-        <!-- 10. COVERAGE / POLICY DETAILS -->
+        <!-- COVERAGE / POLICY DETAILS -->
         <div class="detail-section">
           <div class="detail-section-title">Coverage Schedule</div>
           <ul class="bullet-list coverage-list">
-            ${app.coverages.map(c => `<li>${c}</li>`).join('')}
+            ${coverages.map(c => `<li>${c}</li>`).join('')}
           </ul>
 
           <div style="font-size:0.825rem;font-weight:700;color:var(--gray-700);margin-top:0.85rem;margin-bottom:0.5rem;">Policy Exclusions:</div>
           <ul class="bullet-list exclusion-list">
-            ${app.exclusions.map(e => `<li>${e}</li>`).join('')}
+            ${exclusions.map(e => `<li>${e}</li>`).join('')}
           </ul>
         </div>
 
-        <!-- 11. DOCUMENTS -->
+        <!-- DOCUMENTS -->
         <div class="detail-section">
-          <div class="detail-section-title">Supporting Documents (${app.documents.length})</div>
-          ${app.documents.map(doc => `
-            <div class="doc-item-row">
-              <div class="doc-item-title">
-                <svg width="18" height="18" fill="none" stroke="var(--blue-600)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div class="detail-section-title">Supporting Documents (${documents.length})</div>
+          ${documents.map(doc => `
+            <div class="doc-item-row" style="background:#FAF6F2;border:1px solid #EADBCE;border-radius:8px;margin-bottom:6px;padding:0.65rem 0.85rem;">
+              <div class="doc-item-title" style="color:#3B241D;font-weight:600;font-size:0.85rem;">
+                <svg width="16" height="16" fill="none" stroke="#7A4A3A" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 ${doc}
               </div>
-              <button class="btn btn-outline btn-sm" onclick="showToast('Viewing verified document: ${doc}')">View</button>
+              <button class="btn btn-outline btn-sm" style="font-size:0.775rem;padding:3px 10px;" onclick="showToast('Viewing verified document: ${doc}')">View</button>
             </div>
           `).join('')}
         </div>
 
-        <!-- 12. UNDERWRITING DECISION ACTIONS (Req 12) -->
-        <div class="detail-section" style="border-bottom:none;background:var(--gray-50);padding:1.25rem;border-radius:10px;border:1px solid var(--gray-200);">
-          <div class="detail-section-title" style="margin-bottom:0.75rem;">Underwriting Decision</div>
-          <p style="font-size:0.8rem;color:var(--gray-600);margin-bottom:1rem;">Select an underwriting action to update this case status in real-time:</p>
+        <!-- UNDERWRITING DECISION ACTIONS (Compact Layout) -->
+        <div class="detail-section" style="border-bottom:none;background:#FAF6F2;padding:1.15rem;border-radius:12px;border:1px solid #EADBCE;">
+          <div class="detail-section-title" style="margin-bottom:0.4rem;">Underwriting Decision</div>
+          <p style="font-size:0.8rem;color:#7A4A3A;margin-bottom:0.85rem;">Select an underwriting action or launch the full workspace:</p>
           
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <button class="btn btn-success btn-block" onclick="makeUnderwritingDecision('${app.id}', 'Approved')">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-              Approve & Bind Policy
+          <button class="btn btn-block btn-uw-workspace" id="btn-uw-workspace" onclick="navigateTo('underwriter-review'); selectPolicyForReview('${app.id}'); closeSlidePanel();" style="margin-bottom:8px;">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Open in Policy Review Workspace →
+          </button>
+          
+          <div class="uw-decision-btn-row">
+            <button class="btn btn-uw-approve btn-sm" id="btn-uw-approve" onclick="makeUnderwritingDecision('${app.id}', 'Approved')" style="font-weight:700;padding:0.5rem 0.6rem;font-size:0.825rem;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              Approve
             </button>
-            <button class="btn btn-warning btn-block" onclick="makeUnderwritingDecision('${app.id}', 'Needs More Information')">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              Request More Information
+            <button class="btn btn-uw-info btn-sm" id="btn-uw-info" onclick="promptUnderwritingDecision('Info Required', '${app.id}')" style="font-weight:700;padding:0.5rem 0.6rem;font-size:0.825rem;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              More Info
             </button>
-            <button class="btn btn-danger btn-block" onclick="makeUnderwritingDecision('${app.id}', 'Rejected')">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              Reject Application
+            <button class="btn btn-uw-reject btn-sm" id="btn-uw-reject" onclick="promptUnderwritingDecision('Rejected', '${app.id}')" style="font-weight:700;padding:0.5rem 0.6rem;font-size:0.825rem;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              Reject
             </button>
           </div>
         </div>
       `;
 
-  openOrUpdateSlidePanel(`Underwriting Review: ${app.id}`, `Applicant: ${app.customer} · ${app.product}`, contentHtml);
+  openOrUpdateSlidePanel(`Underwriting Review: ${app.id}`, `Applicant: ${app.customer} · ${app.product || app.policy_type}`, contentHtml);
 }
 
-// Execute Underwriting Decision (Updates UI dynamically)
-function makeUnderwritingDecision(appId, decision) {
-  const app = MOCK_DB.underwriterQueue.find(item => item.id === appId);
+// Execute Underwriting Decision (Persists to Backend & Database with Proper Loading State)
+async function makeUnderwritingDecision(appId, decision, customNotes = '') {
+  const token = getAuthToken();
+  if (!token) {
+    showToast('Authentication token required for underwriter action.');
+    return;
+  }
+
+  const displayDecision = mapUnderwriterStatus(decision);
+  const backendDecision = (decision === 'Info Required' || decision === 'Needs More Information') ? 'Needs More Information' : decision;
+
+  // Find panel action buttons
+  const approveBtn = document.getElementById('btn-uw-approve');
+  const infoBtn = document.getElementById('btn-uw-info');
+  const rejectBtn = document.getElementById('btn-uw-reject');
+  const pageApproveBtn = document.getElementById('btn-page-uw-approve');
+  const pageInfoBtn = document.getElementById('btn-page-uw-info');
+  const pageRejectBtn = document.getElementById('btn-page-uw-reject');
+  const workspaceBtn = document.getElementById('btn-uw-workspace');
+  const dockApproveBtn = document.getElementById('btn-dock-approve');
+  const dockInfoBtn = document.getElementById('btn-dock-info');
+  const dockRejectBtn = document.getElementById('btn-dock-reject');
+  const allButtons = [approveBtn, infoBtn, rejectBtn, pageApproveBtn, pageInfoBtn, pageRejectBtn, workspaceBtn, dockApproveBtn, dockInfoBtn, dockRejectBtn].filter(Boolean);
+
+  // Identify active button
+  let activeBtn = null;
+  if (displayDecision === 'Approved') activeBtn = pageApproveBtn || approveBtn || dockApproveBtn;
+  else if (displayDecision === 'Info Required') activeBtn = pageInfoBtn || infoBtn || dockInfoBtn;
+  else if (displayDecision === 'Rejected') activeBtn = pageRejectBtn || rejectBtn || dockRejectBtn;
+
+  const originalHtml = activeBtn ? activeBtn.innerHTML : '';
+
+  try {
+    // Disable all buttons to prevent double-submit
+    allButtons.forEach(btn => {
+      btn.disabled = true;
+      btn.classList.add('btn-uw-disabled');
+    });
+
+    if (activeBtn) {
+      activeBtn.innerHTML = `
+        <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite; display: inline-block; margin-right: 6px;">
+          <circle cx="12" cy="12" r="10" stroke-opacity="0.25" />
+          <path d="M12 2a10 10 0 0 1 10 10" />
+        </svg>
+        Processing...
+      `;
+    }
+
+    const notes = customNotes || (
+      displayDecision === 'Approved'
+        ? `Policy ${appId} approved and bound under standard actuarial guidelines.`
+        : displayDecision === 'Info Required'
+          ? `Additional loss runs and inspection documentation requested for ${appId}.`
+          : `Application ${appId} rejected due to risk profile exceeding threshold.`
+    );
+
+    const response = await fetch(`${UNDERWRITER_SERVICE_URL}/underwriter/decision`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        item_id: appId,
+        decision: backendDecision,
+        notes: notes
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      const errorMsg = err.detail || 'Failed to record underwriting decision';
+      showToast(`Decision error: ${errorMsg}`, 'error');
+      // Re-enable buttons so user can retry
+      allButtons.forEach(btn => {
+        btn.disabled = false;
+        btn.classList.remove('btn-uw-disabled');
+      });
+      if (activeBtn) activeBtn.innerHTML = originalHtml;
+      return;
+    }
+
+    const result = await response.json();
+
+    // Update local item status in queue data
+    const queue = window.underwriterQueueData || [];
+    const item = queue.find(i => i.id === appId || i.policy_id === appId);
+    if (item) item.status = displayDecision;
+
+    // Update badge in slide panel
+    const panelBadge = document.getElementById('panel-status-badge');
+    if (panelBadge) {
+      panelBadge.textContent = displayDecision;
+      panelBadge.className = `badge ${getUnderwriterStatusBadgeClass(displayDecision)}`;
+    }
+
+    // Update badge in table row
+    const statusBadge = document.getElementById(`status-badge-${appId}`);
+    if (statusBadge) {
+      statusBadge.textContent = displayDecision;
+      statusBadge.className = `badge ${getUnderwriterStatusBadgeClass(displayDecision)}`;
+    }
+
+    // Update active review workspace if open
+    if (window.activeUnderwriterReviewPolicy && (window.activeUnderwriterReviewPolicy.id === appId || window.activeUnderwriterReviewPolicy.policy_id === appId)) {
+      window.activeUnderwriterReviewPolicy.status = displayDecision;
+      const statusBadgeElem = document.getElementById('uw-rev-status-badge');
+      if (statusBadgeElem) {
+        statusBadgeElem.textContent = displayDecision;
+        statusBadgeElem.className = `badge ${getUnderwriterStatusBadgeClass(displayDecision)}`;
+      }
+      const tabStatusElem = document.getElementById('uw-tab-policy-status');
+      if (tabStatusElem) {
+        tabStatusElem.innerHTML = `<span class="badge ${getUnderwriterStatusBadgeClass(displayDecision)}">${displayDecision}</span>`;
+      }
+    }
+
+    const toastMessage = displayDecision === 'Approved'
+      ? `Policy ${appId} approved and bound successfully.`
+      : displayDecision === 'Info Required'
+        ? `Additional information requested for application ${appId}.`
+        : `Policy ${appId} rejected successfully.`;
+
+    showToast(toastMessage, displayDecision === 'Rejected' ? 'error' : displayDecision === 'Info Required' ? 'warning' : 'success');
+
+    // Refresh live stats, queue, and notifications from real backend
+    await Promise.allSettled([
+      fetchUnderwriterStats(),
+      fetchUnderwriterQueue(),
+      fetchNotifications(),
+      (typeof fetchUnderwriterPolicies === 'function' ? fetchUnderwriterPolicies() : Promise.resolve())
+    ]);
+
+    // Restore buttons
+    allButtons.forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('btn-uw-disabled');
+    });
+    if (activeBtn) activeBtn.innerHTML = originalHtml;
+
+  } catch (err) {
+    console.error('Error submitting underwriting decision:', err);
+    showToast('Unable to connect to the service. Please try again.', 'error');
+    allButtons.forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('btn-uw-disabled');
+    });
+    if (activeBtn) activeBtn.innerHTML = originalHtml;
+  }
+}
+
+// ==========================================================================
+// UNDERWRITER MODAL & DRAWER CONTROLLERS
+// ==========================================================================
+function openUwModal(modalId) {
+  const m = document.getElementById(modalId);
+  if (m) {
+    m.classList.add('open');
+    m.setAttribute('aria-hidden', 'false');
+  }
+}
+
+function closeUwModal(modalId) {
+  const m = document.getElementById(modalId);
+  if (m) {
+    m.classList.remove('open');
+    m.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function closeUwModalOnBackdrop(e, modalId) {
+  if (e.target === e.currentTarget) {
+    closeUwModal(modalId);
+  }
+}
+
+// Global Escape listener for Underwriter modals
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.uw-modal-backdrop.open').forEach(m => {
+      m.classList.remove('open');
+      m.setAttribute('aria-hidden', 'true');
+    });
+  }
+});
+
+// PART 1 REQ 1: Interactive Risk Tier Modal
+function openRiskTierModal(tier) {
+  const modal = document.getElementById('uw-risk-rule-modal');
+  const title = document.getElementById('uw-rule-modal-title');
+  const sub = document.getElementById('uw-rule-modal-sub');
+  const body = document.getElementById('uw-rule-modal-body');
+  if (!modal || !body) return;
+
+  if (tier === 'low') {
+    title.innerHTML = `<span style="color:var(--green)">●</span> Low Risk Tier Underwriting Rules`;
+    sub.textContent = 'Preferred Rate Classification · Automated STP Binding Eligible';
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0.5rem;">
+        <div style="background:#FAF6F2;padding:0.75rem;border-radius:10px;border:1px solid #EADBCE;">
+          <div style="font-size:0.75rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;">Score Range</div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--green);">0 – 25 / 100</div>
+        </div>
+        <div style="background:#FAF6F2;padding:0.75rem;border-radius:10px;border:1px solid #EADBCE;">
+          <div style="font-size:0.75rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;">Approval Authority</div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--blue-900);">$1.0M – $2.5M Limit</div>
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Risk Tier Meaning</h4>
+        <p style="font-size:0.825rem;color:var(--gray-700);line-height:1.45;margin:0;">
+          Represents accounts with pristine loss history, excellent structural maintenance, high credit classification, and no adverse territorial exposures. Auto-eligible for standard baseline rates and preferred discounts.
+        </p>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Eligibility Conditions</h4>
+        <ul class="bullet-list coverage-list" style="font-size:0.825rem;">
+          <li>Zero paid or open claims within the preceding 60 months (5-year clean CLUE record).</li>
+          <li>Primary applicant Credit Tier 1 (FICO score &gt; 720).</li>
+          <li>Structure age &lt; 15 years with modern 200A electrical breakers and copper/PEX plumbing.</li>
+          <li>Standard deductible baseline ($500 – $1,000).</li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Required Document Verification</h4>
+        <ul class="bullet-list coverage-list" style="font-size:0.825rem;">
+          <li>Completed ACORD 125 / 126 application form.</li>
+          <li>Prior carrier Declarations Page verifying continuous coverage.</li>
+          <li>Credit score verification record.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Authorized Underwriting Actions & Typical Outcomes</h4>
+        <p style="font-size:0.825rem;color:var(--gray-700);line-height:1.45;margin:0;">
+          <strong>Action:</strong> Automated or one-click approval on standard admitted form.<br>
+          <strong>Outcome:</strong> Immediate policy binding at preferred tier discount (-10% to -15%).
+        </p>
+      </div>
+
+      <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;padding:0.75rem;font-size:0.8rem;color:#065F46;">
+        <strong>Example Scenario:</strong> 8-year-old single-family residential property, FICO 780, zero prior claims, centrally monitored burglar and fire alarm systems.
+      </div>
+    `;
+  } else if (tier === 'medium') {
+    title.innerHTML = `<span style="color:var(--amber)">●</span> Medium Risk Tier Underwriting Rules`;
+    sub.textContent = 'Standard Rate with Conditions · Endorsement Riders Required';
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0.5rem;">
+        <div style="background:#FAF6F2;padding:0.75rem;border-radius:10px;border:1px solid #EADBCE;">
+          <div style="font-size:0.75rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;">Score Range</div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--amber);">26 – 65 / 100</div>
+        </div>
+        <div style="background:#FAF6F2;padding:0.75rem;border-radius:10px;border:1px solid #EADBCE;">
+          <div style="font-size:0.75rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;">Approval Authority</div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--blue-900);">$2.5M – $5.0M Limit</div>
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Risk Tier Meaning</h4>
+        <p style="font-size:0.825rem;color:var(--gray-700);line-height:1.45;margin:0;">
+          Standard risk classification where minor loss history, older building systems, or moderate geographic exposure require deductible endorsements, inspection verifications, or protective safeguard riders.
+        </p>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Eligibility Conditions</h4>
+        <ul class="bullet-list coverage-list" style="font-size:0.825rem;">
+          <li>Maximum 1 minor non-weather loss in 36 months (&lt; $5,000 indemnity).</li>
+          <li>Structure age 15–35 years with certified 4-point inspection report.</li>
+          <li>Mandatory increased deductible ($1,500 – $2,500).</li>
+          <li>Standard earthquake and flood exclusion endorsements apply.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Required Document Verification</h4>
+        <ul class="bullet-list coverage-list" style="font-size:0.825rem;">
+          <li>3-Year Verified Loss Run report from prior insurance carrier.</li>
+          <li>Roof condition & plumbing inspection audit certificate.</li>
+          <li>Signed protective safeguard endorsement rider acknowledgment.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Authorized Underwriting Actions & Typical Outcomes</h4>
+        <p style="font-size:0.825rem;color:var(--gray-700);line-height:1.45;margin:0;">
+          <strong>Action:</strong> Approve with Conditions / Attach Deductible Riders.<br>
+          <strong>Outcome:</strong> Conditional binding with $1,500+ deductible endorsement and standard surcharge (+5% to +15%).
+        </p>
+      </div>
+
+      <div style="background:#FFF7ED;border:1px solid #FFEDD5;border-radius:10px;padding:0.75rem;font-size:0.8rem;color:#9A3412;">
+        <strong>Example Scenario:</strong> 28-year-old commercial retail building with 1 weather loss ($4,200) 30 months ago, architectural shingle roof replaced 4 years ago, monitored burglar alarm.
+      </div>
+    `;
+  } else {
+    title.innerHTML = `<span style="color:var(--red)">●</span> High Risk Tier Underwriting Rules`;
+    sub.textContent = 'Substandard / Surplus Lines · Mandatory Supervisory Referral';
+    body.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0.5rem;">
+        <div style="background:#FAF6F2;padding:0.75rem;border-radius:10px;border:1px solid #EADBCE;">
+          <div style="font-size:0.75rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;">Score Range</div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--red);">66 – 100 / 100</div>
+        </div>
+        <div style="background:#FAF6F2;padding:0.75rem;border-radius:10px;border:1px solid #EADBCE;">
+          <div style="font-size:0.75rem;color:var(--gray-600);text-transform:uppercase;font-weight:600;">Approval Authority</div>
+          <div style="font-size:1.1rem;font-weight:700;color:var(--blue-900);">Chief Underwriting Officer (CUO)</div>
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Risk Tier Meaning</h4>
+        <p style="font-size:0.825rem;color:var(--gray-700);line-height:1.45;margin:0;">
+          Substandard exposure tier with elevated loss frequency, severe environmental hazard exposure (FEMA Flood Zone A/V, coastal wind tier, wildfire interface), or limits exceeding standard treaty capacity.
+        </p>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Eligibility Conditions</h4>
+        <ul class="bullet-list exclusion-list" style="font-size:0.825rem;">
+          <li>2+ paid or open claims in the past 24 months.</li>
+          <li>Severe coastal storm, high wildfire, or special flood hazard zone.</li>
+          <li>Commercial liability limit &gt; $2,000,000 or aging structure &gt;45 years.</li>
+          <li>Mandatory supervisory sign-off before binder issuance.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Required Document Verification</h4>
+        <ul class="bullet-list exclusion-list" style="font-size:0.825rem;">
+          <li>5-Year Official Loss Runs with complete adjuster narrative notes.</li>
+          <li>Structural engineering & electrical wiring audit report.</li>
+          <li>FEMA Flood Zone Elevation Certificate and Wildfire Clearance.</li>
+          <li>Audited business financial statements.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">Authorized Underwriting Actions & Typical Outcomes</h4>
+        <p style="font-size:0.825rem;color:var(--gray-700);line-height:1.45;margin:0;">
+          <strong>Action:</strong> Refer to Senior Underwriter / Decline / Require Substantial Deductible ($5,000+).<br>
+          <strong>Outcome:</strong> Supervisory sign-off on non-standard surplus lines form, or formal decline notice.
+        </p>
+      </div>
+
+      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:0.75rem;font-size:0.8rem;color:#991B1B;">
+        <strong>Example Scenario:</strong> Coastal commercial warehouse situated in flood zone with 2 storm water claims in 18 months ($68,000 aggregate loss) and $3.5M replacement limit.
+      </div>
+    `;
+  }
+
+  openUwModal('uw-risk-rule-modal');
+}
+
+// PART 1 REQ 2: Interactive Workflow Steps Modal
+function openWorkflowStepModal(stepNum) {
+  const modal = document.getElementById('uw-risk-rule-modal');
+  const title = document.getElementById('uw-rule-modal-title');
+  const sub = document.getElementById('uw-rule-modal-sub');
+  const body = document.getElementById('uw-rule-modal-body');
+  if (!modal || !body) return;
+
+  const steps = [
+    {
+      num: 1,
+      name: 'Submission Ingestion',
+      purpose: 'Ingest broker submission, ACORD forms, applicant identity, and prior loss run history into the Underwriting Queue.',
+      checked: 'Application completeness, broker licensing, applicant tax ID / SSN, prior carrier declarations, active queue deduplication.',
+      input: 'ACORD 125/126 forms, prior policy declarations, applicant MVR reports.',
+      output: 'Normalized submission record in Underwriting Queue with indexed metadata.',
+      outcomes: 'Ingestion validated (Proceed to Risk Scoring) OR Rejected for Incomplete Intake Data.',
+      role: 'Intake Underwriting Assistant / Automated OCR Ingestion Service',
+      next: 'Step 2: Risk Scoring'
+    },
+    {
+      num: 2,
+      name: 'Risk Scoring',
+      purpose: 'Compute automated quantitative actuarial risk score (0–100) using property age, claims frequency, and territory metrics.',
+      checked: '5-year CLUE loss frequency, FEMA flood hazard mapping, dwelling/structure age, credit classification.',
+      input: 'Property geospatial coordinates, CLUE loss database, territory loss cost indices.',
+      output: 'Actuarial Risk Score (0–100) and automated exposure rating.',
+      outcomes: 'Low Risk Tier (0–25), Medium Risk Tier (26–65), High Risk Tier (66–100).',
+      role: 'Automated Actuarial Scoring Engine',
+      next: 'Step 3: Risk Classification'
+    },
+    {
+      num: 3,
+      name: 'Risk Classification',
+      purpose: 'Assign standardized exposure tier, baseline deductible retentions, and pricing multipliers.',
+      checked: 'Product line underwriting manuals, territorial rate factors, class code eligibility.',
+      input: 'Computed Risk Score, ISO class code, construction type (ISO 1–6).',
+      output: 'Tier assignment and calculated preliminary gross premium.',
+      outcomes: 'Preferred Tier, Standard Tier with Conditions, Non-Standard / Surplus Lines.',
+      role: 'Underwriting Decision Specialist',
+      next: 'Step 4: Guideline Check'
+    },
+    {
+      num: 4,
+      name: 'Guideline Check',
+      purpose: 'Audit submission against binding authority caps, mandatory inspection requirements, and exclusion endorsements.',
+      checked: 'Binding authority limits ($1.0M–$5.0M), building inspection age thresholds, coastal distance rules, exclusion riders.',
+      input: 'Certified 4-point inspection report, roof condition audit, flood hazard elevation certificate.',
+      output: 'Guideline compliance validation checklist.',
+      outcomes: 'Fully Compliant, Compliance with Endorsement Riders, Supervisory Referral Triggered.',
+      role: 'Certified CPCU Underwriter',
+      next: 'Step 5: Final Underwriting Decision'
+    },
+    {
+      num: 5,
+      name: 'Final Underwriting Decision',
+      purpose: 'Authorize binding approval, attach conditional riders, issue information request, or execute formal decline.',
+      checked: 'Final loss limit authorization, binder documentation, signed customer acceptance.',
+      input: 'Completed underwriting audit checklist, signed proposal, payment binding receipt.',
+      output: 'Policy Bound & Active status, or formal Notice of Information Request.',
+      outcomes: 'Approved & Bound, Approved with Conditions, Needs More Information, Rejected.',
+      role: 'Senior Underwriter / Supervising Director',
+      next: 'Policy Issuance & Customer Delivery'
+    }
+  ];
+
+  const s = steps[stepNum - 1] || steps[0];
+
+  title.textContent = `Workflow Step ${s.num}: ${s.name}`;
+  sub.textContent = `Standard Underwriting Operating Procedure · Responsible: ${s.role}`;
+  body.innerHTML = `
+    <div style="background:#FAF6F2;padding:0.85rem;border-radius:10px;border:1px solid #EADBCE;margin-bottom:0.5rem;">
+      <div style="font-size:0.75rem;color:var(--gray-600);text-transform:uppercase;font-weight:700;">Operational Purpose</div>
+      <div style="font-size:0.9rem;font-weight:600;color:var(--blue-900);margin-top:2px;">${s.purpose}</div>
+    </div>
+
+    <div class="detail-section" style="border:none;padding:0;">
+      <div class="detail-row"><span class="detail-label">What is Checked</span><span class="detail-value" style="font-weight:500;">${s.checked}</span></div>
+      <div class="detail-row"><span class="detail-label">Required Input Data</span><span class="detail-value">${s.input}</span></div>
+      <div class="detail-row"><span class="detail-label">Expected Output</span><span class="detail-value" style="font-weight:600;color:var(--green);">${s.output}</span></div>
+      <div class="detail-row"><span class="detail-label">Possible Outcomes</span><span class="detail-value">${s.outcomes}</span></div>
+      <div class="detail-row"><span class="detail-label">Responsible Role</span><span class="detail-value" style="font-weight:700;">${s.role}</span></div>
+      <div class="detail-row"><span class="detail-label">Next Workflow Phase</span><span class="detail-value" style="font-weight:700;color:var(--blue-700);">${s.next}</span></div>
+    </div>
+  `;
+
+  openUwModal('uw-risk-rule-modal');
+}
+
+// Interactive Consideration Pillars Modal
+function openConsiderationModal(key) {
+  const modal = document.getElementById('uw-risk-rule-modal');
+  const title = document.getElementById('uw-rule-modal-title');
+  const sub = document.getElementById('uw-rule-modal-sub');
+  const body = document.getElementById('uw-rule-modal-body');
+  if (!modal || !body) return;
+
+  const data = {
+    property: {
+      title: 'Property & Building Condition Actuarial Standards',
+      sub: 'Roof Age, Plumbing, Wiring & Fire Protection Standards',
+      desc: 'Roof condition accounts for 40% of residential property loss frequency. Structures over 15 years require certified inspection verifying 200A electrical panel, absence of aluminum/knob-and-tube wiring, and operational plumbing with no prior leak history. Distance to nearest municipal fire hydrant must be &lt; 1,000 feet.'
+    },
+    claims: {
+      title: 'Claims Frequency & Loss Run Verification',
+      sub: '5-Year CLUE Database & Loss History Standards',
+      desc: 'Frequency of past claims is the single highest predictor of future loss severity. Underwriters must inspect full 5-year carrier loss runs. 1 weather claim is permissible; 2+ non-weather water or liability claims trigger mandatory deductible increases ($2,500+) or supervisory referral.'
+    },
+    location: {
+      title: 'Location & Natural Hazards Geospatial Evaluation',
+      sub: 'FEMA Flood Tiers, Wildfire Interface & Coastal Wind Zones',
+      desc: 'Properties in FEMA Special Flood Hazard Areas (Zones A, AE, V) strictly exclude flood from standard HO-3/BOP forms and require proof of separate NFIP or private flood policy. Coastal properties within 2,500 feet of tidal water require 2% to 5% hurricane named-storm deductibles.'
+    },
+    financial: {
+      title: 'Financial Valuation & Underwriting Authority Limits',
+      sub: 'Total Insured Value (TIV) & Binding Caps',
+      desc: 'Binding authority specifies the maximum policy limit an underwriter may bind autonomously. Staff underwriters hold $1.0M authority; Senior CPCU underwriters hold $5.0M authority. Risks exceeding $5.0M TIV require Chief Underwriting Officer (CUO) and facultative reinsurance sign-off.'
+    }
+  };
+
+  const item = data[key] || data.property;
+  title.textContent = item.title;
+  sub.textContent = item.sub;
+  body.innerHTML = `
+    <div style="background:#FAF6F2;padding:1rem;border-radius:12px;border:1px solid #EADBCE;line-height:1.55;font-size:0.875rem;color:var(--gray-800);">
+      ${item.desc}
+    </div>
+  `;
+
+  openUwModal('uw-risk-rule-modal');
+}
+
+// PART 1 REQ 3: Required Documents Checklist Filter & Interactive Toggle
+const UW_RISK_DOCUMENTS = [
+  {
+    id: 'doc-acord',
+    name: 'Application Form',
+    technicalName: 'ACORD 125 / 126 Commercial & Personal Application',
+    tiers: ['low', 'medium', 'high'],
+    tierLabel: 'All Risk Levels',
+    status: 'Complete',
+    desc: 'Completed and signed application form with applicant details and coverage history.'
+  },
+  {
+    id: 'doc-prior',
+    name: 'Previous Insurance Proof',
+    technicalName: 'Proof of Prior Continuous Coverage (Declarations Page)',
+    tiers: ['low', 'medium', 'high'],
+    tierLabel: 'All Risk Levels',
+    status: 'Complete',
+    desc: 'Verifies previous continuous insurance coverage without coverage lapses.'
+  },
+  {
+    id: 'doc-credit',
+    name: 'Identity Verification',
+    technicalName: 'Credit Tier & Identity Verification Statement',
+    tiers: ['low', 'medium', 'high'],
+    tierLabel: 'All Risk Levels',
+    status: 'Complete',
+    desc: 'Applicant identity check and credit tier confirmation.'
+  },
+  {
+    id: 'doc-lossruns',
+    name: 'Previous Claims History',
+    technicalName: '3-Year Verified Prior Carrier Loss Runs',
+    tiers: ['medium', 'high'],
+    tierLabel: 'Medium & High Risk',
+    status: 'Needs Review',
+    desc: 'Official 3-year record of previous insurance claims and payouts.'
+  },
+  {
+    id: 'doc-inspection',
+    name: 'Property Inspection Report',
+    technicalName: 'Certified 4-Point Roof & Plumbing Inspection',
+    tiers: ['medium', 'high'],
+    tierLabel: 'Medium & High Risk',
+    status: 'Needs Review',
+    desc: 'Inspection report covering roof, plumbing, electrical, and heating systems.'
+  },
+  {
+    id: 'doc-flood',
+    name: 'Flood Zone Certificate',
+    technicalName: 'FEMA Flood Zone Elevation Certificate (Zone A/V)',
+    tiers: ['high'],
+    tierLabel: 'High Risk Only',
+    status: 'Missing',
+    desc: 'Elevation certificate confirming flood hazard boundaries and building elevation.'
+  },
+  {
+    id: 'doc-financials',
+    name: 'Financial Documents',
+    technicalName: 'Audited Business Balance Sheet & P&L Statement',
+    tiers: ['high'],
+    tierLabel: 'High Risk Only',
+    status: 'Missing',
+    desc: 'Financial records and business balance sheet to confirm financial stability.'
+  }
+];
+
+// ==========================================================================
+// INTERACTIVE RISK ASSESSMENT GUIDELINES CONTROLLER
+// ==========================================================================
+
+let currentActiveRiskTier = null;
+
+function toggleRiskTierCard(tier) {
+  if (currentActiveRiskTier === tier) {
+    currentActiveRiskTier = null;
+    document.querySelectorAll('.interactive-risk-card').forEach(card => card.classList.remove('selected-card'));
+    return;
+  }
+  currentActiveRiskTier = tier;
+  document.querySelectorAll('.interactive-risk-card').forEach(card => card.classList.remove('selected-card'));
+  const activeCard = document.getElementById(`risk-card-${tier}`);
+  if (activeCard) activeCard.classList.add('selected-card');
+}
+
+// 2. Interactive Guide Step Workflow
+const UW_GUIDE_STEP_DETAILS = {
+  1: {
+    num: 1,
+    title: 'Step 1: Check Documents',
+    subtitle: 'Verify document completeness and validate customer information',
+    points: [
+      'Verify the application form is complete.',
+      'Check identity and supporting documents.',
+      'Confirm property or asset details.',
+      'Identify missing or inconsistent information.'
+    ]
+  },
+  2: {
+    num: 2,
+    title: 'Step 2: Review Risk Factors',
+    subtitle: 'Examine claims history, property location, and coverage limits',
+    points: [
+      'Review the applicant’s claims history.',
+      'Check property, location, and asset details.',
+      'Review coverage amount and deductible.',
+      'Identify unusual or high-risk factors.'
+    ]
+  },
+  3: {
+    num: 3,
+    title: 'Step 3: Understand Risk Score',
+    subtitle: 'Analyze calculated exposure score and score driving factors',
+    points: [
+      'Check the overall calculated risk score.',
+      'Identify the factors increasing the score.',
+      'Compare the score with the risk category.',
+      'Confirm whether additional review is required.'
+    ]
+  },
+  4: {
+    num: 4,
+    title: 'Step 4: Decide Next Step',
+    subtitle: 'Execute authoritative decision or forward for senior sign-off',
+    points: [
+      'Approve when all requirements are satisfied.',
+      'Request information if details are missing.',
+      'Refer the case for senior review when required.',
+      'Reject only when policy requirements are not met.'
+    ]
+  }
+};
+
+let currentActiveGuideStep = null;
+
+function toggleGuideStepDetail(stepNum) {
+  const panel = document.getElementById('uw-guide-step-detail-panel');
+  if (!panel) return;
+
+  if (currentActiveGuideStep === stepNum) {
+    closeGuideStepDetail();
+    return;
+  }
+
+  currentActiveGuideStep = stepNum;
+  const data = UW_GUIDE_STEP_DETAILS[stepNum];
+  if (!data) return;
+
+  // Highlight selected step
+  document.querySelectorAll('.interactive-step-card').forEach(card => card.classList.remove('selected-step'));
+  const activeCard = document.getElementById(`guide-step-card-${stepNum}`);
+  if (activeCard) activeCard.classList.add('selected-step');
+
+  // Render detail panel
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div style="border-left: 4px solid #7A4A3A; padding-left: 1rem; position: relative;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 0.6rem; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="uw-guide-flow-num" style="width:24px; height:24px; font-size:0.75rem;">${data.num}</div>
+          <div>
+            <h4 style="margin:0; font-size:0.95rem; font-weight:700; color:var(--text-main);">${data.title}</h4>
+            <div style="font-size:0.75rem; color:#7A4A3A;">${data.subtitle}</div>
+          </div>
+        </div>
+        <button type="button" onclick="closeGuideStepDetail()" style="background:none; border:none; color:#7A4A3A; font-size:1.1rem; cursor:pointer; padding:2px 6px; line-height:1;" title="Collapse details">✕</button>
+      </div>
+      <div>
+        <div style="font-size: 0.775rem; font-weight: 600; color: #7A4A3A; margin-bottom: 6px;">Step Verification Checklist:</div>
+        <div class="uw-step-checklist-grid" style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px;">
+          ${data.points.map(p => `
+            <div style="display:flex; align-items:center; gap:8px; font-size:0.8125rem; color:var(--text-main);">
+              <svg width="15" height="15" fill="none" stroke="#2F9E78" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>${p}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function closeGuideStepDetail() {
+  currentActiveGuideStep = null;
+  const panel = document.getElementById('uw-guide-step-detail-panel');
+  if (panel) panel.style.display = 'none';
+  document.querySelectorAll('.interactive-step-card').forEach(card => card.classList.remove('selected-step'));
+}
+
+// 3. Interactive Decision Support
+const UW_DECISION_SUPPORT_DETAILS = {
+  ready: {
+    title: 'Ready for Approval',
+    subtitle: 'Standard underwriting criteria met. Documents and risk review complete.',
+    badge: 'Approval',
+    badgeClass: 'badge-active',
+    borderColor: 'var(--green)',
+    points: [
+      'Documents are complete.',
+      'Risk factors have been reviewed.',
+      'No major concerns remain.'
+    ]
+  },
+  info: {
+    title: 'More Information Required',
+    subtitle: 'Additional documentation or clarification needed from applicant/agent.',
+    badge: 'Info Request',
+    badgeClass: 'badge-pending',
+    borderColor: 'var(--amber)',
+    points: [
+      'Documents are missing or incomplete.',
+      'Some information needs clarification.',
+      'Additional evidence is required.'
+    ]
+  },
+  senior: {
+    title: 'Senior Review Required',
+    subtitle: 'Application risk parameters exceed standard threshold or require special sign-off.',
+    badge: 'Senior Review',
+    badgeClass: 'badge-risk-high',
+    borderColor: 'var(--red)',
+    points: [
+      'Risk score is high.',
+      'The case contains complex risk factors.',
+      'Special approval may be required.'
+    ]
+  }
+};
+
+let currentActiveDecision = null;
+
+function toggleDecisionSupportDetail(decisionKey) {
+  const panel = document.getElementById('uw-decision-support-detail-panel');
+  if (!panel) return;
+
+  if (currentActiveDecision === decisionKey) {
+    closeDecisionSupportDetail();
+    return;
+  }
+
+  currentActiveDecision = decisionKey;
+  const data = UW_DECISION_SUPPORT_DETAILS[decisionKey];
+  if (!data) return;
+
+  // Highlight selected card
+  document.querySelectorAll('.interactive-decision-card').forEach(card => card.classList.remove('selected-decision'));
+  const activeCard = document.getElementById(`decision-card-${decisionKey}`);
+  if (activeCard) activeCard.classList.add('selected-decision');
+
+  // Render detail panel
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div style="border-left: 4px solid ${data.borderColor}; padding-left: 1rem; position: relative;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 0.6rem; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div>
+            <h4 style="margin:0; font-size:0.95rem; font-weight:700; color:var(--text-main);">${data.title}</h4>
+            <div style="font-size:0.75rem; color:#7A4A3A;">${data.subtitle}</div>
+          </div>
+          <span class="badge ${data.badgeClass}" style="font-size:0.75rem; padding: 2px 8px;">${data.badge}</span>
+        </div>
+        <button type="button" onclick="closeDecisionSupportDetail()" style="background:none; border:none; color:#7A4A3A; font-size:1.1rem; cursor:pointer; padding:2px 6px; line-height:1;" title="Collapse details">✕</button>
+      </div>
+      <div>
+        <div style="font-size: 0.775rem; font-weight: 600; color: #7A4A3A; margin-bottom: 6px;">Checklist & Evaluation Criteria:</div>
+        <ul class="uw-guideline-bullets" style="margin: 0; padding-left: 1.25rem; font-size: 0.8125rem; line-height: 1.6; color: var(--text-main);">
+          ${data.points.map(p => `<li style="margin-bottom: 3px;">${p}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+function closeDecisionSupportDetail() {
+  currentActiveDecision = null;
+  const panel = document.getElementById('uw-decision-support-detail-panel');
+  if (panel) panel.style.display = 'none';
+  document.querySelectorAll('.interactive-decision-card').forEach(card => card.classList.remove('selected-decision'));
+}
+
+function initRiskAssessmentGuidelines() {
+  // Reset any open subpanels on page entry
+  closeGuideStepDetail();
+  closeDecisionSupportDetail();
+  document.querySelectorAll('.interactive-risk-card').forEach(card => card.classList.remove('selected-card'));
+}
+
+// ==========================================================================
+// PART 2: POLICY REVIEW WORKSPACE CONTROLLERS
+// ==========================================================================
+window.activeUnderwriterReviewPolicy = null;
+
+function initUnderwriterReviewPage(requestedId = null) {
+  const queue = window.underwriterQueueData || [];
+
+  if (queue.length === 0) {
+    fetchUnderwriterQueue().then(() => {
+      populateReviewPolicySelector(requestedId);
+    });
+  } else {
+    populateReviewPolicySelector(requestedId);
+  }
+}
+
+function populateReviewPolicySelector(requestedId = null) {
+  const queue = window.underwriterQueueData || [];
+  const selectElem = document.getElementById('uw-review-policy-select');
+  const countPill = document.getElementById('uw-review-queue-count-pill');
+  if (countPill) countPill.textContent = `${queue.length} Cases in Queue`;
+
+  if (!selectElem) return;
+
+  if (queue.length === 0) {
+    selectElem.innerHTML = '<option value="">No applications in review queue</option>';
+    return;
+  }
+
+  selectElem.innerHTML = queue.map(item => {
+    return `<option value="${item.id}">${item.id} · ${item.customer} (${item.product || item.policy_type}) — ${item.status || 'Pending'}</option>`;
+  }).join('');
+
+  const targetId = requestedId || (queue[0] ? queue[0].id : null);
+  if (targetId) {
+    selectElem.value = targetId;
+    selectPolicyForReview(targetId);
+  }
+}
+
+function selectPolicyForReview(appId) {
+  const queue = window.underwriterQueueData || [];
+  const app = queue.find(item => item.id === appId) || queue[0];
   if (!app) return;
 
-  app.status = decision;
+  window.activeUnderwriterReviewPolicy = app;
 
-  // Update badge in slide panel
-  const panelBadge = document.getElementById('panel-status-badge');
-  if (panelBadge) {
-    panelBadge.textContent = decision;
-    panelBadge.className = decision === 'Approved' ? 'badge badge-active' : decision === 'Needs More Information' ? 'badge badge-info' : 'badge badge-risk-high';
+  const riskLevel = app.risk_level || 'Low';
+  const riskScore = app.risk_score || 20;
+  const status = app.status || 'Pending Review';
+  const statusBadgeClass = status === 'Approved' ? 'badge-active' : status === 'Needs More Information' ? 'badge-info' : status === 'Rejected' ? 'badge-risk-high' : 'badge-pending';
+  const isCommercial = (app.product && app.product.includes('Commercial')) || (app.policy_type && app.policy_type.includes('Commercial'));
+
+  // Summary Banner
+  const titleElem = document.getElementById('uw-rev-title');
+  if (titleElem) titleElem.textContent = `${app.policy_number || app.id} · ${app.product || app.policy_type || 'Commercial Property'}`;
+  const statusElem = document.getElementById('uw-rev-status-badge');
+  if (statusElem) {
+    statusElem.textContent = status;
+    statusElem.className = `badge ${statusBadgeClass}`;
+  }
+  const custSubElem = document.getElementById('uw-rev-customer-sub');
+  if (custSubElem) custSubElem.textContent = `Applicant: ${app.customer || 'Michael Brown'} · Queue ID: ${app.id} · Line: ${app.product || app.policy_type || 'Standard Property'}`;
+
+  const numElem = document.getElementById('uw-rev-policy-num');
+  if (numElem) numElem.textContent = app.policy_number || app.id;
+  const nameElem = document.getElementById('uw-rev-insured-name');
+  if (nameElem) nameElem.textContent = app.customer || 'Michael Brown';
+  const premElem = document.getElementById('uw-rev-premium-val');
+  if (premElem) premElem.textContent = app.premium || '$4,200.00/yr';
+  const limitElem = document.getElementById('uw-rev-limit-val');
+  if (limitElem) limitElem.textContent = isCommercial ? '$5,000,000 Policy Limit' : '$1,000,000 Policy Limit';
+
+  const riskBadgeElem = document.getElementById('uw-rev-risk-badge');
+  if (riskBadgeElem) {
+    const rClass = riskLevel === 'Low' ? 'badge-risk-low' : riskLevel === 'Medium' ? 'badge-risk-medium' : 'badge-risk-high';
+    riskBadgeElem.innerHTML = `<span class="badge ${rClass}">Score: ${riskScore}/100 · ${riskLevel} Risk</span>`;
   }
 
-  // Update badge in open tables
-  const statusBadge = document.getElementById(`status-badge-${appId}`);
-  if (statusBadge) {
-    statusBadge.textContent = decision;
-    statusBadge.className = decision === 'Approved' ? 'badge badge-active' : decision === 'Needs More Information' ? 'badge badge-info' : 'badge badge-risk-high';
+  const effElem = document.getElementById('uw-rev-effective-date');
+  if (effElem) effElem.textContent = app.effective_date || '2026-04-01';
+  const expElem = document.getElementById('uw-rev-expiry-date');
+  if (expElem) expElem.textContent = app.end_date || app.expiry_date || '2027-04-01';
+  const daysElem = document.getElementById('uw-rev-days-val');
+  if (daysElem) daysElem.textContent = app.days_remaining != null ? `${app.days_remaining} days remaining` : '14 days remaining';
+
+  // Tab 1: Policy & Insured (Clean equal-height cards)
+  const tabPolId = document.getElementById('uw-tab-pol-id');
+  if (tabPolId) tabPolId.textContent = app.policy_number || app.id;
+  const tabPType = document.getElementById('uw-tab-product-type');
+  if (tabPType) tabPType.textContent = app.product || app.policy_type || 'Commercial Property';
+  const tabStatus = document.getElementById('uw-tab-policy-status');
+  if (tabStatus) tabStatus.innerHTML = `<span class="badge ${statusBadgeClass}">${status}</span>`;
+  const tabEff = document.getElementById('uw-tab-eff-date');
+  if (tabEff) tabEff.textContent = app.effective_date || '2026-04-01';
+  const tabExp = document.getElementById('uw-tab-exp-date');
+  if (tabExp) tabExp.textContent = app.end_date || app.expiry_date || '2027-04-01';
+  const tabPrem = document.getElementById('uw-tab-premium-val');
+  if (tabPrem) tabPrem.textContent = app.premium || '$4,200.00';
+
+  const tabCustName = document.getElementById('uw-tab-cust-name');
+  if (tabCustName) tabCustName.textContent = app.customer || 'Michael Brown';
+  const tabCustEmail = document.getElementById('uw-tab-cust-email');
+  if (tabCustEmail) tabCustEmail.textContent = app.customer_email || `${(app.customer || 'michael.brown').toLowerCase().replace(/[^a-z]/g, '')}@example.com`;
+  const tabCustId = document.getElementById('uw-tab-cust-id');
+  if (tabCustId) tabCustId.textContent = app.customer_id || 'CUST-0024';
+  const tabAddress = document.getElementById('uw-tab-property-address');
+  if (tabAddress) tabAddress.textContent = app.address || app.property_address || (isCommercial ? '104 Corporate Plaza, Suite 400, Chicago, IL 60606' : '742 Evergreen Terrace, Springfield, IL 62704');
+  const tabAgent = document.getElementById('uw-tab-servicing-agent');
+  if (tabAgent) tabAgent.textContent = app.agent || app.servicing_agent || 'Alex Rivera (Agent Unit 4)';
+  const tabRiskClass = document.getElementById('uw-tab-risk-class');
+  if (tabRiskClass) {
+    const rClass = riskLevel === 'Low' ? 'badge-risk-low' : riskLevel === 'Medium' ? 'badge-risk-medium' : 'badge-risk-high';
+    tabRiskClass.innerHTML = `<span class="badge ${rClass}">${riskLevel} Risk Tier (Score: ${riskScore})</span>`;
   }
 
-  // Recalculate stats dynamically from source of truth
-  const pendingCount = MOCK_DB.underwriterQueue.filter(i => i.status === 'Pending').length;
-  const highRiskCount = MOCK_DB.underwriterQueue.filter(i => i.riskLevel === 'High' && i.status !== 'Rejected').length;
-  const approvedCount = MOCK_DB.underwriterQueue.filter(i => i.status === 'Approved').length;
-  const infoCount = MOCK_DB.underwriterQueue.filter(i => i.status === 'Needs More Information').length;
+  // Tab 2: Coverage & Limits Schedule (Equal-sized cards)
+  const covContainer = document.getElementById('uw-tab-coverages-container');
+  if (covContainer) {
+    const rawCoverages = app.coverages && app.coverages.length > 0 ? app.coverages : ['Building & Core Structure', 'Business Personal Property', 'General Liability Protection', 'Loss of Income / Business Interruption'];
+    const rawExclusions = app.exclusions && app.exclusions.length > 0 ? app.exclusions : ['Earthquake & Seismic Rider', 'Flood Zone Endorsement'];
 
-  MOCK_DB.underwriter.stats.pendingReviews = pendingCount;
-  MOCK_DB.underwriter.stats.highRiskCases = highRiskCount;
-  MOCK_DB.underwriter.stats.approved = approvedCount;
-  MOCK_DB.underwriter.stats.needsMoreInfo = infoCount;
+    const coverageCards = [
+      ...rawCoverages.map(c => ({
+        name: c,
+        limit: isCommercial ? '$2,500,000' : '$750,000',
+        deductible: '$2,500',
+        premium: 'Included in Base',
+        status: 'Included',
+        desc: 'Standard comprehensive policy protection against covered perils.'
+      })),
+      ...rawExclusions.map(e => ({
+        name: e,
+        limit: isCommercial ? '$1,000,000' : '$250,000',
+        deductible: '$5,000',
+        premium: 'Endorsement Rider',
+        status: 'Excluded',
+        desc: 'Specialized endorsement required prior to binding authorization.'
+      }))
+    ];
 
-  const elPending = document.querySelector('#card-uw-pending .stat-value');
-  if (elPending) elPending.textContent = pendingCount;
-  const elHighRisk = document.querySelector('#card-uw-high-risk .stat-value');
-  if (elHighRisk) elHighRisk.textContent = highRiskCount;
-  const elApproved = document.querySelector('#card-uw-approved .stat-value');
-  if (elApproved) elApproved.textContent = approvedCount;
-  const elInfo = document.querySelector('#card-uw-info .stat-value');
-  if (elInfo) elInfo.textContent = infoCount;
-
-  // Add to audit trail
-  if (MOCK_DB.auditLogs) {
-    MOCK_DB.auditLogs.unshift({
-      time: 'Just now',
-      user: 'Alex Vance',
-      role: 'Underwriter',
-      action: `Underwriting Decision: ${decision} (${app.id})`,
-      meta: `Applicant: ${app.customer} · Product: ${app.product} · Premium: ${app.premium}`
-    });
-    renderAdminAuditLogs();
+    covContainer.innerHTML = coverageCards.map(item => `
+      <div class="uw-coverage-card">
+        <div>
+          <div class="uw-coverage-card-header">
+            <div class="uw-coverage-card-title">${item.name}</div>
+            <span class="badge ${item.status === 'Included' ? 'badge-active' : 'badge-pending'}" style="font-size:0.75rem;">${item.status}</span>
+          </div>
+          <div class="uw-coverage-card-desc">${item.desc}</div>
+        </div>
+        <div class="uw-coverage-metrics-row">
+          <div class="uw-coverage-metric-item">
+            <span class="uw-coverage-metric-label">Coverage Limit</span>
+            <span class="uw-coverage-metric-val">${item.limit}</span>
+          </div>
+          <div class="uw-coverage-metric-item">
+            <span class="uw-coverage-metric-label">Deductible</span>
+            <span class="uw-coverage-metric-val">${item.deductible}</span>
+          </div>
+          <div class="uw-coverage-metric-item">
+            <span class="uw-coverage-metric-label">Premium</span>
+            <span class="uw-coverage-metric-val" style="color:var(--blue-700);">${item.premium}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
   }
 
-  const toastMessage = decision === 'Approved'
-    ? `Application ${appId} Approved! Policy bind instruction dispatched.`
-    : decision === 'Needs More Information'
-      ? `Information request notification sent to broker for ${appId}.`
-      : `Application ${appId} Rejected due to underwriting risk criteria.`;
+  // Tab 3: Risk Factors (Clean, simple format with no duplicate side content)
+  const factorsContainer = document.getElementById('uw-tab-risk-factors-container');
+  if (factorsContainer) {
+    const factors = [
+      {
+        name: 'Building & Structural Integrity',
+        desc: 'Physical structure constructed within modern building code standards with certified roof inspection.',
+        finding: 'Roof Age < 12 yrs (Class 4 Hail Rated)',
+        impact: 'Low Impact',
+        impactClass: 'uw-impact-low',
+        status: '<span class="badge badge-active">Verified</span>'
+      },
+      {
+        name: 'Prior Loss & Claims Record',
+        desc: 'Carrier loss runs report 5-year claims history across relevant property & liability lines.',
+        finding: riskLevel === 'High' ? '1 Open Fire Loss Claim' : '0 Prior Claims in 60 Mo',
+        impact: riskLevel === 'High' ? 'High Impact' : 'Low Impact',
+        impactClass: riskLevel === 'High' ? 'uw-impact-high' : 'uw-impact-low',
+        status: riskLevel === 'High' ? '<span class="badge badge-risk-high">Review Required</span>' : '<span class="badge badge-active">Verified</span>'
+      },
+      {
+        name: 'Territory Hazard & Flood Exposure',
+        desc: 'Geospatial catastrophe mapping and FEMA flood zone boundary classification.',
+        finding: 'Zone X (Minimal Flood Risk)',
+        impact: 'Low Impact',
+        impactClass: 'uw-impact-low',
+        status: '<span class="badge badge-active">Within Guidelines</span>'
+      },
+      {
+        name: '4-Point Inspection & Electrical Safety',
+        desc: 'Physical 4-point audit of electrical 200A service, plumbing lines, HVAC, and fire suppression.',
+        finding: 'Copper Plumbing / Updated Breakers',
+        impact: 'Moderate Impact',
+        impactClass: 'uw-impact-med',
+        status: '<span class="badge badge-pending">Inspection Verified</span>'
+      },
+      {
+        name: 'Binding Authority Threshold',
+        desc: 'Total insured value and liability exposure evaluated against CPCU underwriter authorization limit.',
+        finding: `$${isCommercial ? '5.0M' : '1.0M'} Limit / Standard Authority`,
+        impact: 'Low Impact',
+        impactClass: 'uw-impact-low',
+        status: '<span class="badge badge-active">Within Guidelines</span>'
+      }
+    ];
 
-  showToast(toastMessage);
+    factorsContainer.innerHTML = factors.map(f => `
+      <div class="uw-risk-factor-row">
+        <div class="uw-factor-left">
+          <div class="uw-factor-title">${f.name}</div>
+          <div class="uw-factor-desc">${f.desc}</div>
+        </div>
+        <div class="uw-factor-meta-pills">
+          <div class="uw-factor-finding">${f.finding}</div>
+          <div class="uw-factor-impact ${f.impactClass}">${f.impact}</div>
+          <div>${f.status}</div>
+        </div>
+      </div>
+    `).join('');
+  }
 
-  // Re-render queue with current filter inputs
-  const searchVal = document.getElementById('uw-search-input')?.value || '';
-  const statusVal = document.getElementById('uw-status-filter')?.value || 'all';
-  const riskVal = document.getElementById('uw-risk-filter')?.value || 'all';
-  const prodVal = document.getElementById('uw-product-filter')?.value || 'all';
-  renderUnderwriterQueueTable(statusVal, riskVal, prodVal, searchVal);
-  renderUnderwriterFullQueue(statusVal, riskVal, prodVal, searchVal, true);
+  // Tab 4: Documents Checklist Table (Proper responsive columns, no clipping)
+  const docsTbody = document.getElementById('uw-tab-docs-tbody');
+  if (docsTbody) {
+    const rawDocs = app.documents && app.documents.length > 0 ? app.documents : ['Application Form', 'Previous Insurance Proof', 'Property Inspection Report', '5-Year Loss Runs Statement', 'Identity & Business Verification'];
+    const docTypes = ['Application Schedule', 'Continuous Coverage', 'Physical Audit', 'Financial Loss History', 'Compliance & KYC'];
+
+    docsTbody.innerHTML = rawDocs.map((doc, idx) => {
+      const docType = docTypes[idx % docTypes.length];
+      return `
+        <tr>
+          <td><strong style="color:var(--blue-900);font-size:0.875rem;">${doc}</strong></td>
+          <td><span style="font-size:0.8rem;color:#7A4A3A;">${docType}</span></td>
+          <td><span class="badge badge-active">Submitted</span></td>
+          <td>
+            <select class="uw-doc-select" onchange="updateDocChecklistStatus(${idx}, this.value)">
+              <option value="Reviewed" selected>Reviewed & Verified</option>
+              <option value="Pending">Pending Review</option>
+              <option value="Requires Attention">Requires Attention</option>
+            </select>
+          </td>
+          <td style="text-align:right;">
+            <span class="badge badge-active" id="doc-status-cell-${idx}">Reviewed & Verified</span>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Reset selected state on decision cards
+  document.querySelectorAll('.uw-decision-card').forEach(c => c.classList.remove('selected-decision'));
+}
+
+function switchReviewTab(tabName, btnElem = null) {
+  if (btnElem) {
+    document.querySelectorAll('.uw-review-tab-btn').forEach(b => b.classList.remove('active'));
+    btnElem.classList.add('active');
+  }
+
+  document.querySelectorAll('.uw-tab-panel').forEach(p => p.classList.remove('active'));
+  const targetPanel = document.getElementById(`uw-panel-${tabName}`);
+  if (targetPanel) targetPanel.classList.add('active');
+}
+
+function updateDocChecklistStatus(idx, status) {
+  const cell = document.getElementById(`doc-status-cell-${idx}`);
+  if (cell) {
+    cell.textContent = status;
+    cell.className = status === 'Reviewed' || status === 'Reviewed & Verified' ? 'badge badge-active' : status === 'Requires Attention' || status === 'Missing' ? 'badge badge-risk-high' : 'badge badge-pending';
+  }
+}
+
+function selectAndPromptDecision(decisionType, cardElem) {
+  document.querySelectorAll('.uw-decision-card').forEach(c => c.classList.remove('selected-decision'));
+  if (cardElem) {
+    cardElem.classList.add('selected-decision');
+  }
+  promptUnderwritingDecision(decisionType);
+}
+
+// Decision Confirmation Modal Controller
+let pendingDecisionType = 'Approved';
+
+function promptUnderwritingDecision(decisionType, specificAppId = null) {
+  let app = null;
+  if (specificAppId) {
+    const queue = window.underwriterQueueData || [];
+    app = queue.find(i => i.id === specificAppId || i.policy_id === specificAppId);
+    if (app) {
+      window.activeUnderwriterReviewPolicy = app;
+    }
+  }
+  if (!app) {
+    app = window.activeUnderwriterReviewPolicy;
+  }
+  if (!app) {
+    showToast('Please select an active policy from the queue first.');
+    return;
+  }
+
+  pendingDecisionType = decisionType;
+
+  const modal = document.getElementById('uw-decision-modal');
+  const title = document.getElementById('uw-modal-decision-title');
+  const sub = document.getElementById('uw-modal-decision-sub');
+  const polId = document.getElementById('uw-modal-pol-id');
+  const insured = document.getElementById('uw-modal-insured-name');
+  const actionBadge = document.getElementById('uw-modal-action-badge');
+  const notes = document.getElementById('uw-modal-notes');
+  if (!modal) return;
+
+  const displayDecisionName = decisionType === 'Approved' ? 'Approve & Bind' : (decisionType === 'Info Required' || decisionType === 'Needs More Information') ? 'Request More Information' : 'Reject';
+  title.textContent = `Confirm Decision: ${displayDecisionName}`;
+  sub.textContent = `Binding authorization for ${app.policy_number || app.id}`;
+  if (polId) polId.textContent = app.policy_number || app.id;
+  if (insured) insured.textContent = app.customer || 'Michael Brown';
+
+  if (actionBadge) {
+    actionBadge.textContent = displayDecisionName;
+    actionBadge.className = decisionType === 'Approved' ? 'badge badge-active' : (decisionType === 'Info Required' || decisionType === 'Needs More Information') ? 'badge badge-info' : 'badge badge-risk-high';
+  }
+
+  if (notes) {
+    notes.value = decisionType === 'Approved'
+      ? `Underwriting review verified: application meets standard guidelines. Policy approved and bound for annual term.`
+      : (decisionType === 'Info Required' || decisionType === 'Needs More Information')
+        ? `Please provide updated carrier loss runs and certified electrical system audit before final determination.`
+        : `Application declined: risk score and hazard assessment exceed allowable binding guidelines for this coverage line.`;
+  }
+
+  openUwModal('uw-decision-modal');
+}
+
+async function confirmUnderwritingDecision() {
+  const app = window.activeUnderwriterReviewPolicy;
+  if (!app) return;
+
+  const notes = document.getElementById('uw-modal-notes')?.value || '';
+  closeUwModal('uw-decision-modal');
+
+  // Map user decision to backend supported decision: 'Approved' | 'Rejected' | 'Info Required'
+  let backendDecision = 'Approved';
+  if (pendingDecisionType === 'Rejected') backendDecision = 'Rejected';
+  else if (pendingDecisionType === 'Info Required' || pendingDecisionType === 'Needs More Information') backendDecision = 'Info Required';
+  else backendDecision = 'Approved';
+
+  await makeUnderwritingDecision(app.id, backendDecision, notes);
 }
 
 /**
@@ -3326,19 +4258,29 @@ function renderAdminDashboardUsersTable() {
   const tbody = document.getElementById('admin-dashboard-users-tbody');
   if (!tbody) return;
 
-  tbody.innerHTML = MOCK_DB.users.map(u => {
-    const roleBadge = u.role === 'Admin' ? 'background:#3B241D;color:#ffffff;' : u.role === 'Underwriter' ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : u.role === 'Agent' ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
-    const statusBadge = u.status === 'Active' ? 'badge-active' : 'badge-pending';
+  const users = (window.adminUsersData && window.adminUsersData.users) ? window.adminUsersData.users : [];
+
+  if (users.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:2rem;">No system users found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = users.slice(0, 10).map(u => {
+    const role = u.role || 'Customer';
+    const roleBadge = role === 'Admin' ? 'background:#3B241D;color:#ffffff;' : role.startsWith('Underwriter') ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : role.startsWith('Agent') ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
+    const status = u.status || 'Active';
+    const statusBadge = status === 'Active' ? 'badge-active' : 'badge-pending';
+    const userId = u.user_id || u.id;
     return `
-          <tr onclick="openUserDetailsPanel('${u.id}')" title="Click to view details for ${u.name}" data-tooltip="View full identity and privilege profile for ${u.name}">
-            <td><strong style="color:var(--blue-900)">${u.name}</strong></td>
-            <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;">${u.id}</code></td>
-            <td>${u.email}</td>
-            <td><span class="badge" style="${roleBadge}">${u.role}</span></td>
-            <td><span class="badge ${statusBadge}">${u.status}</span></td>
-            <td>${u.created}</td>
+          <tr onclick="openUserDetailsPanel('${userId}')" title="Click to view details for ${u.name}" data-tooltip="View full identity and privilege profile for ${u.name}">
+            <td title="${u.name}"><strong style="color:var(--blue-900)">${u.name}</strong></td>
+            <td title="${userId}"><code style="font-size:0.775rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;">${userId}</code></td>
+            <td class="td-email" title="${u.email}" data-tooltip="${u.email}">${u.email}</td>
+            <td><span class="badge" style="${roleBadge}">${role}</span></td>
+            <td><span class="badge ${statusBadge}">${status}</span></td>
+            <td title="${u.created_at || u.created || 'Recorded'}">${u.created_at || u.created || 'Recorded'}</td>
             <td style="text-align:right">
-              <button class="btn btn-outline btn-sm table-action-btn" onclick="event.stopPropagation(); openUserDetailsPanel('${u.id}')" data-tooltip="Inspect ${u.name}'s account">View →</button>
+              <button class="btn btn-outline btn-sm table-action-btn" onclick="event.stopPropagation(); openUserDetailsPanel('${userId}')" data-tooltip="Inspect ${u.name}'s account">View →</button>
             </td>
           </tr>
         `;
@@ -3350,10 +4292,16 @@ function renderAdminUsersTable(roleFilter = 'all', statusFilter = 'all', searchT
   if (!tbody) return;
   const q = searchTerm.toLowerCase().trim();
 
-  const filtered = MOCK_DB.users.filter(u => {
-    const matchesRole = roleFilter === 'all' || u.role.toLowerCase() === roleFilter.toLowerCase();
-    const matchesStatus = statusFilter === 'all' || u.status.toLowerCase() === statusFilter.toLowerCase();
-    const matchesSearch = u.name.toLowerCase().includes(q) || u.id.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+  const users = (window.adminUsersData && window.adminUsersData.users) ? window.adminUsersData.users : [];
+
+  const filtered = users.filter(u => {
+    const role = (u.role || '').toLowerCase();
+    const matchesRole = roleFilter === 'all' || role.includes(roleFilter.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || (u.status || 'active').toLowerCase() === statusFilter.toLowerCase();
+    const userId = (u.user_id || u.id || '').toLowerCase();
+    const name = (u.name || '').toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    const matchesSearch = !q || name.includes(q) || userId.includes(q) || email.includes(q);
     return matchesRole && matchesStatus && matchesSearch;
   });
 
@@ -3363,69 +4311,203 @@ function renderAdminUsersTable(roleFilter = 'all', statusFilter = 'all', searchT
   }
 
   tbody.innerHTML = filtered.map(u => {
-    const roleBadge = u.role === 'Admin' ? 'background:#3B241D;color:#ffffff;' : u.role === 'Underwriter' ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : u.role === 'Agent' ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
-    const statusBadge = u.status === 'Active' ? 'badge-active' : 'badge-pending';
+    const role = u.role || 'Customer';
+    const roleBadge = role === 'Admin' ? 'background:#3B241D;color:#ffffff;' : role.startsWith('Underwriter') ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : role.startsWith('Agent') ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
+    const status = u.status || 'Active';
+    const statusBadge = status === 'Active' ? 'badge-active' : 'badge-pending';
+    const userId = u.user_id || u.id;
     return `
-          <tr onclick="openUserDetailsPanel('${u.id}')" title="Click to view details for ${u.name}" data-tooltip="View full identity and privilege profile for ${u.name}">
-            <td><strong style="color:var(--blue-900)">${u.name}</strong></td>
-            <td><code style="font-size:0.8rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;">${u.id}</code></td>
-            <td>${u.email}</td>
-            <td><span class="badge" style="${roleBadge}">${u.role}</span></td>
-            <td><span class="badge ${statusBadge}">${u.status}</span></td>
-            <td>${u.created}</td>
+          <tr onclick="openUserDetailsPanel('${userId}')" title="Click to view details for ${u.name}" data-tooltip="View full identity and privilege profile for ${u.name}">
+            <td title="${u.name}"><strong style="color:var(--blue-900)">${u.name}</strong></td>
+            <td title="${userId}"><code style="font-size:0.775rem;background:var(--gray-100);padding:2px 6px;border-radius:4px;">${userId}</code></td>
+            <td class="td-email" title="${u.email}" data-tooltip="${u.email}">${u.email}</td>
+            <td><span class="badge" style="${roleBadge}">${role}</span></td>
+            <td><span class="badge ${statusBadge}">${status}</span></td>
+            <td title="${u.created_at || u.created || 'Recorded'}">${u.created_at || u.created || 'Recorded'}</td>
             <td style="text-align:right">
-              <button class="btn btn-primary btn-sm table-action-btn" onclick="event.stopPropagation(); openUserDetailsPanel('${u.id}')" data-tooltip="Inspect ${u.name}'s account">View →</button>
+              <button class="btn btn-primary btn-sm table-action-btn" onclick="event.stopPropagation(); openUserDetailsPanel('${userId}')" data-tooltip="Inspect ${u.name}'s account">View →</button>
             </td>
           </tr>
         `;
   }).join('');
 }
 
-// Open User Details Right-Side Slide Panel (Req 8)
+// Open User Details Right-Side Slide Panel (Real Database Data)
 function openUserDetailsPanel(userId) {
-  const u = MOCK_DB.users.find(item => item.id === userId);
+  const users = (window.adminUsersData && window.adminUsersData.users) ? window.adminUsersData.users : [];
+  const u = users.find(item => (item.user_id === userId || item.id === userId));
   if (!u) return;
 
-  const roleBadge = u.role === 'Admin' ? 'background:#3B241D;color:#ffffff;' : u.role === 'Underwriter' ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : u.role === 'Agent' ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
+  const rawRole = u.role || 'Customer';
+  let normRole = 'Customer';
+  if (rawRole.toLowerCase().includes('agent')) normRole = 'Agent';
+  else if (rawRole.toLowerCase().includes('underwriter')) normRole = 'Underwriter';
+  else if (rawRole.toLowerCase().includes('admin')) normRole = 'Admin';
+  else if (rawRole.toLowerCase().includes('customer')) normRole = 'Customer';
+  else normRole = rawRole;
+
+  const roleBadge = normRole === 'Admin' ? 'background:#3B241D;color:#ffffff;' : normRole === 'Underwriter' ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : normRole === 'Agent' ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
+  const idStr = u.user_id || u.id;
+  const status = u.status || 'Active';
+  const created = u.created_at || u.created || 'Database Record';
+
+  const assignedDesc = normRole === 'Customer'
+    ? `Retail Policyholder · Associated with ${u.policies_count || 0} active policies`
+    : normRole === 'Agent'
+      ? 'Licensed Insurance Broker · Portfolio Advisor'
+      : normRole === 'Underwriter'
+        ? 'Risk Decision Authority · Queue Reviewer'
+        : 'Enterprise Platform Superuser';
 
   const contentHtml = `
         <div class="detail-section">
           <div class="detail-section-title">User Account Details</div>
           <div class="detail-row"><span class="detail-label">Full Name</span><span class="detail-value" style="font-weight:700;color:var(--blue-900);font-size:1rem;">${u.name}</span></div>
-          <div class="detail-row"><span class="detail-label">User ID</span><span class="detail-value" style="font-family:monospace;font-weight:700;">${u.id}</span></div>
+          <div class="detail-row"><span class="detail-label">User ID</span><span class="detail-value" style="font-family:monospace;font-weight:700;">${idStr}</span></div>
           <div class="detail-row"><span class="detail-label">Email Address</span><span class="detail-value">${u.email}</span></div>
-          <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${u.phone || '(555) 012-3456'}</span></div>
-          <div class="detail-row"><span class="detail-label">Assigned Role</span><span class="badge" style="${roleBadge}">${u.role}</span></div>
-          <div class="detail-row"><span class="detail-label">Status</span><span class="badge ${u.status === 'Active' ? 'badge-active' : 'badge-pending'}">${u.status}</span></div>
-          <div class="detail-row"><span class="detail-label">Created Date</span><span class="detail-value">${u.created}</span></div>
+          <div class="detail-row"><span class="detail-label">Assigned Role</span><span class="badge" style="${roleBadge}">${normRole}</span></div>
+          <div class="detail-row"><span class="detail-label">Status</span><span class="badge ${status === 'Active' ? 'badge-active' : 'badge-pending'}">${status}</span></div>
+          <div class="detail-row"><span class="detail-label">Created Date</span><span class="detail-value">${created}</span></div>
         </div>
 
         <div class="detail-section">
-          <div class="detail-section-title">Assigned Information</div>
+          <div class="detail-section-title">Assigned Scope & Privileges</div>
           <div class="card" style="padding:1rem;background:var(--gray-50);border:1px solid var(--gray-200);">
             <div style="font-size:0.875rem;font-weight:700;color:var(--blue-900);margin-bottom:4px;">
-              ${u.role === 'Customer' ? 'Customer Account Hierarchy' : u.role === 'Agent' ? 'Assigned Broker Portfolio' : u.role === 'Underwriter' ? 'Risk Authority & Queue' : 'Administrator Superuser Scope'}
+              ${normRole} Authority Scope
             </div>
-            <div style="font-size:0.85rem;color:var(--gray-700);">${u.assignedInfo}</div>
+            <div style="font-size:0.85rem;color:var(--gray-700);">${assignedDesc}</div>
           </div>
         </div>
 
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-outline btn-block btn-sm" onclick="showToast('Password reset link dispatched for ${u.name}.')">Send Password Reset</button>
-          <button class="btn btn-primary btn-block btn-sm" onclick="showToast('User record verified.')">Confirm RBAC</button>
+        <div style="display:flex;gap:8px;align-items:center;width:100%;">
+          <button class="btn btn-outline btn-sm" style="flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0.45rem 0.5rem;font-size:0.775rem;" id="btn-admin-panel-pwd-reset" title="Send Password Reset to ${normRole}" onclick="handleAdminPasswordReset('${idStr}', '${u.email}', '${normRole}', this)">Send Password Reset to ${normRole}</button>
+          <button class="btn btn-primary btn-sm" style="flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0.45rem 0.5rem;font-size:0.775rem;" id="btn-admin-panel-confirm-rbac" title="Confirm as ${normRole}" onclick="handleAdminConfirmAccess('${idStr}', '${normRole}', this)">Confirm as ${normRole}</button>
         </div>
       `;
 
-  openOrUpdateSlidePanel(`User: ${u.name}`, `ID: ${u.id} · ${u.role} Account`, contentHtml);
+  openOrUpdateSlidePanel(`User: ${u.name}`, `ID: ${idStr} · ${normRole} Account`, contentHtml);
 }
 
-// Open Create User Slide-Out Panel (Req 7)
+async function handleAdminPasswordReset(userId, email, role, btnElem) {
+  if (!btnElem) return;
+  if (btnElem.disabled) return;
+
+  const originalHtml = btnElem.innerHTML;
+  btnElem.disabled = true;
+  btnElem.innerHTML = `<span style="display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:4px;"></span> Sending...`;
+
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      showToast('Authentication token required for admin action.');
+      btnElem.disabled = false;
+      btnElem.innerHTML = originalHtml;
+      return;
+    }
+
+    const response = await fetch(`${ADMIN_SERVICE_URL}/admin/users/password-reset`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        email: email || '',
+        role: role
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      showToast(`Error: ${err.detail || 'Failed to dispatch password reset.'}`);
+      btnElem.disabled = false;
+      btnElem.innerHTML = originalHtml;
+      return;
+    }
+
+    const data = await response.json();
+    showToast(data.message || `Password reset link sent to the ${role} successfully.`);
+
+    // Update button text and keep disabled to prevent duplicate actions
+    btnElem.innerHTML = `Password Reset Sent to ${role}`;
+    btnElem.disabled = true;
+    btnElem.style.opacity = '0.85';
+    btnElem.style.cursor = 'default';
+
+    if (typeof fetchAdminAudit === 'function') fetchAdminAudit();
+  } catch (err) {
+    console.error('Password reset error:', err);
+    showToast(`Error connecting to Admin service: ${err.message}`);
+    btnElem.disabled = false;
+    btnElem.innerHTML = originalHtml;
+  }
+}
+
+async function handleAdminConfirmAccess(userId, role, btnElem) {
+  if (!btnElem) return;
+  if (btnElem.disabled) return;
+
+  const originalHtml = btnElem.innerHTML;
+  btnElem.disabled = true;
+  btnElem.innerHTML = `<span style="display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:4px;"></span> Confirming...`;
+
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      showToast('Authentication token required for admin action.');
+      btnElem.disabled = false;
+      btnElem.innerHTML = originalHtml;
+      return;
+    }
+
+    const response = await fetch(`${ADMIN_SERVICE_URL}/admin/users/confirm-access`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        role: role
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      showToast(`Error: ${err.detail || 'Failed to confirm access.'}`);
+      btnElem.disabled = false;
+      btnElem.innerHTML = originalHtml;
+      return;
+    }
+
+    const data = await response.json();
+    showToast(data.message || `${role} access confirmed successfully.`);
+
+    // Update button text and keep disabled to prevent duplicate submissions
+    btnElem.innerHTML = `${role} Confirmed`;
+    btnElem.disabled = true;
+    btnElem.style.opacity = '0.85';
+    btnElem.style.cursor = 'default';
+
+    if (typeof fetchAdminAudit === 'function') fetchAdminAudit();
+  } catch (err) {
+    console.error('Confirm access error:', err);
+    showToast(`Error connecting to Admin service: ${err.message}`);
+    btnElem.disabled = false;
+    btnElem.innerHTML = originalHtml;
+  }
+}
+
+
+// Open Create User Slide-Out Panel
 function openCreateUserPanel(e) {
   if (e && e.stopPropagation) e.stopPropagation();
   const contentHtml = `
         <div class="detail-section" style="border-bottom:none;">
           <p style="font-size:0.85rem;color:var(--gray-600);margin-bottom:1.25rem;">
-            Fill in the information below to provision a new user account with enterprise role assignment.
+            Fill in the information below to provision a new user account with PostgreSQL persistence.
           </p>
 
           <form id="admin-create-user-form" onsubmit="handleCreateUserSubmit(event)">
@@ -3440,8 +4522,8 @@ function openCreateUserPanel(e) {
             </div>
 
             <div class="form-group" style="margin-bottom:1rem;">
-              <label for="new-user-phone" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Phone Number *</label>
-              <input type="tel" id="new-user-phone" class="form-control" placeholder="(555) 345-6789" required style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;">
+              <label for="new-user-phone" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Phone Number</label>
+              <input type="tel" id="new-user-phone" class="form-control" placeholder="(555) 345-6789" style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;">
             </div>
 
             <div class="form-group" style="margin-bottom:1rem;">
@@ -3455,45 +4537,43 @@ function openCreateUserPanel(e) {
             </div>
 
             <div class="form-group" style="margin-bottom:1rem;">
-              <label for="new-user-status" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Account Status *</label>
-              <select id="new-user-status" class="form-control" required style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;background:var(--white);">
+              <label for="new-user-status" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Account Status</label>
+              <select id="new-user-status" class="form-control" style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;background:var(--white);">
                 <option value="Active">Active</option>
                 <option value="Pending">Pending</option>
               </select>
             </div>
 
             <div class="form-group" style="margin-bottom:1.25rem;">
-              <label for="new-user-dept" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Organization / Portfolio Notes</label>
-              <input type="text" id="new-user-dept" class="form-control" placeholder="e.g. Northeast Region · Commercial Advisory" style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;">
+              <label for="new-user-dept" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Address / Location Notes</label>
+              <input type="text" id="new-user-dept" class="form-control" placeholder="124 Grand Avenue, Suite 400, Chicago, IL 60611" style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;">
             </div>
 
             <div style="display:flex;gap:10px;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--gray-200);">
               <button type="button" class="btn btn-outline btn-block" onclick="closeSlidePanel()">Cancel</button>
-              <button type="submit" class="btn btn-primary btn-block">Create User</button>
+              <button type="submit" class="btn btn-primary btn-block" id="btn-admin-submit-user">Create User</button>
             </div>
           </form>
         </div>
       `;
 
-  openOrUpdateSlidePanel('Create New User', 'Provision New InsureAssist Account', contentHtml);
+  openOrUpdateSlidePanel('Create New User', 'Provision New Database User Account', contentHtml);
 };
 
-// Handle Create User Submission (persists to state and updates UI)
-function handleCreateUserSubmit(e) {
+// Handle Create User Submission (Persists to Backend & Database)
+async function handleCreateUserSubmit(e) {
   e.preventDefault();
 
   const nameInput = document.getElementById('new-user-name');
   const emailInput = document.getElementById('new-user-email');
   const phoneInput = document.getElementById('new-user-phone');
   const roleInput = document.getElementById('new-user-role');
-  const statusInput = document.getElementById('new-user-status');
   const deptInput = document.getElementById('new-user-dept');
 
   const name = nameInput ? nameInput.value.trim() : '';
   const email = emailInput ? emailInput.value.trim() : '';
-  const phone = phoneInput ? phoneInput.value.trim() : '(555) 123-4567';
+  const phone = phoneInput ? phoneInput.value.trim() : '';
   const role = roleInput ? roleInput.value : 'Customer';
-  const status = statusInput ? statusInput.value : 'Active';
   const dept = deptInput ? deptInput.value.trim() : '';
 
   // Form validation
@@ -3508,82 +4588,51 @@ function handleCreateUserSubmit(e) {
     if (emailInput) emailInput.focus();
     return;
   }
-  if (!phone) {
-    showToast('Please enter a phone number.');
-    if (phoneInput) phoneInput.focus();
-    return;
-  }
 
-  // Generate ID according to existing convention
-  const count = MOCK_DB.users.length + 1;
-  const newId = `USR-${String(count).padStart(3, '0')}`;
-
-  const assignedInfo = dept || (
-    role === 'Customer' ? 'Assigned Agent: Alex Rivera' :
-      role === 'Agent' ? 'Assigned Customers: 0 Accounts' :
-        role === 'Underwriter' ? 'Senior Risk Officer · Queue Authority' :
-          'System Governance & Root RBAC'
-  );
-
-  const newUser = {
-    id: newId,
-    name: name,
-    email: email,
-    phone: phone,
-    role: role,
-    status: status,
-    created: 'Today',
-    assignedInfo: assignedInfo,
-    policiesCount: 0
-  };
-
-  // Add to data store
-  MOCK_DB.users.unshift(newUser);
-
-  // Add audit log
-  MOCK_DB.auditLogs.unshift({
-    time: 'Just now',
-    user: 'Jordan Taylor',
-    role: 'Admin',
-    action: `Created new user account ${newId} (${name})`,
-    meta: `Assigned role: ${role} · Status: ${status} · Email: ${email}`
-  });
-
-  // Update relevant dashboard counts
-  const totalUsersEl = document.getElementById('admin-stat-total-users-val');
-  if (totalUsersEl) {
-    const cur = parseInt(totalUsersEl.textContent, 10) || 248;
-    totalUsersEl.textContent = cur + 1;
-  }
-
-  if (role === 'Customer') {
-    const totalCustEl = document.getElementById('admin-stat-total-customers-val');
-    if (totalCustEl) {
-      const cur = parseInt(totalCustEl.textContent, 10) || 180;
-      totalCustEl.textContent = cur + 1;
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      showToast('Admin authentication token required.');
+      return;
     }
-  } else if (role === 'Agent') {
-    const totalAgtEl = document.getElementById('admin-stat-total-agents-val');
-    if (totalAgtEl) {
-      const cur = parseInt(totalAgtEl.textContent, 10) || 32;
-      totalAgtEl.textContent = cur + 1;
+
+    const response = await fetch(`${ADMIN_SERVICE_URL}/admin/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        role: role,
+        mobile: phone,
+        address: dept || '124 Grand Avenue, Suite 400, Chicago, IL 60611',
+        password: 'password123'
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      showToast(`Creation failed: ${err.detail || 'Could not create user'}`);
+      return;
     }
-  } else if (role === 'Underwriter') {
-    const totalUwEl = document.getElementById('admin-stat-total-underwriters-val');
-    if (totalUwEl) {
-      const cur = parseInt(totalUwEl.textContent, 10) || 24;
-      totalUwEl.textContent = cur + 1;
-    }
+
+    const result = await response.json();
+    showToast(`User ${name} (${result.user_id}) created in PostgreSQL database!`);
+
+    // Refresh admin data
+    await fetchAdminUsers();
+    await fetchAdminStats();
+    await fetchAdminAudit();
+
+    // Re-render and open user panel
+    openUserDetailsPanel(result.user_id);
+
+  } catch (err) {
+    console.error('Error creating user via Admin API:', err);
+    showToast('Network error while creating user in database.');
   }
-
-  // Re-render user tables and audit logs
-  renderAdminDashboardUsersTable();
-  renderAdminUsersTable();
-  renderAdminAuditLogs();
-
-  // Show user details in the open panel with success notification
-  openUserDetailsPanel(newId);
-  showToast(`User ${name} (${newId}) created successfully as ${role}!`);
 };
 
 /**
@@ -3862,16 +4911,24 @@ function handleCreateRoleSubmit(e) {
   showToast(`Role "${name}" created successfully with ${selectedPerms.length} permissions!`);
 };
 
-// Render Policy Management Table (Req 10)
+// Render Policy Management Table (Real Database Data)
 function renderAdminPoliciesTable(typeFilter = 'all', statusFilter = 'all', searchTerm = '') {
   const tbody = document.getElementById('admin-policies-tbody');
   if (!tbody) return;
   const q = searchTerm.toLowerCase().trim();
 
-  const filtered = MOCK_DB.allPolicies.filter(p => {
-    const matchesType = typeFilter === 'all' || p.type.toLowerCase().includes(typeFilter.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || p.status.toLowerCase() === statusFilter.toLowerCase();
-    const matchesSearch = p.id.toLowerCase().includes(q) || p.customer.toLowerCase().includes(q) || p.type.toLowerCase().includes(q) || p.agent.toLowerCase().includes(q);
+  const policies = (window.adminPoliciesData && window.adminPoliciesData.policies) ? window.adminPoliciesData.policies : [];
+
+  const filtered = policies.filter(p => {
+    const polType = (p.policy_type || p.type || '').toLowerCase();
+    const matchesType = typeFilter === 'all' || polType.includes(typeFilter.toLowerCase());
+    const polStatus = (p.status || '').toLowerCase();
+    const matchesStatus = statusFilter === 'all' || polStatus === statusFilter.toLowerCase();
+    const polNum = (p.policy_number || p.id || '').toLowerCase();
+    const custName = (p.customer_name || p.customer || '').toLowerCase();
+    const custEmail = (p.customer_email || '').toLowerCase();
+    const agentName = (p.assigned_agent || p.agent_name || '').toLowerCase();
+    const matchesSearch = !q || polNum.includes(q) || custName.includes(q) || custEmail.includes(q) || polType.includes(q) || agentName.includes(q);
     return matchesType && matchesStatus && matchesSearch;
   });
 
@@ -3880,28 +4937,53 @@ function renderAdminPoliciesTable(typeFilter = 'all', statusFilter = 'all', sear
     return;
   }
 
-  tbody.innerHTML = filtered.map(p => `
-        <tr onclick="openPolicyDetailsPanel('${p.id}', '${p.customer}')" title="Click to view policy ${p.id}">
-          <td><code style="font-size:0.825rem;font-weight:700;background:var(--blue-50);color:var(--blue-800);padding:3px 8px;border-radius:4px;">${p.id}</code></td>
-          <td><strong style="color:var(--blue-900)">${p.customer}</strong></td>
-          <td>${p.type}</td>
-          <td><span class="badge ${p.status === 'Active' ? 'badge-active' : 'badge-pending'}">${p.status}</span></td>
-          <td style="font-weight:700;color:var(--blue-900)">${p.premium}</td>
-          <td><span style="font-size:0.85rem;color:var(--gray-700)">${p.agent}</span></td>
+  tbody.innerHTML = filtered.map(p => {
+    const polId = p.policy_id || p.id || '';
+    const polNum = p.policy_number || p.id || '';
+    const custName = p.customer_name || p.customer || 'Unknown';
+    const polType = p.policy_type || p.type || 'Standard Policy';
+    const status = p.status || 'Active';
+    const premium = p.premium || 'N/A';
+    const assignedAgent = p.assigned_agent || p.agent_name || 'Unassigned';
+    const statusBadge = status.toLowerCase() === 'active' ? 'badge-active' : (status.toLowerCase() === 'expired' ? 'badge-risk-high' : 'badge-pending');
+
+    return `
+        <tr onclick="openPolicyDetailsPanel('${polId}', '${custName}')" title="Click to view details for policy ${polNum}" style="cursor:pointer;">
+          <td><code style="font-size:0.8125rem;font-weight:700;background:var(--blue-50);color:var(--blue-800);padding:2px 6px;border-radius:4px;white-space:nowrap;" title="${polNum}">${polNum}</code></td>
+          <td><strong style="color:var(--blue-900)" title="${custName}">${custName}</strong></td>
+          <td><span title="${polType}">${polType}</span></td>
+          <td><span class="badge ${statusBadge}">${status}</span></td>
+          <td style="font-weight:700;color:var(--blue-900);white-space:nowrap;">${premium}</td>
+          <td><span style="font-size:0.8125rem;color:var(--gray-700);font-weight:500;" title="${assignedAgent}">${assignedAgent}</span></td>
           <td style="text-align:right">
-            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openPolicyDetailsPanel('${p.id}', '${p.customer}')">View →</button>
+            <button class="btn btn-outline btn-sm table-action-btn" onclick="event.stopPropagation(); openPolicyDetailsPanel('${polId}', '${custName}')" title="View policy ${polNum}">View →</button>
           </td>
         </tr>
-      `).join('');
+      `;
+  }).join('');
 }
 
-// Render Audit Logs (Req 11)
+// Render Audit Logs (Real Database Activity)
 function renderAdminAuditLogs() {
   const container = document.getElementById('admin-audit-log-container');
   if (!container) return;
 
-  container.innerHTML = MOCK_DB.auditLogs.map(log => {
-    const badgeColor = log.role === 'Admin' ? 'background:#3B241D;color:#ffffff;' : log.role === 'Underwriter' ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : log.role === 'Agent' ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
+  const logs = (window.adminAuditData && window.adminAuditData.audit_logs)
+    ? window.adminAuditData.audit_logs
+    : ((window.workflowNotificationsData && window.workflowNotificationsData.length > 0) ? window.workflowNotificationsData : []);
+
+  if (logs.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--gray-500);">No system audit activity recorded yet.</div>`;
+    return;
+  }
+
+  container.innerHTML = logs.map(log => {
+    const role = log.recipient_role || log.role || 'System';
+    const badgeColor = role === 'Admin' ? 'background:#3B241D;color:#ffffff;' : (role.includes('Underwriter') ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : (role.includes('Agent') ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;'));
+    const title = log.title || log.action || 'System Event';
+    const message = log.message || log.meta || '';
+    const time = log.timestamp || log.created_at || log.time || 'Recent';
+
     return `
           <div class="panel-policy-list-item" style="padding: 1rem 1.15rem;">
             <div style="display:flex;align-items:flex-start;gap:12px;">
@@ -3910,13 +4992,13 @@ function renderAdminAuditLogs() {
               </div>
               <div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-                  <span style="font-weight:700;color:var(--blue-900);font-size:0.925rem;">${log.action}</span>
-                  <span class="badge" style="${badgeColor};font-size:0.7rem;padding:1px 6px;">${log.role} · ${log.user}</span>
+                  <span style="font-weight:700;color:var(--blue-900);font-size:0.925rem;">${title}</span>
+                  <span class="badge" style="${badgeColor};font-size:0.7rem;padding:1px 6px;">${role}</span>
                 </div>
-                <div style="font-size:0.8rem;color:var(--gray-600);">${log.meta}</div>
+                <div style="font-size:0.8rem;color:var(--gray-600);">${message}</div>
               </div>
             </div>
-            <span style="font-size:0.775rem;color:var(--gray-500);font-weight:600;white-space:nowrap;">${log.time}</span>
+            <span style="font-size:0.775rem;color:var(--gray-500);font-weight:600;white-space:nowrap;">${time}</span>
           </div>
         `;
   }).join('');
@@ -4614,6 +5696,353 @@ function renderNotifications(notifications) {
       </div>
     `;
   }).join('');
+}
+
+/**
+ * UNDERWRITER & ADMIN REAL-TIME DATABASE FETCH SERVICES
+ */
+async function fetchUnderwriterStats() {
+  try {
+    const token = getAuthToken();
+    if (!token) return null;
+    const response = await fetch(`${UNDERWRITER_SERVICE_URL}/underwriter/stats`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const stats = await response.json();
+      window.underwriterStatsData = stats;
+
+      // Summary KPI Cards
+      const elPending = document.getElementById('uw-stat-pending-val') || document.querySelector('#card-uw-pending .stat-value');
+      if (elPending) elPending.textContent = stats.pending_reviews != null ? stats.pending_reviews : 0;
+      const elHighRisk = document.getElementById('uw-stat-high-risk-val') || document.querySelector('#card-uw-high-risk .stat-value');
+      if (elHighRisk) elHighRisk.textContent = stats.high_risk_cases != null ? stats.high_risk_cases : 0;
+      const elApproved = document.getElementById('uw-stat-approved-val') || document.querySelector('#card-uw-approved .stat-value');
+      if (elApproved) elApproved.textContent = stats.approved != null ? stats.approved : 0;
+      const elInfo = document.getElementById('uw-stat-info-val') || document.querySelector('#card-uw-info .stat-value');
+      if (elInfo) elInfo.textContent = stats.needs_more_info != null ? stats.needs_more_info : 0;
+
+      // Dynamic Card Tooltips
+      const cardPending = document.getElementById('card-uw-pending');
+      if (cardPending) cardPending.setAttribute('data-tooltip', `View ${stats.pending_reviews || 0} pending submissions in the Underwriting Queue`);
+      const cardHighRisk = document.getElementById('card-uw-high-risk');
+      if (cardHighRisk) cardHighRisk.setAttribute('data-tooltip', `View ${stats.high_risk_cases || 0} flagged high-risk cases`);
+      const cardApproved = document.getElementById('card-uw-approved');
+      if (cardApproved) cardApproved.setAttribute('data-tooltip', `View ${stats.approved || 0} active policies in portfolio`);
+      const cardInfo = document.getElementById('card-uw-info');
+      if (cardInfo) cardInfo.setAttribute('data-tooltip', `View ${stats.needs_more_info || 0} cases requiring additional information`);
+
+      // Decision distribution total
+      const totalPol = stats.total_policies || 791;
+      const totalEl = document.getElementById('uw-decision-total-cases');
+      if (totalEl) totalEl.textContent = `${totalPol} Total Policies`;
+
+      // Decision distribution bars
+      const distContainer = document.getElementById('uw-decision-distribution-container');
+      if (distContainer) {
+        const appPct = Math.round(((stats.approved || 0) / totalPol) * 100);
+        const pendPct = Math.round(((stats.pending_reviews || 0) / totalPol) * 100);
+        const infoPct = Math.round(((stats.needs_more_info || 0) / totalPol) * 100);
+        const highPct = Math.round(((stats.high_risk_cases || 0) / totalPol) * 100);
+
+        const distItems = [
+          {
+            label: 'Approved & Active',
+            count: stats.approved || 0,
+            pct: appPct,
+            color: '#2F9E78',
+            tooltip: `${stats.approved || 0} active/approved policies (${appPct}%)`
+          },
+          {
+            label: 'Pending Review',
+            count: stats.pending_reviews || 0,
+            pct: pendPct,
+            color: '#C98245',
+            tooltip: `${stats.pending_reviews || 0} pending review submissions (${pendPct}%)`
+          },
+          {
+            label: 'High Risk Flagged',
+            count: stats.high_risk_cases || 0,
+            pct: highPct,
+            color: '#D65A5A',
+            tooltip: `${stats.high_risk_cases || 0} high risk flagged accounts (${highPct}%)`
+          },
+          {
+            label: 'Needs More Info',
+            count: stats.needs_more_info || 0,
+            pct: infoPct,
+            color: '#9A6B55',
+            tooltip: `${stats.needs_more_info || 0} cases requiring additional information (${infoPct}%)`
+          }
+        ];
+
+        // Sort ascending: smallest percentage at top -> largest percentage at bottom
+        distItems.sort((a, b) => a.pct - b.pct);
+
+        distContainer.innerHTML = distItems.map(item => `
+          <div data-tooltip="${item.tooltip}">
+            <div style="display:flex;justify-content:space-between;font-size:0.875rem;margin-bottom:5px;">
+              <span style="font-weight:600;color:var(--blue-900)">${item.label}</span>
+              <span style="color:${item.color};font-weight:700">${item.count} (${item.pct}%)</span>
+            </div>
+            <div style="background:#F4EDE4;height:8px;border-radius:4px;overflow:hidden;">
+              <div style="background:${item.color};width:${Math.min(item.pct, 100)}%;height:100%;border-radius:4px;"></div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Performance Indicators
+      const avgRiskEl = document.getElementById('uw-avg-risk-score-val');
+      if (avgRiskEl) avgRiskEl.innerHTML = `48 <span style="font-size:0.75rem;font-weight:600;color:var(--amber);">(Moderate)</span>`;
+      const activeRateEl = document.getElementById('uw-active-policy-rate-val');
+      if (activeRateEl) activeRateEl.textContent = `${Math.round(((stats.total_active_policies || 0) / totalPol) * 100)}%`;
+      const triageVolEl = document.getElementById('uw-triage-volume-val');
+      if (triageVolEl) triageVolEl.textContent = `${stats.pending_reviews || 0} cases`;
+      const highRiskRatioEl = document.getElementById('uw-high-risk-ratio-val');
+      if (highRiskRatioEl) highRiskRatioEl.textContent = `${Math.round(((stats.high_risk_cases || 0) / totalPol) * 100)}%`;
+
+      // LOB Distribution Bars
+      const lobContainer = document.getElementById('uw-lob-distribution-bars');
+      if (lobContainer && Array.isArray(stats.lob_distribution)) {
+        lobContainer.innerHTML = stats.lob_distribution.map((item, idx) => {
+          const accentNum = (idx % 4) + 1;
+          const pctValue = (typeof item.percentage === 'number') ? item.percentage : parseFloat(item.percentage) || 0;
+          return `
+            <div class="chart-row" onclick="navigateTo('underwriter-queue')" data-tooltip="${item.policy_type} (${item.count} policies): ${item.total_premium_formatted} (${pctValue}%)">
+              <span class="chart-row-label">${item.policy_type}</span>
+              <div class="chart-row-track">
+                <div class="chart-row-fill accent-${accentNum}" style="width: ${pctValue}%;">
+                  <span class="chart-row-pct">${pctValue}%</span>
+                </div>
+              </div>
+              <span class="chart-row-val">${item.total_premium_formatted}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      return stats;
+    }
+  } catch (err) {
+    console.warn('Underwriter /underwriter/stats fetch error:', err);
+  }
+  return null;
+}
+
+async function fetchUnderwriterQueue() {
+  try {
+    const token = getAuthToken();
+    if (!token) return [];
+    const response = await fetch(`${UNDERWRITER_SERVICE_URL}/underwriter/queue`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const queue = await response.json();
+      window.underwriterQueueData = Array.isArray(queue) ? queue : [];
+
+      // Update queue page header count
+      const queueTitle = document.getElementById('uw-queue-page-title');
+      if (queueTitle) queueTitle.textContent = `Underwriting Queue (${window.underwriterQueueData.length} Cases)`;
+
+      // Render Dashboard Urgent Attention Queue
+      const urgentListEl = document.getElementById('uw-urgent-attention-list');
+      if (urgentListEl) {
+        const highPriority = window.underwriterQueueData.filter(i => (i.risk_level === 'High' || i.premium_raw > 10000)).slice(0, 2);
+        const displayItems = highPriority.length > 0 ? highPriority : window.underwriterQueueData.slice(0, 2);
+        if (displayItems.length === 0) {
+          urgentListEl.innerHTML = `<div style="color:var(--gray-500);font-size:0.875rem;padding:1rem;">No urgent triage cases in queue.</div>`;
+        } else {
+          urgentListEl.innerHTML = displayItems.map(item => `
+            <div class="panel-policy-list-item" style="border-left:3px solid var(--red);padding:0.85rem 1rem;" data-tooltip="${item.customer}: ${item.product || item.policy_type} (${item.premium}). Risk: ${item.risk_level} (Score ${item.risk_score})">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                  <span style="font-weight:700;color:var(--blue-900);font-size:0.9rem;">${item.customer}</span>
+                  <span class="badge ${item.risk_level === 'High' ? 'badge-risk-high' : 'badge-risk-medium'}" style="font-size:0.7rem;padding:1px 6px;">Score ${item.risk_score} · ${item.risk_level} Risk</span>
+                </div>
+                <div style="font-size:0.8rem;color:var(--gray-600);">${item.product || item.policy_type} · ${item.premium} · Policy ID: ${item.id}</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="openUnderwriterReviewPanel('${item.id}')" data-tooltip="Review ${item.customer}'s application">Review →</button>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Render Dashboard Recent Decision Activity
+      const recentListEl = document.getElementById('uw-recent-activity-list');
+      if (recentListEl) {
+        const processed = window.underwriterQueueData.slice(0, 3);
+        recentListEl.innerHTML = processed.map(item => `
+          <div class="panel-policy-list-item" style="padding:0.75rem 0.95rem;" data-tooltip="${item.id}: ${item.customer} - ${item.status}">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                <span style="font-weight:700;color:var(--blue-900);font-size:0.875rem;">${item.id} · ${item.customer}</span>
+                <span class="badge ${item.status === 'Approved' ? 'badge-active' : (item.status === 'Needs More Information' ? 'badge-info' : 'badge-pending')}" style="font-size:0.685rem;padding:1px 6px;">${item.status}</span>
+              </div>
+              <div style="font-size:0.785rem;color:var(--gray-600);">${item.product || item.policy_type} · ${item.premium} · Risk: ${item.risk_level}</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="openUnderwriterReviewPanel('${item.id}')">Inspect →</button>
+          </div>
+        `).join('');
+      }
+
+      renderUnderwriterQueueTable();
+      renderUnderwriterFullQueue();
+      return window.underwriterQueueData;
+    }
+  } catch (err) {
+    console.warn('Underwriter /underwriter/queue fetch error:', err);
+  }
+  return [];
+}
+
+async function fetchUnderwriterPolicies(statusFilter = 'all', policyType = 'all', search = '', limit = 100, offset = 0) {
+  try {
+    const token = getAuthToken();
+    if (!token) return { policies: [], total: 0 };
+    let url = `${UNDERWRITER_SERVICE_URL}/underwriter/policies?limit=${limit}&offset=${offset}`;
+    if (statusFilter && statusFilter !== 'all') url += `&status=${encodeURIComponent(statusFilter)}`;
+    if (policyType && policyType !== 'all') url += `&type=${encodeURIComponent(policyType)}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const data = await response.json();
+      window.underwriterPoliciesData = data;
+      return data;
+    }
+  } catch (err) {
+    console.warn('Underwriter /underwriter/policies fetch error:', err);
+  }
+  return { policies: [], total: 0 };
+}
+
+async function fetchAdminStats() {
+  try {
+    const token = getAuthToken();
+    if (!token) return null;
+    const response = await fetch(`${ADMIN_SERVICE_URL}/admin/stats`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const stats = await response.json();
+      window.adminStatsData = stats;
+
+      const elUsers = document.getElementById('admin-stat-total-users-val');
+      if (elUsers) elUsers.textContent = stats.total_users != null ? stats.total_users : 502;
+      const elCust = document.getElementById('admin-stat-total-customers-val');
+      if (elCust) elCust.textContent = stats.total_customers != null ? stats.total_customers : (stats.customer_user_count || 321);
+      const elAgents = document.getElementById('admin-stat-total-agents-val');
+      if (elAgents) elAgents.textContent = stats.agent_count != null ? stats.agent_count : 71;
+      const elUw = document.getElementById('admin-stat-total-underwriters-val');
+      if (elUw) elUw.textContent = stats.underwriter_count != null ? stats.underwriter_count : 45;
+      const elPolicies = document.getElementById('admin-stat-total-policies-val');
+      if (elPolicies) elPolicies.textContent = stats.total_policies != null ? stats.total_policies : 791;
+      const elActive = document.getElementById('admin-stat-active-policies-val');
+      if (elActive) elActive.textContent = stats.active_policies != null ? stats.active_policies : 357;
+
+      return stats;
+    }
+  } catch (err) {
+    console.warn('Admin /admin/stats fetch error:', err);
+  }
+  return null;
+}
+
+async function fetchAdminUsers(role = 'all', search = '', limit = 100, offset = 0) {
+  try {
+    const token = getAuthToken();
+    if (!token) return { users: [], total: 0 };
+    let url = `${ADMIN_SERVICE_URL}/admin/users?limit=${limit}&offset=${offset}`;
+    if (role && role !== 'all') url += `&role=${encodeURIComponent(role)}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const data = await response.json();
+      window.adminUsersData = data;
+      renderAdminDashboardUsersTable();
+      renderAdminUsersTable(role, 'all', search);
+      return data;
+    }
+  } catch (err) {
+    console.warn('Admin /admin/users fetch error:', err);
+  }
+  return { users: [], total: 0 };
+}
+
+async function fetchAdminPolicies(typeFilter = 'all', statusFilter = 'all', search = '', limit = 100, offset = 0) {
+  const tbody = document.getElementById('admin-policies-tbody');
+  const tag = document.getElementById('admin-policies-count-tag');
+
+  if (tbody && (!window.adminPoliciesData || !window.adminPoliciesData.policies || window.adminPoliciesData.policies.length === 0)) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gray-500);"><div class="spinner" style="margin:0 auto 8px;"></div>Loading enterprise policies...</td></tr>`;
+  }
+
+  try {
+    const token = getAuthToken();
+    if (!token) return { policies: [], total: 0 };
+    let url = `${ADMIN_SERVICE_URL}/admin/policies?limit=${limit}&offset=${offset}`;
+    if (statusFilter && statusFilter !== 'all') url += `&status=${encodeURIComponent(statusFilter)}`;
+    if (typeFilter && typeFilter !== 'all') url += `&type=${encodeURIComponent(typeFilter)}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const data = await response.json();
+      window.adminPoliciesData = data;
+      const totalCount = (data.total !== undefined) ? data.total : (data.policies ? data.policies.length : 0);
+      if (tag) {
+        tag.textContent = `${totalCount.toLocaleString()} Enterprise Policies`;
+      }
+      renderAdminPoliciesTable(typeFilter, statusFilter, search);
+      return data;
+    } else {
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#ef4444;padding:2rem;">Failed to load policies (Status ${response.status}).</td></tr>`;
+      }
+      showToast('Failed to load enterprise policies.');
+    }
+  } catch (err) {
+    console.warn('Admin /admin/policies fetch error:', err);
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#ef4444;padding:2rem;">Unable to connect to policy service.</td></tr>`;
+    }
+    showToast('Network error while loading policies.');
+  }
+  return { policies: [], total: 0 };
+}
+
+async function fetchAdminAudit(limit = 50, offset = 0) {
+  try {
+    const token = getAuthToken();
+    if (!token) return { audit_logs: [], total: 0 };
+    const response = await fetch(`${ADMIN_SERVICE_URL}/admin/audit?limit=${limit}&offset=${offset}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const data = await response.json();
+      window.adminAuditData = data;
+      renderAdminAuditLogs();
+      return data;
+    }
+  } catch (err) {
+    console.warn('Admin /admin/audit fetch error:', err);
+  }
+  return { audit_logs: [], total: 0 };
 }
 
 async function handleCustomerConfirmRenewal(policyId, policyNumber) {
@@ -5361,7 +6790,7 @@ function renderCustomerDashboard(policies) {
       }
 
       chartContainer.innerHTML = groupList.map((g, idx) => {
-        const pct = totalPrem > 0 ? Math.round((g.total / totalPrem) * 100) : 0;
+        const pct = totalPrem > 0 ? Math.round((g.total / totalPrem) * 1000) / 10 : 0;
         const displayPct = (groupList.length === 1 && totalPrem > 0) ? 100 : pct;
         const accent = accents[idx % accents.length];
         const iconSvg = getCategoryIcon(g.name);
@@ -5375,7 +6804,9 @@ function renderCustomerDashboard(policies) {
                   ${g.name}
                 </div>
                 <div class="chart-row-track">
-                  <div class="chart-row-fill ${accent}" style="width: ${Math.max(displayPct, 12)}%;">${displayPct}%</div>
+                  <div class="chart-row-fill ${accent}" style="width: ${displayPct}%;">
+                    <span class="chart-row-pct">${displayPct}%</span>
+                  </div>
                 </div>
                 <div class="chart-row-val">$${formattedVal}</div>
               </div>
@@ -5832,6 +7263,10 @@ function switchRole(role, targetPage = null) {
       portalTag.style.color = '#3B241D';
     }
     if (portalDot) portalDot.style.background = '#3B241D';
+    fetchAdminStats();
+    fetchAdminUsers();
+    fetchAdminPolicies();
+    fetchAdminAudit();
     fetchNotifications();
     navigateTo(pageToOpen);
   } else if (normalizedRole === 'underwriter') {
@@ -5849,6 +7284,8 @@ function switchRole(role, targetPage = null) {
       portalTag.style.color = '#3B241D';
     }
     if (portalDot) portalDot.style.background = '#8C5343';
+    fetchUnderwriterStats();
+    fetchUnderwriterQueue();
     fetchNotifications();
     navigateTo(pageToOpen);
   } else if (normalizedRole === 'agent') {
@@ -5922,9 +7359,23 @@ function navigateTo(pageId) {
   if (targetNav) targetNav.classList.add('active');
 
   if (pageId === 'underwriter-queue') {
-    renderUnderwriterFullQueue();
+    fetchUnderwriterQueue();
   } else if (pageId === 'underwriter-dashboard') {
-    renderUnderwriterQueueTable();
+    fetchUnderwriterStats();
+    fetchUnderwriterQueue();
+  } else if (pageId === 'underwriter-risk') {
+    if (typeof initRiskAssessmentGuidelines === 'function') initRiskAssessmentGuidelines();
+  } else if (pageId === 'underwriter-review') {
+    if (typeof initUnderwriterReviewPage === 'function') initUnderwriterReviewPage();
+  } else if (pageId === 'admin-dashboard') {
+    fetchAdminStats();
+    fetchAdminUsers();
+  } else if (pageId === 'admin-users') {
+    fetchAdminUsers();
+  } else if (pageId === 'admin-policies') {
+    fetchAdminPolicies();
+  } else if (pageId === 'admin-audit') {
+    fetchAdminAudit();
   } else if (pageId === 'agent-customers') {
     if (typeof fetchAgentCustomers === 'function') {
       fetchAgentCustomers().then(() => renderAgentFullCustomersDirectory());
@@ -5964,6 +7415,9 @@ function navigateTo(pageId) {
       renderFnolPolicySelection();
       fnolRenderStep(window.fnolState.step || 1);
     }
+  } else if (pageId === 'customer-application') {
+    if (typeof initPolicyApplicationModule === 'function') initPolicyApplicationModule();
+    if (typeof fetchCustomerApplications === 'function') fetchCustomerApplications();
   } else if (pageId === 'agent-policies') {
     if (typeof fetchAgentPolicies === 'function') {
       fetchAgentPolicies('all').then(() => renderAgentPoliciesTable());
@@ -5971,6 +7425,8 @@ function navigateTo(pageId) {
       renderAgentPoliciesTable();
     }
     fetchAgentRenewals();
+  } else if (pageId === 'agent-applications') {
+    if (typeof fetchAgentApplications === 'function') fetchAgentApplications();
   } else if (pageId === 'admin-users') {
     renderAdminUsersTable();
   } else if (pageId === 'admin-policies') {
@@ -5989,20 +7445,72 @@ function navigateTo(pageId) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function showToast(message) {
-  const container = document.getElementById('toast-container');
+function showToast(message, type) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  // Infer toast type if not explicitly supplied
+  let toastType = type;
+  if (!toastType) {
+    const lower = (message || '').toLowerCase();
+    if (lower.includes('error') || lower.includes('failed') || lower.includes('could not') || lower.includes('unable to') || lower.includes('rejected') || lower.includes('missing') || lower.includes('not found') || lower.includes('denied')) {
+      toastType = 'error';
+    } else if (lower.includes('success') || lower.includes('approved') || lower.includes('confirmed') || lower.includes('created') || lower.includes('saved') || lower.includes('enabled') || lower.includes('bound') || lower.includes('updated') || lower.includes('refreshed') || lower.includes('downloaded') || lower.includes('submitted')) {
+      toastType = 'success';
+    } else if (lower.includes('warning') || lower.includes('required') || lower.includes('already exists') || lower.includes('please select') || lower.includes('please enter') || lower.includes('attention') || lower.includes('read-only')) {
+      toastType = 'warning';
+    } else {
+      toastType = 'info';
+    }
+  }
+
+  const icons = {
+    success: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    error: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    warning: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    info: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+  };
+
   const toast = document.createElement('div');
-  toast.className = 'toast';
+  toast.className = `toast toast-${toastType}`;
   toast.innerHTML = `
-        <svg width="18" height="18" fill="none" stroke="#60a5fa" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <span>${message}</span>
-      `;
+    <div class="toast-icon">${icons[toastType] || icons.info}</div>
+    <div class="toast-content">${message}</div>
+    <button class="toast-close-btn" aria-label="Close notification">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  `;
+
   container.appendChild(toast);
-  setTimeout(() => toast.classList.add('show'), 10);
-  setTimeout(() => {
+  requestAnimationFrame(() => {
+    toast.classList.add('show');
+  });
+
+  let dismissed = false;
+  const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
     toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
+    setTimeout(() => {
+      if (toast.parentElement) toast.remove();
+    }, 280);
+  };
+
+  const timer = setTimeout(dismiss, 3500);
+
+  const closeBtn = toast.querySelector('.toast-close-btn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearTimeout(timer);
+      dismiss();
+    });
+  }
 }
 
 /**
@@ -6380,7 +7888,7 @@ function fnolRenderStep(step) {
   // Stepper Bar HTML
   const stepsList = [
     { num: 1, title: 'Intake & Evidence', desc: 'Policy & Details' },
-    { num: 2, title: 'AI Assessment', desc: 'Classification & Summary' },
+    { num: 2, title: 'Risk Factor', desc: 'Risk Classification & Key Factors' },
     { num: 3, title: 'Review Claim', desc: 'Verify Information' },
     { num: 4, title: 'Confirmation', desc: 'Claim ID & Status' }
   ];
@@ -6422,18 +7930,18 @@ function fnolRenderStep(step) {
     contentHtml = `
       ${stepperHtml}
 
-      <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:1.5rem;align-items:start;" class="fnol-grid-responsive">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;" class="fnol-grid-responsive">
         <!-- Left Column: Policy & Incident Details -->
-        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+        <div style="display:flex;flex-direction:column;gap:1.25rem;">
           <!-- Policy Selection Card -->
-          <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.35rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+          <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.25rem 1.35rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
             <h4 style="font-family:'Playfair Display',Georgia,serif;font-size:1.1rem;color:var(--cust-brown-900);margin:0 0 8px;display:flex;align-items:center;gap:8px;">
               <span style="background:var(--cust-brown-100);color:var(--cust-brown-700);width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:bold;">1</span>
               Select Covered Policy
             </h4>
-            <p style="font-size:0.825rem;color:var(--gray-600);margin:0 0 14px;">Choose which of your active policies this claim relates to:</p>
+            <p style="font-size:0.825rem;color:var(--gray-600);margin:0 0 12px;">Choose which of your active policies this claim relates to:</p>
             
-            <div id="fnol-policy-list-container" style="display:flex;flex-direction:column;gap:10px;">
+            <div id="fnol-policy-list-container" style="display:flex;flex-direction:column;gap:8px;">
               <div style="padding:14px;background:#FAF6F2;border:1px solid var(--cust-cream-border);border-radius:8px;font-size:0.85rem;color:var(--cust-brown-900);text-align:center;">
                 Loading your active policies...
               </div>
@@ -6441,32 +7949,32 @@ function fnolRenderStep(step) {
           </div>
 
           <!-- Incident Details Card -->
-          <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.35rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+          <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.25rem 1.35rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
             <h4 style="font-family:'Playfair Display',Georgia,serif;font-size:1.1rem;color:var(--cust-brown-900);margin:0 0 8px;display:flex;align-items:center;gap:8px;">
               <span style="background:var(--cust-brown-100);color:var(--cust-brown-700);width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:bold;">2</span>
               Incident Details
             </h4>
-            <p style="font-size:0.825rem;color:var(--gray-600);margin:0 0 14px;">Provide the time, location, and a clear description of the incident:</p>
+            <p style="font-size:0.825rem;color:var(--gray-600);margin:0 0 12px;">Provide the time, location, and a clear description of the incident:</p>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
               <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label" style="font-size:0.825rem;font-weight:600;margin-bottom:6px;display:block;">Date of Loss <span style="color:#DC2626;">*</span></label>
-                <input type="date" id="fnol-date-loss" class="form-control" value="${s.dateLoss}" style="font-size:0.875rem;padding:8px 12px;width:100%;box-sizing:border-box;border-radius:6px;" required>
+                <label class="form-label" style="font-size:0.8rem;font-weight:600;margin-bottom:4px;display:block;">Date of Loss <span style="color:#DC2626;">*</span></label>
+                <input type="date" id="fnol-date-loss" class="form-control" value="${s.dateLoss}" style="font-size:0.85rem;padding:7px 10px;width:100%;box-sizing:border-box;border-radius:6px;" required>
               </div>
               <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label" style="font-size:0.825rem;font-weight:600;margin-bottom:6px;display:block;">Time of Loss <span style="font-size:0.75rem;font-weight:normal;color:var(--gray-500);">(Optional)</span></label>
-                <input type="time" id="fnol-time-loss" class="form-control" value="${s.timeLoss}" style="font-size:0.875rem;padding:8px 12px;width:100%;box-sizing:border-box;border-radius:6px;">
+                <label class="form-label" style="font-size:0.8rem;font-weight:600;margin-bottom:4px;display:block;">Time of Loss <span style="font-size:0.75rem;font-weight:normal;color:var(--gray-500);">(Optional)</span></label>
+                <input type="time" id="fnol-time-loss" class="form-control" value="${s.timeLoss}" style="font-size:0.85rem;padding:7px 10px;width:100%;box-sizing:border-box;border-radius:6px;">
               </div>
             </div>
 
-            <div class="form-group" style="margin-bottom:14px;">
-              <label class="form-label" style="font-size:0.825rem;font-weight:600;margin-bottom:6px;display:block;">Location of Incident <span style="color:#DC2626;">*</span></label>
-              <input type="text" id="fnol-location" class="form-control" value="${s.location}" placeholder="e.g. 5th Ave & Main St or Home/Business Address" style="font-size:0.875rem;padding:9px 12px;width:100%;box-sizing:border-box;border-radius:6px;" required>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label" style="font-size:0.8rem;font-weight:600;margin-bottom:4px;display:block;">Location of Incident <span style="color:#DC2626;">*</span></label>
+              <input type="text" id="fnol-location" class="form-control" value="${s.location}" placeholder="e.g. 5th Ave & Main St or Home/Business Address" style="font-size:0.85rem;padding:8px 10px;width:100%;box-sizing:border-box;border-radius:6px;" required>
             </div>
 
-            <div class="form-group" style="margin-bottom:14px;">
-              <label class="form-label" style="font-size:0.825rem;font-weight:600;margin-bottom:6px;display:block;">What Happened? (Incident Category)</label>
-              <select id="fnol-category" class="form-control" style="font-size:0.875rem;padding:9px 12px;width:100%;box-sizing:border-box;border-radius:6px;">
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label" style="font-size:0.8rem;font-weight:600;margin-bottom:4px;display:block;">What Happened? (Incident Category)</label>
+              <select id="fnol-category" class="form-control" style="font-size:0.85rem;padding:8px 10px;width:100%;box-sizing:border-box;border-radius:6px;">
                 <option value="Vehicle Collision" ${s.incidentCategory === 'Vehicle Collision' ? 'selected' : ''}>Vehicle Collision / Impact</option>
                 <option value="Water / Pipe Leak" ${s.incidentCategory === 'Water / Pipe Leak' ? 'selected' : ''}>Water Leak / Plumbing Discharge</option>
                 <option value="Weather / Storm Damage" ${s.incidentCategory === 'Weather / Storm Damage' ? 'selected' : ''}>Weather / Storm / Hail Damage</option>
@@ -6476,27 +7984,27 @@ function fnolRenderStep(step) {
             </div>
 
             <div class="form-group" style="margin-bottom:0;">
-              <label class="form-label" style="font-size:0.825rem;font-weight:600;margin-bottom:6px;display:block;">Description of Incident <span style="color:#DC2626;">*</span></label>
-              <textarea id="fnol-description" class="form-control" placeholder="Describe what happened, any damages noticed, and the sequence of events in detail..." style="font-size:0.875rem;line-height:1.55;padding:12px 14px;width:100%;min-height:145px;box-sizing:border-box;border-radius:8px;resize:vertical;display:block;" required>${s.description}</textarea>
+              <label class="form-label" style="font-size:0.8rem;font-weight:600;margin-bottom:4px;display:block;">Description of Incident <span style="color:#DC2626;">*</span></label>
+              <textarea id="fnol-description" class="form-control" placeholder="Describe what happened, any damages noticed, and the sequence of events in detail..." style="font-size:0.85rem;line-height:1.5;padding:8px 10px;width:100%;min-height:85px;height:90px;box-sizing:border-box;border-radius:6px;resize:vertical;display:block;" required>${s.description}</textarea>
             </div>
           </div>
         </div>
 
         <!-- Right Column: Supporting Information & Uploads -->
-        <div style="display:flex;flex-direction:column;gap:1.5rem;">
+        <div style="display:flex;flex-direction:column;gap:1.25rem;">
           <!-- Photo & Document Upload Card -->
-          <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.35rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+          <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.25rem 1.35rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
             <h4 style="font-family:'Playfair Display',Georgia,serif;font-size:1.1rem;color:var(--cust-brown-900);margin:0 0 8px;display:flex;align-items:center;gap:8px;">
               <span style="background:var(--cust-brown-100);color:var(--cust-brown-700);width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:bold;">3</span>
               Photos & Supporting Evidence <span style="font-size:0.75rem;font-weight:normal;color:var(--gray-500);">(Optional)</span>
             </h4>
-            <p style="font-size:0.825rem;color:var(--gray-600);margin:0 0 14px;">Upload photos of damage, repair estimates, or relevant documents to expedite review:</p>
+            <p style="font-size:0.825rem;color:var(--gray-600);margin:0 0 12px;">Upload photos of damage, repair estimates, or relevant documents to expedite review:</p>
 
             <input type="file" id="fnol-file-input" multiple accept="image/*,.pdf" style="display:none;" onchange="fnolHandleFileUpload(event)">
             
-            <div onclick="fnolTriggerUpload()" style="border:2px dashed var(--cust-cream-border);background:#FAF6F2;border-radius:8px;padding:22px 16px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:14px;">
-              <svg width="28" height="28" fill="none" stroke="var(--cust-brown-700)" stroke-width="1.8" viewBox="0 0 24 24" style="margin:0 auto 8px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-              <div style="font-size:0.875rem;font-weight:600;color:var(--cust-brown-900);">Click to browse or drop damage photos here</div>
+            <div onclick="fnolTriggerUpload()" style="border:2px dashed var(--cust-cream-border);background:#FAF6F2;border-radius:8px;padding:18px 14px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px;">
+              <svg width="26" height="26" fill="none" stroke="var(--cust-brown-700)" stroke-width="1.8" viewBox="0 0 24 24" style="margin:0 auto 6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <div style="font-size:0.85rem;font-weight:600;color:var(--cust-brown-900);">Click to browse or drop damage photos here</div>
               <div style="font-size:0.75rem;color:var(--gray-500);margin-top:2px;">JPEG, PNG, HEIC, PDF (Up to 15MB each)</div>
             </div>
 
@@ -6515,21 +8023,21 @@ function fnolRenderStep(step) {
           </div>
 
           <!-- Police Report & Witness Card -->
-          <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.35rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+          <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.25rem 1.35rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
             <h4 style="font-family:'Playfair Display',Georgia,serif;font-size:1.1rem;color:var(--cust-brown-900);margin:0 0 12px;">
               Police Report & Witnesses <span style="font-size:0.75rem;font-weight:normal;color:var(--gray-500);">(Optional)</span>
             </h4>
 
             <!-- Police Report Accordion / Toggle -->
-            <div style="border-bottom:1px solid var(--cust-cream-border);padding-bottom:14px;margin-bottom:14px;">
+            <div style="border-bottom:1px solid var(--cust-cream-border);padding-bottom:12px;margin-bottom:12px;">
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:0.85rem;color:var(--cust-brown-900);">
                 <input type="checkbox" id="fnol-police-toggle" ${s.hasPoliceReport ? 'checked' : ''} onchange="document.getElementById('fnol-police-fields').style.display = this.checked ? 'block' : 'none';" style="accent-color:var(--cust-brown-700);">
                 <span>Police or Official Accident Report Filed</span>
               </label>
-              <div id="fnol-police-fields" style="display:${s.hasPoliceReport ? 'block' : 'none'};margin-top:12px;padding-left:24px;">
+              <div id="fnol-police-fields" style="display:${s.hasPoliceReport ? 'block' : 'none'};margin-top:10px;padding-left:24px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                  <input type="text" id="fnol-police-num" class="form-control" placeholder="Report / Case Number (Optional)" value="${s.policeReportNum || ''}" style="font-size:0.825rem;padding:8px 10px;border-radius:6px;">
-                  <input type="text" id="fnol-police-dept" class="form-control" placeholder="Police Dept / Agency (Optional)" value="${s.policeDept || ''}" style="font-size:0.825rem;padding:8px 10px;border-radius:6px;">
+                  <input type="text" id="fnol-police-num" class="form-control" placeholder="Report / Case Number (Optional)" value="${s.policeReportNum || ''}" style="font-size:0.825rem;padding:7px 10px;border-radius:6px;">
+                  <input type="text" id="fnol-police-dept" class="form-control" placeholder="Police Dept / Agency (Optional)" value="${s.policeDept || ''}" style="font-size:0.825rem;padding:7px 10px;border-radius:6px;">
                 </div>
               </div>
             </div>
@@ -6540,40 +8048,41 @@ function fnolRenderStep(step) {
                 <input type="checkbox" id="fnol-witness-toggle" ${s.hasWitness ? 'checked' : ''} onchange="document.getElementById('fnol-witness-fields').style.display = this.checked ? 'block' : 'none';" style="accent-color:var(--cust-brown-700);">
                 <span>Witness Information Available</span>
               </label>
-              <div id="fnol-witness-fields" style="display:${s.hasWitness ? 'block' : 'none'};margin-top:12px;padding-left:24px;">
+              <div id="fnol-witness-fields" style="display:${s.hasWitness ? 'block' : 'none'};margin-top:10px;padding-left:24px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-                  <input type="text" id="fnol-witness-name" class="form-control" placeholder="Witness Full Name (Optional)" value="${s.witnessName || ''}" style="font-size:0.825rem;padding:8px 10px;border-radius:6px;">
-                  <input type="text" id="fnol-witness-phone" class="form-control" placeholder="Phone or Email (Optional)" value="${s.witnessPhone || ''}" style="font-size:0.825rem;padding:8px 10px;border-radius:6px;">
+                  <input type="text" id="fnol-witness-name" class="form-control" placeholder="Witness Full Name (Optional)" value="${s.witnessName || ''}" style="font-size:0.825rem;padding:7px 10px;border-radius:6px;">
+                  <input type="text" id="fnol-witness-phone" class="form-control" placeholder="Phone or Email (Optional)" value="${s.witnessPhone || ''}" style="font-size:0.825rem;padding:7px 10px;border-radius:6px;">
                 </div>
-                <textarea id="fnol-witness-stmt" class="form-control" rows="2" placeholder="Brief witness statement or contact notes (Optional)..." style="font-size:0.825rem;padding:8px 10px;border-radius:6px;width:100%;box-sizing:border-box;">${s.witnessStatement || ''}</textarea>
+                <textarea id="fnol-witness-stmt" class="form-control" rows="2" placeholder="Brief witness statement or contact notes (Optional)..." style="font-size:0.825rem;padding:7px 10px;border-radius:6px;width:100%;box-sizing:border-box;">${s.witnessStatement || ''}</textarea>
               </div>
             </div>
           </div>
-
-          <!-- Bottom Action Navigation -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
-            <button type="button" class="btn btn-outline" onclick="navigateTo('customer-dashboard')">
-              Cancel / Return
-            </button>
-            <button type="button" class="btn btn-primary" onclick="fnolSetStep(2)" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:8px;">
-              <span>Continue to AI Assessment</span>
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
-          </div>
         </div>
+      </div>
+
+      <!-- Bottom Action Navigation -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;">
+        <button type="button" class="btn btn-outline" onclick="navigateTo('customer-dashboard')">
+          Cancel / Return
+        </button>
+        <button type="button" class="btn btn-primary" onclick="fnolSetStep(2)" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:8px;">
+          <span>Continue to Risk Factor</span>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
       </div>
     `;
     container.innerHTML = contentHtml;
     renderFnolPolicySelection();
   }
 
-  // STEP 2: AI CLAIM ASSESSMENT & 4-PART SUMMARY
+  // STEP 2: RISK FACTOR & CLASSIFICATION
   else if (step === 2) {
     const isLow = s.classification === 'Low Severity';
     const isMed = s.classification === 'Medium Severity';
     const isHigh = s.classification === 'High Severity';
     const isFraud = s.classification === 'Potential Fraud';
 
+    const riskLabel = isLow ? 'Low Risk' : isMed ? 'Medium Risk' : isHigh ? 'High Risk' : 'Elevated Risk (Verification Flagged)';
     const bannerBg = isLow ? '#ECFDF5' : isMed ? '#FFFBEB' : isHigh ? '#FEF2F2' : '#F5F3FF';
     const bannerBorder = isLow ? '#A7F3D0' : isMed ? '#FDE68A' : isHigh ? '#FECACA' : '#DDD6FE';
     const bannerText = isLow ? '#065F46' : isMed ? '#92400E' : isHigh ? '#991B1B' : '#5B21B6';
@@ -6582,10 +8091,25 @@ function fnolRenderStep(step) {
     const userObj = JSON.parse((typeof localStorage !== 'undefined' && localStorage.getItem('auth_user')) || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('auth_user')) || '{}');
     const custName = userObj.name || 'Insured Policyholder';
 
+    // Derived Risk Factors
+    const descText = (s.description || '').toLowerCase();
+    const damageSeverityText = isLow ? 'Low' : isMed ? 'Moderate' : 'High';
+    const bodilyInjuryText = (descText.includes('injur') || descText.includes('hospital') || descText.includes('medic') || descText.includes('doctor')) ? 'Reported (Medical Review Required)' : 'None reported';
+    const propFunctionalityText = (descText.includes('towed') || descText.includes('uninhabitable') || descText.includes('total') || descText.includes('non-functional') || descText.includes('destroyed')) ? 'Impaired / Non-functional' : 'Fully functional';
+    const coverageStatusText = s.policyType ? `Potentially covered` : 'Potentially covered';
+    const supportingEvidenceText = (s.photos && s.photos.length > 0) ? `${s.photos.length} attachment(s) provided` : 'No attachments provided';
+    const claimComplexityText = (s.classificationScore <= 25) ? 'Low' : (s.classificationScore <= 60) ? 'Moderate' : 'High';
+
+    const riskSummaryText = isLow ?
+      'The claim currently presents a low-risk profile based on the information provided. Further verification may be required before the claim is finalized.' :
+      isMed ?
+      'The claim currently presents a moderate-risk profile based on the information provided. Further verification may be required before the claim is finalized.' :
+      'The claim currently presents an elevated-risk profile based on the information provided. Further verification may be required before the claim is finalized.';
+
     contentHtml = `
       ${stepperHtml}
 
-      <!-- AI Classification Banner -->
+      <!-- Risk Factor Assessment Banner -->
       <div style="background:${bannerBg};border:1.5px solid ${bannerBorder};border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:10px;">
           <div style="display:flex;align-items:center;gap:12px;">
@@ -6593,24 +8117,24 @@ function fnolRenderStep(step) {
               ${isFraud ? '🚩' : isHigh ? '⚠️' : isMed ? '⚡' : '🛡️'}
             </div>
             <div>
-              <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;color:${bannerText};">AI Intake Classification</div>
-              <h3 style="font-size:1.35rem;font-weight:700;color:${bannerText};margin:0;">${s.classification}</h3>
+              <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;color:${bannerText};">RISK FACTOR ASSESSMENT</div>
+              <h3 style="font-size:1.35rem;font-weight:700;color:${bannerText};margin:0;">${riskLabel}</h3>
             </div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:0.75rem;color:${bannerText};font-weight:600;">Intake Severity Score</div>
-            <div style="font-size:1.4rem;font-weight:800;color:${bannerText};">${s.classificationScore} / 100</div>
+            <div style="font-size:0.75rem;color:${bannerText};font-weight:600;">Risk Score</div>
+            <div style="font-size:1.4rem;font-weight:800;color:${bannerText};">Risk Score: ${s.classificationScore} / 100</div>
           </div>
         </div>
         <p style="font-size:0.875rem;color:${bannerText};margin:0;line-height:1.5;">${s.classificationRationale}</p>
       </div>
 
-      <!-- Complete 4-Section AI Claim Summary Grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem;" class="fnol-grid-responsive">
+      <!-- Complete 4-Section Assessment Grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;" class="fnol-grid-responsive">
         <!-- Section 1: Claim Overview -->
         <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.25rem;display:flex;flex-direction:column;gap:8px;">
           <div style="display:flex;align-items:center;gap:8px;color:var(--cust-brown-900);font-weight:700;font-size:0.95rem;">
-            <span style="font-size:1.1rem;">📋</span> 1. Claim Overview
+            <span style="font-size:1.1rem;">📋</span> Claim Overview
           </div>
           <div style="font-size:0.85rem;color:var(--gray-700);line-height:1.5;background:#FAF6F2;padding:12px;border-radius:8px;border:1px solid var(--cust-cream-border);flex:1;">
             ${s.claimSummary.overview}
@@ -6618,10 +8142,10 @@ function fnolRenderStep(step) {
           <div style="font-size:0.75rem;color:var(--gray-500);">Policyholder: <strong>${custName}</strong> · Active Policy: <strong>${s.policyCode || s.policyId}</strong></div>
         </div>
 
-        <!-- Section 2: Damages -->
+        <!-- Section 2: Damage Assessment -->
         <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.25rem;display:flex;flex-direction:column;gap:8px;">
           <div style="display:flex;align-items:center;gap:8px;color:var(--cust-brown-900);font-weight:700;font-size:0.95rem;">
-            <span style="font-size:1.1rem;">💥</span> 2. Damages Assessed
+            <span style="font-size:1.1rem;">💥</span> Damage Assessment
           </div>
           <div style="font-size:0.85rem;color:var(--gray-700);line-height:1.5;background:#FAF6F2;padding:12px;border-radius:8px;border:1px solid var(--cust-cream-border);flex:1;">
             ${s.claimSummary.damages}
@@ -6629,10 +8153,10 @@ function fnolRenderStep(step) {
           <div style="font-size:0.75rem;color:var(--gray-500);">Supporting Evidence: <strong>${s.photos.length} item(s) attached</strong></div>
         </div>
 
-        <!-- Section 3: Coverage Potentially Triggered -->
+        <!-- Section 3: Coverage Check -->
         <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.25rem;display:flex;flex-direction:column;gap:8px;">
           <div style="display:flex;align-items:center;gap:8px;color:var(--cust-brown-900);font-weight:700;font-size:0.95rem;">
-            <span style="font-size:1.1rem;">🛡️</span> 3. Coverage Potentially Triggered
+            <span style="font-size:1.1rem;">🛡️</span> Coverage Check
           </div>
           <div style="font-size:0.85rem;color:var(--gray-700);line-height:1.5;background:#FAF6F2;padding:12px;border-radius:8px;border:1px solid var(--cust-cream-border);flex:1;">
             ${s.claimSummary.coverageTriggered}
@@ -6643,7 +8167,7 @@ function fnolRenderStep(step) {
         <!-- Section 4: Recommended Next Action -->
         <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.25rem;display:flex;flex-direction:column;gap:8px;">
           <div style="display:flex;align-items:center;gap:8px;color:var(--cust-brown-900);font-weight:700;font-size:0.95rem;">
-            <span style="font-size:1.1rem;">🧭</span> 4. Recommended Next Action
+            <span style="font-size:1.1rem;">🧭</span> Recommended Next Action
           </div>
           <div style="font-size:0.85rem;color:var(--gray-700);line-height:1.5;background:#FAF6F2;padding:12px;border-radius:8px;border:1px solid var(--cust-cream-border);flex:1;">
             ${s.claimSummary.recommendedNextAction}
@@ -6652,10 +8176,55 @@ function fnolRenderStep(step) {
         </div>
       </div>
 
-      <!-- AI Advisory Disclaimer -->
-      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;margin-bottom:1.5rem;display:flex;align-items:flex-start;gap:10px;font-size:0.8rem;color:#64748B;line-height:1.4;">
-        <span style="font-size:1rem;">ℹ️</span>
-        <div><strong>AI-Assisted Assessment Notice:</strong> This preliminary analysis is generated automatically to expedite intake routing and estimate preliminary reserve guidelines. This does not constitute a final binding claim decision or confirmation of coverage liability.</div>
+      <!-- Risk Factors Identified Card -->
+      <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.35rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+        <h4 style="font-family:'Playfair Display',Georgia,serif;font-size:1.05rem;color:var(--cust-brown-900);margin:0 0 12px;display:flex;align-items:center;gap:8px;">
+          <span style="color:var(--cust-brown-700);font-size:1.1rem;">🔍</span>
+          Risk Factors Identified
+        </h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;">
+          <div style="background:#FAF6F2;border:1px solid var(--cust-cream-border);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;">Damage Severity</span>
+            <span style="font-size:0.9rem;font-weight:700;color:var(--cust-brown-900);">${damageSeverityText}</span>
+          </div>
+          <div style="background:#FAF6F2;border:1px solid var(--cust-cream-border);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;">Bodily Injury</span>
+            <span style="font-size:0.9rem;font-weight:700;color:var(--cust-brown-900);">${bodilyInjuryText}</span>
+          </div>
+          <div style="background:#FAF6F2;border:1px solid var(--cust-cream-border);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;">Property Functionality</span>
+            <span style="font-size:0.9rem;font-weight:700;color:var(--cust-brown-900);">${propFunctionalityText}</span>
+          </div>
+          <div style="background:#FAF6F2;border:1px solid var(--cust-cream-border);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;">Coverage Status</span>
+            <span style="font-size:0.9rem;font-weight:700;color:var(--cust-brown-900);">${coverageStatusText}</span>
+          </div>
+          <div style="background:#FAF6F2;border:1px solid var(--cust-cream-border);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;">Supporting Evidence</span>
+            <span style="font-size:0.9rem;font-weight:700;color:var(--cust-brown-900);">${supportingEvidenceText}</span>
+          </div>
+          <div style="background:#FAF6F2;border:1px solid var(--cust-cream-border);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;">Claim Complexity</span>
+            <span style="font-size:0.9rem;font-weight:700;color:var(--cust-brown-900);">${claimComplexityText}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Summary Card -->
+      <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.25rem 1.35rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+        <h4 style="font-family:'Playfair Display',Georgia,serif;font-size:1.05rem;color:var(--cust-brown-900);margin:0 0 8px;display:flex;align-items:center;gap:8px;">
+          <span style="color:var(--cust-brown-700);font-size:1.1rem;">📊</span>
+          Risk Summary
+        </h4>
+        <p style="font-size:0.875rem;color:var(--gray-700);margin:0;line-height:1.55;">
+          ${riskSummaryText}
+        </p>
+      </div>
+
+      <!-- AI-Assisted Analysis Notice -->
+      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:12px 16px;margin-bottom:1.5rem;display:flex;align-items:flex-start;gap:10px;font-size:0.8rem;color:#64748B;line-height:1.45;">
+        <span style="font-size:1rem;flex-shrink:0;">ℹ️</span>
+        <div><strong>AI-Assisted Analysis Notice:</strong> This preliminary analysis supports claim intake and routing. It does not constitute a final claim decision or confirmation of coverage liability.</div>
       </div>
 
       <!-- Action Buttons -->
@@ -6674,6 +8243,11 @@ function fnolRenderStep(step) {
 
   // STEP 3: REVIEW CLAIM BEFORE SUBMISSION
   else if (step === 3) {
+    const isLow = s.classification === 'Low Severity';
+    const isMed = s.classification === 'Medium Severity';
+    const isHigh = s.classification === 'High Severity';
+    const riskLabel = isLow ? 'Low Risk' : isMed ? 'Medium Risk' : isHigh ? 'High Risk' : 'Elevated Risk (Verification Flagged)';
+
     contentHtml = `
       ${stepperHtml}
 
@@ -6735,13 +8309,13 @@ function fnolRenderStep(step) {
           </div>
         </div>
 
-        <!-- AI Classification Box -->
-        <div style="background:#FAF5FF;border:1px solid #E9D5FF;padding:12px 16px;border-radius:8px;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;">
+        <!-- Risk Factor Assessment Box -->
+        <div style="background:#FAF5FF;border:1px solid #E9D5FF;padding:12px 16px;border-radius:8px;margin-bottom:1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
           <div>
-            <span style="font-size:0.75rem;text-transform:uppercase;font-weight:700;color:#6B21A8;">Initial AI Triage Classification:</span>
-            <div style="font-size:1.1rem;font-weight:800;color:#581C87;">${s.classification} (Score: ${s.classificationScore}/100)</div>
+            <span style="font-size:0.75rem;text-transform:uppercase;font-weight:700;color:#6B21A8;">Initial Risk Factor Assessment:</span>
+            <div style="font-size:1.1rem;font-weight:800;color:#581C87;">${riskLabel} (Score: ${s.classificationScore}/100)</div>
           </div>
-          <button type="button" class="btn btn-outline btn-sm" onclick="fnolSetStep(2)" style="font-size:0.75rem;">View AI Assessment</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="fnolSetStep(2)" style="font-size:0.75rem;">View Risk Factor</button>
         </div>
 
         <div style="font-size:0.8rem;color:var(--gray-600);border-top:1px solid var(--cust-cream-border);padding-top:10px;">
@@ -6752,7 +8326,7 @@ function fnolRenderStep(step) {
       <!-- Submission Actions -->
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <button type="button" class="btn btn-outline" onclick="fnolSetStep(2)">
-          ← Back to AI Assessment
+          ← Back to Risk Factor
         </button>
         <button type="button" class="btn btn-primary" onclick="fnolSubmitClaim()" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;font-size:0.95rem;box-shadow:0 4px 12px rgba(122, 74, 58, 0.25);">
           <span>Submit Claim ✓</span>
@@ -6764,6 +8338,11 @@ function fnolRenderStep(step) {
 
   // STEP 4: CONFIRMATION & CLAIM ID STATUS
   else if (step === 4) {
+    const isLow = s.classification === 'Low Severity';
+    const isMed = s.classification === 'Medium Severity';
+    const isHigh = s.classification === 'High Severity';
+    const riskLabel = isLow ? 'Low Risk' : isMed ? 'Medium Risk' : isHigh ? 'High Risk' : 'Elevated Risk (Verification Flagged)';
+
     const isFraud = s.classification === 'Potential Fraud';
     const claimStatusText = isFraud ? 'Submitted · Routing to Special Investigation Unit' : 'Submitted · Adjuster Assigned';
     const nextActionText = isFraud ? 
@@ -6799,7 +8378,7 @@ function fnolRenderStep(step) {
 
           <div class="detail-row" style="padding:8px 0;"><span class="detail-label" style="font-size:0.875rem;">Covered Policy</span><span class="detail-value" style="font-size:0.875rem;"><strong>${s.policyType}</strong> (${s.policyCode || s.policyId})</span></div>
           <div class="detail-row" style="padding:8px 0;"><span class="detail-label" style="font-size:0.875rem;">Incident Date & Location</span><span class="detail-value" style="font-size:0.875rem;">${s.dateLoss} · ${s.location}</span></div>
-          <div class="detail-row" style="padding:8px 0;"><span class="detail-label" style="font-size:0.875rem;">AI Triage Classification</span><span class="detail-value" style="font-size:0.875rem;"><strong>${s.classification}</strong> (Score: ${s.classificationScore}/100)</span></div>
+          <div class="detail-row" style="padding:8px 0;"><span class="detail-label" style="font-size:0.875rem;">Risk Factor Assessment</span><span class="detail-value" style="font-size:0.875rem;"><strong>${riskLabel}</strong> (Risk Score: ${s.classificationScore}/100)</span></div>
           <div class="detail-row" style="padding:8px 0;border-bottom:none;"><span class="detail-label" style="font-size:0.875rem;">Recommended Next Action</span><span class="detail-value" style="font-size:0.875rem;color:var(--cust-brown-700);font-weight:600;">${nextActionText}</span></div>
         </div>
 
@@ -6982,22 +8561,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminPolicyStatusFilter = document.getElementById('admin-policy-status-filter');
   const adminPolicyResetBtn = document.getElementById('admin-policy-reset-btn');
 
-  const triggerAdminPolicyFilter = () => {
-    const search = adminPolicySearch ? adminPolicySearch.value : '';
+  let adminPolicyDebounceTimer = null;
+  const triggerAdminPolicyFilter = (fetchRemote = false) => {
+    const search = adminPolicySearch ? adminPolicySearch.value.trim() : '';
     const type = adminPolicyTypeFilter ? adminPolicyTypeFilter.value : 'all';
     const status = adminPolicyStatusFilter ? adminPolicyStatusFilter.value : 'all';
-    renderAdminPoliciesTable(type, status, search);
+
+    if (fetchRemote) {
+      fetchAdminPolicies(type, status, search);
+    } else {
+      renderAdminPoliciesTable(type, status, search);
+    }
   };
 
-  if (adminPolicySearch) adminPolicySearch.addEventListener('input', triggerAdminPolicyFilter);
-  if (adminPolicyTypeFilter) adminPolicyTypeFilter.addEventListener('change', triggerAdminPolicyFilter);
-  if (adminPolicyStatusFilter) adminPolicyStatusFilter.addEventListener('change', triggerAdminPolicyFilter);
+  if (adminPolicySearch) {
+    adminPolicySearch.addEventListener('input', () => {
+      // Instant local search filter
+      triggerAdminPolicyFilter(false);
+      // Debounced backend query
+      clearTimeout(adminPolicyDebounceTimer);
+      adminPolicyDebounceTimer = setTimeout(() => {
+        triggerAdminPolicyFilter(true);
+      }, 350);
+    });
+  }
+  if (adminPolicyTypeFilter) adminPolicyTypeFilter.addEventListener('change', () => triggerAdminPolicyFilter(true));
+  if (adminPolicyStatusFilter) adminPolicyStatusFilter.addEventListener('change', () => triggerAdminPolicyFilter(true));
   if (adminPolicyResetBtn) {
     adminPolicyResetBtn.addEventListener('click', () => {
       if (adminPolicySearch) adminPolicySearch.value = '';
       if (adminPolicyTypeFilter) adminPolicyTypeFilter.value = 'all';
       if (adminPolicyStatusFilter) adminPolicyStatusFilter.value = 'all';
-      renderAdminPoliciesTable('all', 'all', '');
+      fetchAdminPolicies('all', 'all', '');
       showToast('Policy filters reset.');
     });
   }
@@ -7052,28 +8647,32 @@ document.addEventListener('DOMContentLoaded', () => {
       highlightActiveCard('card-uw-pending');
       const statusFilter = document.getElementById('uw-full-status-filter');
       if (statusFilter) {
-        statusFilter.value = 'Pending';
-        renderUnderwriterFullQueue('Pending', 'all', 'all', '');
+        statusFilter.value = 'Pending Review';
+        renderUnderwriterFullQueue('Pending Review', 'all', 'all', '');
       }
-      const pendingList = MOCK_DB.underwriterQueue.filter(item => item.status === 'Pending');
+      const queue = window.underwriterQueueData || [];
+      const pendingList = queue.filter(item => {
+        const s = mapUnderwriterStatus(item.status);
+        return s === 'Pending Review' || s === 'Pending Approval';
+      });
       const contentHtml = `
             <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">Showing <strong>${pendingList.length} applications</strong> awaiting risk evaluation:</div>
-            <div style="display:flex;flex-direction:column;gap:0.65rem;">
-              ${pendingList.map(app => `
+            <div style="display:flex;flex-direction:column;gap:0.65rem;max-height:400px;overflow-y:auto;">
+              ${pendingList.slice(0, 15).map(app => `
                 <div class="panel-policy-list-item">
                   <div>
-                    <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${app.customer} · ${app.product}</div>
-                    <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${app.id} · ${app.premium}/yr · Risk: ${app.riskLevel}</div>
+                    <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${app.customer} · ${app.product || app.policy_type}</div>
+                    <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${app.id} · ${app.premium} · Risk: ${app.risk_level || 'Low'}</div>
                   </div>
                   <button class="btn btn-primary btn-sm" onclick="openUnderwriterReviewPanel('${app.id}')">Review →</button>
                 </div>
               `).join('')}
             </div>
             <div style="margin-top:1.25rem;">
-              <button class="btn btn-outline btn-block btn-sm" onclick="navigateTo('underwriter-queue')">Open Dedicated Queue Ledger →</button>
+              <button class="btn btn-outline btn-block btn-sm" onclick="navigateTo('underwriter-queue')">Open Dedicated Queue Ledger (${queue.length}) →</button>
             </div>
           `;
-      openOrUpdateSlidePanel('Pending Underwriting Reviews (14)', 'Active Submissions Requiring Decision', contentHtml);
+      openOrUpdateSlidePanel(`Pending Underwriting Reviews (${pendingList.length})`, 'Active Submissions Requiring Decision', contentHtml);
     });
   }
 
@@ -7085,22 +8684,23 @@ document.addEventListener('DOMContentLoaded', () => {
         riskFilter.value = 'High';
         renderUnderwriterFullQueue('all', 'High', 'all', '');
       }
-      const highList = MOCK_DB.underwriterQueue.filter(item => item.riskLevel === 'High');
+      const queue = window.underwriterQueueData || [];
+      const highList = queue.filter(item => (item.risk_level || '').toLowerCase() === 'high' || item.premium_raw > 10000);
       const contentHtml = `
             <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">Showing <strong>${highList.length} high-exposure cases</strong> flagged for strict review:</div>
-            <div style="display:flex;flex-direction:column;gap:0.65rem;">
-              ${highList.map(app => `
+            <div style="display:flex;flex-direction:column;gap:0.65rem;max-height:400px;overflow-y:auto;">
+              ${highList.slice(0, 15).map(app => `
                 <div class="panel-policy-list-item" style="border-left:3px solid var(--red);">
                   <div>
-                    <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${app.customer} · ${app.product}</div>
-                    <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${app.id} · Score ${app.riskScore}/100 · ${app.status}</div>
+                    <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${app.customer} · ${app.product || app.policy_type}</div>
+                    <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${app.id} · Score ${app.risk_score || 75}/100 · ${mapUnderwriterStatus(app.status)}</div>
                   </div>
                   <button class="btn btn-primary btn-sm" onclick="openUnderwriterReviewPanel('${app.id}')">Review Case →</button>
                 </div>
               `).join('')}
             </div>
           `;
-      openOrUpdateSlidePanel('High-Risk Cases (4)', 'Applications with Elevated Hazard Indicators', contentHtml);
+      openOrUpdateSlidePanel(`High-Risk Cases (${highList.length})`, 'Applications with Elevated Hazard Indicators', contentHtml);
     });
   }
 
@@ -7112,22 +8712,23 @@ document.addEventListener('DOMContentLoaded', () => {
         statusFilter.value = 'Approved';
         renderUnderwriterFullQueue('Approved', 'all', 'all', '');
       }
-      const approvedList = MOCK_DB.underwriterQueue.filter(item => item.status === 'Approved');
+      const queue = window.underwriterQueueData || [];
+      const approvedList = queue.filter(item => mapUnderwriterStatus(item.status) === 'Approved');
       const contentHtml = `
             <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">Showing <strong>${approvedList.length} bound/approved policies</strong>:</div>
-            <div style="display:flex;flex-direction:column;gap:0.65rem;">
+            <div style="display:flex;flex-direction:column;gap:0.65rem;max-height:400px;overflow-y:auto;">
               ${approvedList.map(app => `
                 <div class="panel-policy-list-item">
                   <div>
-                    <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${app.customer} · ${app.product}</div>
-                    <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${app.id} · ${app.premium}/yr · Effective ${app.effectiveDate}</div>
+                    <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${app.customer} · ${app.product || app.policy_type}</div>
+                    <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${app.id} · ${app.premium} · Effective ${app.effective_date || 'Current'}</div>
                   </div>
                   <button class="btn btn-outline btn-sm" onclick="openUnderwriterReviewPanel('${app.id}')">Inspect →</button>
                 </div>
               `).join('')}
             </div>
           `;
-      openOrUpdateSlidePanel('Approved Applications (28)', 'Policies Bound and Issued', contentHtml);
+      openOrUpdateSlidePanel(`Approved Applications (${approvedList.length})`, 'Policies Bound and Issued', contentHtml);
     });
   }
 
@@ -7136,17 +8737,18 @@ document.addEventListener('DOMContentLoaded', () => {
       highlightActiveCard('card-uw-info');
       const statusFilter = document.getElementById('uw-full-status-filter');
       if (statusFilter) {
-        statusFilter.value = 'Needs More Information';
-        renderUnderwriterFullQueue('Needs More Information', 'all', 'all', '');
+        statusFilter.value = 'Info Required';
+        renderUnderwriterFullQueue('Info Required', 'all', 'all', '');
       }
-      const infoList = MOCK_DB.underwriterQueue.filter(item => item.status === 'Needs More Information');
+      const queue = window.underwriterQueueData || [];
+      const infoList = queue.filter(item => mapUnderwriterStatus(item.status) === 'Info Required');
       const contentHtml = `
             <div style="font-size:0.875rem;color:var(--gray-600);margin-bottom:0.75rem;">Showing <strong>${infoList.length} applications</strong> awaiting supplemental documents:</div>
-            <div style="display:flex;flex-direction:column;gap:0.65rem;">
-              ${infoList.map(app => `
+            <div style="display:flex;flex-direction:column;gap:0.65rem;max-height:400px;overflow-y:auto;">
+              ${infoList.length === 0 ? '<div style="color:var(--gray-500);padding:1rem;">No policies currently pending supplemental documents.</div>' : infoList.map(app => `
                 <div class="panel-policy-list-item" style="border-left:3px solid var(--blue-600);">
                   <div>
-                    <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${app.customer} · ${app.product}</div>
+                    <div style="font-weight:700;color:var(--blue-900);font-size:0.9rem">${app.customer} · ${app.product || app.policy_type}</div>
                     <div style="font-size:0.8rem;color:var(--gray-500);font-family:monospace">${app.id} · Pending documentation</div>
                   </div>
                   <button class="btn btn-outline btn-sm" onclick="openUnderwriterReviewPanel('${app.id}')">View Details →</button>
@@ -7154,7 +8756,7 @@ document.addEventListener('DOMContentLoaded', () => {
               `).join('')}
             </div>
           `;
-      openOrUpdateSlidePanel('Needs More Information (6)', 'Cases Awaiting Documentation', contentHtml);
+      openOrUpdateSlidePanel(`Info Required (${infoList.length})`, 'Cases Awaiting Documentation', contentHtml);
     });
   }
 
@@ -7510,7 +9112,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    let html = `<div style="display:flex;flex-direction:column;gap:1.25rem;">`;
+    let html = `<div style="display:flex;flex-direction:column;gap:1.25rem;width:100%;">`;
 
     filtered.forEach(c => {
       const isClosed = (c.status || '').includes('Closed') || (c.status || '').includes('Settled');
@@ -7528,58 +9130,63 @@ document.addEventListener('DOMContentLoaded', () => {
       const statusBorder = isClosed ? '#E5E7EB' : '#BFDBFE';
 
       html += `
-          <div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.35rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px;border-bottom:1px solid var(--cust-cream-border);padding-bottom:12px;">
+          <div class="card" style="width:100%;box-sizing:border-box;border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.5rem 1.75rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;border-bottom:1px solid var(--cust-cream-border);padding-bottom:14px;">
               <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-                <span style="font-weight:800;font-size:1.1rem;color:var(--cust-brown-900);letter-spacing:0.02em;">${c.id}</span>
-                <span style="background:${statusBadgeBg};color:${statusBadgeColor};border:1px solid ${statusBorder};font-size:0.75rem;font-weight:700;padding:3px 10px;border-radius:14px;">
-                  ● ${c.status || 'Under Review'}
+                <span style="font-weight:800;font-size:1.15rem;color:var(--cust-brown-900);letter-spacing:0.02em;font-family:monospace;">${c.id}</span>
+                <span style="background:${statusBadgeBg};color:${statusBadgeColor};border:1px solid ${statusBorder};font-size:0.75rem;font-weight:700;padding:4px 12px;border-radius:14px;display:inline-flex;align-items:center;gap:6px;">
+                  <span style="width:6px;height:6px;border-radius:50%;background:${statusBadgeColor};"></span>
+                  ${c.status || 'Under Review'}
                 </span>
-                <span style="background:${severityBadgeBg};color:${severityBadgeColor};border:1px solid ${severityBorder};font-size:0.75rem;font-weight:700;padding:3px 10px;border-radius:14px;">
+                <span style="background:${severityBadgeBg};color:${severityBadgeColor};border:1px solid ${severityBorder};font-size:0.75rem;font-weight:700;padding:4px 12px;border-radius:14px;">
                   ${sevStr}
                 </span>
               </div>
               <div style="text-align:right;">
-                <span style="font-size:0.75rem;color:var(--gray-500);">Estimated Amount</span>
-                <div style="font-weight:800;font-size:1.05rem;color:var(--cust-brown-900);">${c.amount || '$0'}</div>
+                <span style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;display:block;">Estimated Amount</span>
+                <div style="font-weight:800;font-size:1.15rem;color:var(--cust-brown-900);">${c.amount || '$0'}</div>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-bottom:14px;background:#FAF6F2;padding:12px 14px;border-radius:8px;border:1px solid var(--cust-cream-border);">
+            <div style="display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:16px;margin-bottom:14px;background:#FAF6F2;padding:14px 18px;border-radius:8px;border:1px solid var(--cust-cream-border);" class="claims-card-grid-responsive">
               <div>
-                <div style="font-size:0.725rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;">Covered Policy</div>
-                <div style="font-size:0.85rem;font-weight:700;color:var(--cust-brown-900);">${c.policyType || 'Insurance Policy'}</div>
+                <div style="font-size:0.725rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;margin-bottom:3px;">Covered Policy</div>
+                <div style="font-size:0.875rem;font-weight:700;color:var(--cust-brown-900);">${c.policyType || 'Insurance Policy'}</div>
                 <div style="font-size:0.75rem;color:var(--gray-600);">${c.policyCode || c.policyId || ''}</div>
               </div>
 
               <div>
-                <div style="font-size:0.725rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;">Incident Peril</div>
-                <div style="font-size:0.85rem;font-weight:700;color:var(--cust-brown-900);">${c.claimType || 'Loss'}</div>
-                <div style="font-size:0.75rem;color:var(--gray-600);">Date: ${c.dateLoss || ''}</div>
+                <div style="font-size:0.725rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;margin-bottom:3px;">Incident Peril</div>
+                <div style="font-size:0.875rem;font-weight:700;color:var(--cust-brown-900);">${c.claimType || 'Loss'}</div>
+                <div style="font-size:0.75rem;color:var(--gray-600);">Date: ${c.dateLoss || 'N/A'}</div>
               </div>
 
               <div>
-                <div style="font-size:0.725rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;">Assigned Adjuster</div>
-                <div style="font-size:0.85rem;font-weight:700;color:var(--cust-brown-900);">${(c.adjuster && c.adjuster.name) || 'Marcus Vance'}</div>
+                <div style="font-size:0.725rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;margin-bottom:3px;">Assigned Adjuster</div>
+                <div style="font-size:0.875rem;font-weight:700;color:var(--cust-brown-900);">${(c.adjuster && c.adjuster.name) || 'Marcus Vance'}</div>
                 <div style="font-size:0.75rem;color:var(--gray-600);">${(c.adjuster && c.adjuster.phone) || '(555) 881-3022'}</div>
               </div>
 
               <div>
-                <div style="font-size:0.725rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;">Deductible</div>
-                <div style="font-size:0.85rem;font-weight:700;color:var(--cust-brown-900);">${c.deductible || '$1,000'}</div>
+                <div style="font-size:0.725rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;margin-bottom:3px;">Deductible & Evidence</div>
+                <div style="font-size:0.875rem;font-weight:700;color:var(--cust-brown-900);">${c.deductible || '$1,000'}</div>
                 <div style="font-size:0.75rem;color:var(--gray-600);">${(c.evidence || []).length} evidence file(s)</div>
               </div>
             </div>
 
-            <p style="font-size:0.85rem;color:var(--gray-700);margin:0 0 12px;line-height:1.45;">
-              ${c.description || ''}
-            </p>
+            <div style="margin-bottom:14px;background:#fff;border:1px solid var(--cust-cream-border);border-radius:8px;padding:12px 16px;">
+              <div style="font-size:0.75rem;color:var(--gray-500);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Incident Description</div>
+              <p style="font-size:0.85rem;color:var(--gray-700);margin:0;line-height:1.5;">
+                ${c.description || ''}
+              </p>
+            </div>
 
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-top:1px solid var(--cust-cream-border);padding-top:12px;">
-              <div style="display:flex;align-items:center;gap:6px;font-size:0.825rem;color:var(--cust-brown-800);">
-                <strong>Next Step:</strong> <span>${c.nextAction || 'Adjuster inspection scheduled.'}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-top:1px solid var(--cust-cream-border);padding-top:12px;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--cust-brown-900);">
+                <span style="font-weight:700;color:var(--cust-brown-700);">Next Step:</span>
+                <span style="color:var(--gray-700);">${c.nextAction || 'Adjuster inspection scheduled.'}</span>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="openCustomerClaimDetails('${c.id}')" style="display:inline-flex;align-items:center;gap:6px;font-size:0.825rem;padding:6px 14px;border-color:var(--cust-brown-700);color:var(--cust-brown-800);">
+              <button class="btn btn-outline btn-sm" onclick="openCustomerClaimDetails('${c.id}')" style="display:inline-flex;align-items:center;gap:6px;font-size:0.825rem;padding:7px 16px;border-color:var(--cust-brown-700);color:var(--cust-brown-800);font-weight:600;border-radius:8px;">
                 <span>View Full Claim Details</span>
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </button>
@@ -7625,7 +9232,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dates = claim.timelineDates || {};
     const steps = [
       { num: 1, title: 'Claim Submitted', desc: dates.step1 || 'Submitted' },
-      { num: 2, title: 'AI Assessment', desc: dates.step2 || 'Completed' },
+      { num: 2, title: 'Risk Assessment', desc: dates.step2 || 'Completed' },
       { num: 3, title: 'Adjuster Assigned', desc: dates.step3 || 'Assigned' },
       { num: 4, title: 'Investigation', desc: dates.step4 || 'In Progress' },
       { num: 5, title: 'Decision', desc: dates.step5 || 'Pending' },
@@ -7801,9 +9408,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderRoleChatMessages(r, getRoleAiData(r).activeConversationId);
   });
 });
-
-
-
 // Global Window Exports for inline HTML handlers
 if (typeof getMockChatResponse === 'function') window.getMockChatResponse = getMockChatResponse;
 if (typeof openAIChatSlidePanel === 'function') window.openAIChatSlidePanel = openAIChatSlidePanel;
@@ -7907,7 +9511,6 @@ if (typeof filterCustomerClaims === 'function') window.filterCustomerClaims = fi
 if (typeof searchCustomerClaims === 'function') window.searchCustomerClaims = searchCustomerClaims;
 if (typeof openCustomerClaimDetails === 'function') window.openCustomerClaimDetails = openCustomerClaimDetails;
 if (typeof closeCustomerClaimDetails === 'function') window.closeCustomerClaimDetails = closeCustomerClaimDetails;
-
 if (typeof fetchCustomerProfile === 'function') window.fetchCustomerProfile = fetchCustomerProfile;
 if (typeof fetchCustomerPolicies === 'function') window.fetchCustomerPolicies = fetchCustomerPolicies;
 if (typeof fetchCustomerClaims === 'function') window.fetchCustomerClaims = fetchCustomerClaims;
@@ -7919,13 +9522,19 @@ if (typeof getAuthHeaders === 'function') window.getAuthHeaders = getAuthHeaders
 if (typeof toggleTheme === 'function') window.toggleTheme = toggleTheme;
 if (typeof updateThemeIcon === 'function') window.updateThemeIcon = updateThemeIcon;
 if (typeof initTheme === 'function') window.initTheme = initTheme;
-
 if (typeof fetchCustomerRenewals === 'function') window.fetchCustomerRenewals = fetchCustomerRenewals;
 if (typeof fetchAgentRenewals === 'function') window.fetchAgentRenewals = fetchAgentRenewals;
 if (typeof fetchAgentProfile === 'function') window.fetchAgentProfile = fetchAgentProfile;
 if (typeof fetchAgentDashboard === 'function') window.fetchAgentDashboard = fetchAgentDashboard;
 if (typeof fetchAgentCustomers === 'function') window.fetchAgentCustomers = fetchAgentCustomers;
 if (typeof fetchAgentPolicies === 'function') window.fetchAgentPolicies = fetchAgentPolicies;
+if (typeof fetchUnderwriterStats === 'function') window.fetchUnderwriterStats = fetchUnderwriterStats;
+if (typeof fetchUnderwriterQueue === 'function') window.fetchUnderwriterQueue = fetchUnderwriterQueue;
+if (typeof fetchUnderwriterPolicies === 'function') window.fetchUnderwriterPolicies = fetchUnderwriterPolicies;
+if (typeof fetchAdminStats === 'function') window.fetchAdminStats = fetchAdminStats;
+if (typeof fetchAdminUsers === 'function') window.fetchAdminUsers = fetchAdminUsers;
+if (typeof fetchAdminPolicies === 'function') window.fetchAdminPolicies = fetchAdminPolicies;
+if (typeof fetchAdminAudit === 'function') window.fetchAdminAudit = fetchAdminAudit;
 if (typeof fetchNotifications === 'function') window.fetchNotifications = fetchNotifications;
 if (typeof renderNotifications === 'function') window.renderNotifications = renderNotifications;
 if (typeof handleCustomerConfirmRenewal === 'function') window.handleCustomerConfirmRenewal = handleCustomerConfirmRenewal;
@@ -7943,3 +9552,1954 @@ if (typeof downloadCustomerClaimDetailsPDF === 'function') window.downloadCustom
 if (typeof downloadPolicyDocument === 'function') window.downloadPolicyDocument = downloadPolicyDocument;
 if (typeof generatePDFDocument === 'function') window.generatePDFDocument = generatePDFDocument;
 if (typeof downloadPDFFile === 'function') window.downloadPDFFile = downloadPDFFile;
+if (typeof toggleRiskTierCard === 'function') window.toggleRiskTierCard = toggleRiskTierCard;
+if (typeof toggleGuideStepDetail === 'function') window.toggleGuideStepDetail = toggleGuideStepDetail;
+if (typeof closeGuideStepDetail === 'function') window.closeGuideStepDetail = closeGuideStepDetail;
+if (typeof toggleDecisionSupportDetail === 'function') window.toggleDecisionSupportDetail = toggleDecisionSupportDetail;
+if (typeof closeDecisionSupportDetail === 'function') window.closeDecisionSupportDetail = closeDecisionSupportDetail;
+if (typeof initRiskAssessmentGuidelines === 'function') window.initRiskAssessmentGuidelines = initRiskAssessmentGuidelines;
+if (typeof initUnderwriterReviewPage === 'function') window.initUnderwriterReviewPage = initUnderwriterReviewPage;
+if (typeof populateReviewPolicySelector === 'function') window.populateReviewPolicySelector = populateReviewPolicySelector;
+if (typeof selectPolicyForReview === 'function') window.selectPolicyForReview = selectPolicyForReview;
+if (typeof switchReviewTab === 'function') window.switchReviewTab = switchReviewTab;
+if (typeof toggleRiskFactorExplanation === 'function') window.toggleRiskFactorExplanation = toggleRiskFactorExplanation;
+if (typeof updateDocChecklistStatus === 'function') window.updateDocChecklistStatus = updateDocChecklistStatus;
+if (typeof jumpToMissingRequirements === 'function') window.jumpToMissingRequirements = jumpToMissingRequirements;
+if (typeof promptUnderwritingDecision === 'function') window.promptUnderwritingDecision = promptUnderwritingDecision;
+if (typeof selectAndPromptDecision === 'function') window.selectAndPromptDecision = selectAndPromptDecision;
+if (typeof confirmUnderwritingDecision === 'function') window.confirmUnderwritingDecision = confirmUnderwritingDecision;
+if (typeof openUwModal === 'function') window.openUwModal = openUwModal;
+if (typeof closeUwModal === 'function') window.closeUwModal = closeUwModal;
+if (typeof closeUwModalOnBackdrop === 'function') window.closeUwModalOnBackdrop = closeUwModalOnBackdrop;
+if (typeof handleAdminPasswordReset === 'function') window.handleAdminPasswordReset = handleAdminPasswordReset;
+if (typeof handleAdminConfirmAccess === 'function') window.handleAdminConfirmAccess = handleAdminConfirmAccess;
+if (typeof renderAgentPoliciesTable === 'function') window.renderAgentPoliciesTable = renderAgentPoliciesTable;
+if (typeof handleAgentPolicyFilters === 'function') window.handleAgentPolicyFilters = handleAgentPolicyFilters;
+if (typeof getAgentPolicyStatusClass === 'function') window.getAgentPolicyStatusClass = getAgentPolicyStatusClass;
+
+/* ==========================================================================
+   CUSTOMER POLICY APPLICATION FLOW (AVAILABLE PRODUCTS, INTAKE & TRACKING)
+   ========================================================================== */
+
+const AVAILABLE_POLICY_PRODUCTS = [
+  {
+    id: 'prod-homeowners',
+    policyType: 'Homeowners',
+    title: 'Homeowners Premier Protection (HO-3)',
+    category: 'property',
+    categoryLabel: 'Property & Home',
+    iconSvg: `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    description: 'Comprehensive physical damage protection for your primary dwelling, personal belongings, and personal liability against unexpected perils.',
+    highlights: [
+      'Dwelling replacement coverage up to $750,000',
+      'Personal property replacement cost up to $300,000',
+      'Personal liability safeguard up to $500,000',
+      'Loss of use & temporary living expenses up to $75,000',
+      'Sudden pipe discharge & hail storm protection'
+    ],
+    eligibility: 'Owner-occupied single family residence, townhouse, or approved condo structure in good structural condition.',
+    basePremiumYear: 1840,
+    basePremiumMonth: 154,
+    coverageTiers: {
+      Basic: { label: 'Basic', limit: '$300,000 Dwelling / $100,000 Liability', limitNum: 300000, deductible: '$1,500', deductibleNum: 1500, premiumYear: 1450, desc: 'Essential coverage for smaller homes or high-deductible preferences.' },
+      Standard: { label: 'Standard (Recommended)', limit: '$450,000 Dwelling / $300,000 Liability', limitNum: 450000, deductible: '$1,000', deductibleNum: 1000, premiumYear: 1840, desc: 'Most popular tier with balanced deductible and comprehensive personal property protection.' },
+      Enhanced: { label: 'Enhanced', limit: '$600,000 Dwelling / $500,000 Liability', limitNum: 600000, deductible: '$1,000', deductibleNum: 1000, premiumYear: 2280, desc: 'Expanded limits for higher-value homes including extended replacement cost.' },
+      Premium: { label: 'Premium', limit: '$850,000 Dwelling / $1,000,000 Liability', limitNum: 850000, deductible: '$500', deductibleNum: 500, premiumYear: 2950, desc: 'Top-tier executive coverage with minimal deductible and full open-perils protection.' }
+    },
+    exclusions: [
+      'Damage resulting from external flood / storm surge (requires supplemental NFIP flood endorsement)',
+      'Earthquake or earth movement unless added by rider',
+      'Intentional damage, illegal actions, or normal wear and tear',
+      'Undeclared commercial business operations on premises'
+    ],
+    requiredDocs: [
+      { type: 'Government ID Proof', desc: 'Valid Driver License, Passport, or State ID', sample: 'drivers_license.pdf' },
+      { type: 'Proof of Ownership', desc: 'Property Deed, Purchase Agreement, or Recent Property Tax Bill', sample: 'property_deed.pdf' },
+      { type: 'Home Inspection / Photos', desc: 'Recent home inspection report or 4-corner exterior photos', sample: 'home_photos.pdf' }
+    ],
+    fields: [
+      { id: 'prop_type', label: 'Property Type', type: 'select', options: ['Single Family Home', 'Townhouse / Rowhouse', 'Condominium Unit', 'Multi-Family (2-4 Units)'], required: true },
+      { id: 'year_built', label: 'Year Built', type: 'number', placeholder: 'e.g. 2016', required: true },
+      { id: 'sqft', label: 'Estimated Living Area (Sq. Ft.)', type: 'number', placeholder: 'e.g. 2400', required: true },
+      { id: 'stories', label: 'Number of Stories', type: 'select', options: ['1 Story', '2 Stories', '3+ Stories', 'Split-Level'], required: true },
+      { id: 'roof_type', label: 'Roof Material & Age', type: 'select', options: ['Asphalt Shingles (< 10 yrs)', 'Tile / Slate (< 15 yrs)', 'Metal Roofing', 'Flat / Membrane (< 10 yrs)', 'Other / Unknown'], required: true },
+      { id: 'security', label: 'Fire & Security Alarms', type: 'select', options: ['Monitored Security & Smoke Alarm', 'Local Smoke Detectors Only', 'Smart Home Security System', 'Gated Community / Guarded'], required: true },
+      { id: 'replacement_val', label: 'Estimated Replacement Cost ($)', type: 'number', placeholder: 'e.g. 450000', required: true }
+    ]
+  },
+  {
+    id: 'prod-auto',
+    policyType: 'Auto',
+    title: 'Auto Comprehensive & Collision Protection',
+    category: 'vehicle',
+    categoryLabel: 'Vehicle & Auto',
+    iconSvg: `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+    description: 'Complete vehicular coverage protecting against collision impacts, theft, vandalism, weather perils, and high-limit bodily injury liability.',
+    highlights: [
+      'Bodily injury liability up to $250k / $500k',
+      'Property damage liability up to $100,000',
+      'Comprehensive & collision protection ($500 standard deductible)',
+      '24/7 Roadside Assistance & Emergency Towing included',
+      'Rental car reimbursement during collision repair'
+    ],
+    eligibility: 'Licensed drivers with registered private passenger car, SUV, or light pickup truck.',
+    basePremiumYear: 1260,
+    basePremiumMonth: 105,
+    coverageTiers: {
+      Basic: { label: 'State Minimum', limit: '$50k/$100k Liability / $25k Property Damage', limitNum: 50000, deductible: '$1,000', deductibleNum: 1000, premiumYear: 890, desc: 'Meets legal requirements with higher out-of-pocket deductibles.' },
+      Standard: { label: 'Standard (Recommended)', limit: '$100k/$300k Liability / $100k Property Damage', limitNum: 100000, deductible: '$500', deductibleNum: 500, premiumYear: 1260, desc: 'Solid protection with comprehensive collision and roadside service.' },
+      Enhanced: { label: 'Enhanced', limit: '$250k/$500k Liability / $250k Property Damage', limitNum: 250000, deductible: '$500', deductibleNum: 500, premiumYear: 1650, desc: 'High liability limits and original equipment manufacturer (OEM) parts guarantee.' },
+      Premium: { label: 'Premium Total Protect', limit: '$500k Combined Single Limit', limitNum: 500000, deductible: '$250', deductibleNum: 250, premiumYear: 2150, desc: 'Maximum single limit with zero deductible glass replacement and gap coverage.' }
+    },
+    exclusions: [
+      'Commercial rideshare or delivery use without commercial vehicle endorsement',
+      'Unlicensed or non-declared household operators',
+      'Intentional racing or off-road track events',
+      'Normal vehicle wear, engine breakdown, or tire puncture'
+    ],
+    requiredDocs: [
+      { type: 'Government ID Proof', desc: 'Valid Driver’s License of Primary Operator', sample: 'drivers_license.pdf' },
+      { type: 'Vehicle Registration / Title', desc: 'Current State Vehicle Registration or Title Certificate', sample: 'vehicle_registration.pdf' },
+      { type: 'Prior Insurance Proof', desc: 'Previous auto declarations page or proof of continuous coverage', sample: 'prior_auto_policy.pdf' }
+    ],
+    fields: [
+      { id: 'veh_year', label: 'Vehicle Year', type: 'number', placeholder: 'e.g. 2022', required: true },
+      { id: 'veh_make', label: 'Vehicle Make', type: 'text', placeholder: 'e.g. Honda, Toyota, Ford, Tesla', required: true },
+      { id: 'veh_model', label: 'Vehicle Model', type: 'text', placeholder: 'e.g. Accord, RAV4, F-150, Model 3', required: true },
+      { id: 'veh_vin', label: 'Vehicle Identification Number (VIN)', type: 'text', placeholder: '17-character VIN (e.g. 1HGCR2F83HA000000)', required: true },
+      { id: 'veh_usage', label: 'Primary Vehicle Usage', type: 'select', options: ['Commute to Work / School', 'Pleasure / Personal Use Only', 'Business / Sales Calls', 'Commercial / Rideshare'], required: true },
+      { id: 'annual_miles', label: 'Estimated Annual Mileage', type: 'select', options: ['Under 7,500 miles/yr (Low Mileage)', '7,500 - 12,000 miles/yr (Average)', '12,000 - 18,000 miles/yr', 'Over 18,000 miles/yr'], required: true },
+      { id: 'primary_parking', label: 'Night Parking Location', type: 'select', options: ['Enclosed Private Garage', 'Private Driveway', 'Assigned Parking Lot / Carport', 'Street Parking'], required: true }
+    ]
+  },
+  {
+    id: 'prod-commercial',
+    policyType: 'Commercial Property',
+    title: 'Commercial Property & Asset Protection',
+    category: 'commercial',
+    categoryLabel: 'Commercial & Business',
+    iconSvg: `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>`,
+    description: 'Safeguard your commercial buildings, leased office premises, inventory, industrial machinery, and business interruption losses.',
+    highlights: [
+      'Building replacement protection up to $2,000,000',
+      'Business personal property & inventory up to $750,000',
+      'Business interruption & lost revenue up to 12 months',
+      'Electronic data & computer equipment rider included',
+      'Equipment breakdown & machinery protection'
+    ],
+    eligibility: 'Registered business entities, commercial building owners, or commercial enterprise tenants.',
+    basePremiumYear: 2450,
+    basePremiumMonth: 204,
+    coverageTiers: {
+      Basic: { label: 'Small Business Basic', limit: '$500,000 Building / $200,000 Inventory', limitNum: 500000, deductible: '$2,500', deductibleNum: 2500, premiumYear: 1850, desc: 'Ideal for small retail shops or consulting offices.' },
+      Standard: { label: 'Standard Commercial', limit: '$1,000,000 Building / $500,000 Inventory', limitNum: 1000000, deductible: '$1,500', deductibleNum: 1500, premiumYear: 2450, desc: 'Balanced commercial protection with business interruption coverage.' },
+      Enhanced: { label: 'Enhanced Enterprise', limit: '$2,000,000 Building / $1,000,000 Inventory', limitNum: 2000000, deductible: '$1,000', deductibleNum: 1000, premiumYear: 3600, desc: 'Designed for manufacturing, warehousing, and multi-tenant commercial centers.' }
+    },
+    exclusions: [
+      'War, terrorism, or civil unrest unless specific TRIA rider is attached',
+      'Flood / storm surge without specialized commercial NFIP policy',
+      'Employee theft or embezzlement (requires Commercial Crime coverage)',
+      'Unattended vacancy exceeding 60 consecutive days'
+    ],
+    requiredDocs: [
+      { type: 'Government ID Proof', desc: 'Driver License or Passport of Authorized Officer', sample: 'officer_id.pdf' },
+      { type: 'Business Registration / License', desc: 'Articles of Incorporation, LLC Certificate, or Business License', sample: 'business_registration.pdf' },
+      { type: 'Commercial Lease or Property Deed', desc: 'Current commercial lease agreement or building deed', sample: 'commercial_lease.pdf' }
+    ],
+    fields: [
+      { id: 'business_name', label: 'Legal Business Name', type: 'text', placeholder: 'e.g. Acme Logistics LLC', required: true },
+      { id: 'biz_type', label: 'Commercial Property Use', type: 'select', options: ['Office Premises', 'Retail Storefront', 'Restaurant / Food Service', 'Warehouse / Distribution', 'Light Manufacturing', 'Medical / Clinic'], required: true },
+      { id: 'building_construction', label: 'Building Construction Type', type: 'select', options: ['Fire-Resistive Concrete / Steel', 'Masonry / Non-Combustible', 'Joisted Masonry', 'Wood Frame'], required: true },
+      { id: 'building_age', label: 'Building Construction Year', type: 'number', placeholder: 'e.g. 2012', required: true },
+      { id: 'sqft_occupied', label: 'Total Commercial Square Footage', type: 'number', placeholder: 'e.g. 5000', required: true },
+      { id: 'inventory_value', label: 'Estimated Machinery & Inventory Value ($)', type: 'number', placeholder: 'e.g. 250000', required: true },
+      { id: 'fire_suppression', label: 'Fire Suppression Systems', type: 'select', options: ['Full Automatic Sprinkler System', 'Partial Sprinklers with Central Alarm', 'Fire Extinguishers & Smoke Detectors Only'], required: true }
+    ]
+  },
+  {
+    id: 'prod-liability',
+    policyType: 'General Liability',
+    title: 'Commercial General Liability (CGL)',
+    category: 'commercial',
+    categoryLabel: 'Commercial & Business',
+    iconSvg: `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    description: 'Defend your business against third-party bodily injury, property damage lawsuits, advertising liabilities, and legal defense costs.',
+    highlights: [
+      '$1,000,000 per occurrence / $2,000,000 aggregate liability',
+      'Third-party bodily injury & property damage defense',
+      'Products & completed operations liability protection',
+      'Personal & advertising injury safeguard',
+      'Immediate legal defense and court settlement funding'
+    ],
+    eligibility: 'Operating businesses, independent contractors, professional consultancies, and commercial services.',
+    basePremiumYear: 1650,
+    basePremiumMonth: 137,
+    coverageTiers: {
+      Basic: { label: 'Small Business Basic', limit: '$500k Occurrence / $1M Aggregate', limitNum: 500000, deductible: '$1,000', deductibleNum: 1000, premiumYear: 1100, desc: 'Essential baseline protection for sole proprietors and independent consultants.' },
+      Standard: { label: 'Standard CGL (Recommended)', limit: '$1M Occurrence / $2M Aggregate', limitNum: 1000000, deductible: '$500', deductibleNum: 500, premiumYear: 1650, desc: 'Industry standard required by most corporate clients, landlords, and contracts.' },
+      Enhanced: { label: 'Enhanced Enterprise', limit: '$2M Occurrence / $4M Aggregate', limitNum: 2000000, deductible: '$500', deductibleNum: 500, premiumYear: 2450, desc: 'High liability buffer for high-footfall retail, contractors, and hospitality businesses.' }
+    },
+    exclusions: [
+      'Professional errors and omissions (requires dedicated E&O / Professional Liability)',
+      'Worker workplace injury (requires statutory Workers’ Compensation)',
+      'Pollution or environmental contamination incidents',
+      'Cyber data breaches (requires separate Cyber Security coverage)'
+    ],
+    requiredDocs: [
+      { type: 'Government ID Proof', desc: 'Driver License or Passport of Business Owner', sample: 'owner_id.pdf' },
+      { type: 'Business Tax Return / Revenue Proof', desc: 'Recent business tax return or 12-month revenue statement', sample: 'tax_return.pdf' },
+      { type: 'Commercial Certificate of Good Standing', desc: 'State corporate registration or active license', sample: 'state_license.pdf' }
+    ],
+    fields: [
+      { id: 'cgl_biz_name', label: 'Company / Operating Name', type: 'text', placeholder: 'e.g. Apex Consulting Group Inc.', required: true },
+      { id: 'cgl_industry', label: 'Industry & Business Activity', type: 'select', options: ['Professional / IT Services / Consulting', 'Retail Store / E-Commerce', 'Contractor / Building Trades', 'Hospitality / Food & Beverage', 'Health / Fitness / Personal Care', 'Wholesale & Trade'], required: true },
+      { id: 'cgl_employees', label: 'Number of Full-Time Employees', type: 'number', placeholder: 'e.g. 8', required: true },
+      { id: 'cgl_gross_rev', label: 'Estimated Annual Gross Revenue ($)', type: 'number', placeholder: 'e.g. 750000', required: true },
+      { id: 'cgl_years_op', label: 'Years in Continuous Operation', type: 'select', options: ['Under 1 Year (New Venture)', '1 - 3 Years', '3 - 5 Years', '5+ Years Established'], required: true },
+      { id: 'cgl_subcontractors', label: 'Do you utilize subcontractors?', type: 'select', options: ['No, 100% In-House Staff', 'Yes, with verified certificates of insurance', 'Yes, occasional freelance assistance'], required: true }
+    ]
+  },
+  {
+    id: 'prod-renters',
+    policyType: 'Renters',
+    title: 'Renters Protection Policy (HO-4)',
+    category: 'property',
+    categoryLabel: 'Property & Home',
+    iconSvg: `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="9" y1="18" x2="15" y2="18"/><line x1="12" y1="15" x2="12" y2="21"/></svg>`,
+    description: 'Affordable safeguard for tenants renting apartments, condos, or single-family homes covering personal belongings, electronics, and personal liability.',
+    highlights: [
+      'Personal property replacement cost up to $100,000',
+      'Personal liability coverage up to $300,000',
+      'Worldwide theft protection for laptops & valuables',
+      'Temporary loss of use & hotel reimbursement up to $25,000',
+      'Guest medical payments protection included'
+    ],
+    eligibility: 'Tenants residing in leased apartments, rental condominiums, or single-family rental dwellings.',
+    basePremiumYear: 360,
+    basePremiumMonth: 30,
+    coverageTiers: {
+      Basic: { label: 'Essential Renters', limit: '$25,000 Belongings / $100,000 Liability', limitNum: 25000, deductible: '$500', deductibleNum: 500, premiumYear: 240, desc: 'Great for studio or 1-bedroom apartments.' },
+      Standard: { label: 'Standard (Recommended)', limit: '$50,000 Belongings / $300,000 Liability', limitNum: 50000, deductible: '$500', deductibleNum: 500, premiumYear: 360, desc: 'Complete coverage satisfying all standard landlord lease requirements.' },
+      Enhanced: { label: 'Enhanced Protection', limit: '$100,000 Belongings / $500,000 Liability', limitNum: 100000, deductible: '$250', deductibleNum: 250, premiumYear: 490, desc: 'Designed for larger residences with high-value electronics and jewelry schedules.' }
+    },
+    exclusions: [
+      'Building physical structure or landlord fixtures (covered under Landlord policy)',
+      'Floods or water backup unless optional rider is selected',
+      'Intentional loss or roommate property without co-insured endorsement'
+    ],
+    requiredDocs: [
+      { type: 'Government ID Proof', desc: 'Valid Driver’s License or Passport', sample: 'drivers_license.pdf' },
+      { type: 'Residential Lease Agreement', desc: 'Current signed tenant lease agreement indicating address and unit', sample: 'lease_agreement.pdf' }
+    ],
+    fields: [
+      { id: 'rental_address', label: 'Rental Unit Address & Unit Number', type: 'text', placeholder: 'e.g. 742 Evergreen Terrace, Apt 4B', required: true },
+      { id: 'landlord_name', label: 'Landlord / Property Management Name', type: 'text', placeholder: 'e.g. Skyline Property Management', required: true },
+      { id: 'lease_term', label: 'Current Lease Term', type: 'select', options: ['12-Month Standard Lease', '6-Month Lease', 'Month-to-Month', '2-Year Multi-Year Lease'], required: true },
+      { id: 'personal_belongings_val', label: 'Estimated Personal Belongings Value ($)', type: 'number', placeholder: 'e.g. 45000', required: true },
+      { id: 'has_roommates', label: 'Any Unrelated Roommates?', type: 'select', options: ['No, Single Tenant / Family Only', 'Yes, 1 Roommate', 'Yes, 2+ Roommates'], required: true }
+    ]
+  },
+  {
+    id: 'prod-umbrella',
+    policyType: 'Personal Umbrella',
+    title: 'Personal Umbrella Excess Liability',
+    category: 'umbrella',
+    categoryLabel: 'Personal Umbrella',
+    iconSvg: `<svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12A10 10 0 0 0 12 2v10z"/><path d="M12 12a10 10 0 0 0-10 0v2a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-2a10 10 0 0 0 5-5"/></svg>`,
+    description: 'High-limit secondary liability protection that attaches above your primary Auto and Homeowners policies against severe, multimillion-dollar claims.',
+    highlights: [
+      'Additional $1,000,000 to $5,000,000 in excess liability protection',
+      'Worldwide territory protection for auto accidents and personal acts',
+      'Coverage for personal injury lawsuits, libel, slander, and false arrest',
+      'Pays legal defense fees above policy limits without deductible',
+      'Protects family savings, investments, home equity, and future wages'
+    ],
+    eligibility: 'Individuals holding underlying active Auto ($250k/$500k) and Homeowners ($300k) policies in good standing.',
+    basePremiumYear: 480,
+    basePremiumMonth: 40,
+    coverageTiers: {
+      Standard: { label: '$1,000,000 Umbrella', limit: '$1,000,000 Excess Limit', limitNum: 1000000, deductible: '$0 Self-Insured Retention', deductibleNum: 0, premiumYear: 380, desc: 'Essential protection for families with primary home and vehicle.' },
+      Enhanced: { label: '$2,000,000 Umbrella (Popular)', limit: '$2,000,000 Excess Limit', limitNum: 2000000, deductible: '$0 Self-Insured Retention', deductibleNum: 0, premiumYear: 520, desc: 'High-recommendation tier for homeowners with teen drivers or rental assets.' },
+      Premium: { label: '$5,000,000 Umbrella', limit: '$5,000,000 Excess Limit', limitNum: 5000000, deductible: '$0 Self-Insured Retention', deductibleNum: 0, premiumYear: 890, desc: 'High-net-worth protection shielding substantial real estate and investment portfolios.' }
+    },
+    exclusions: [
+      'Commercial or business enterprise activities (requires Commercial Umbrella)',
+      'Intentional criminal acts or punitive damage penalties where prohibited by law',
+      'Damage to personal property owned by the policyholder (liability-only policy)'
+    ],
+    requiredDocs: [
+      { type: 'Government ID Proof', desc: 'Valid Driver’s License or Passport', sample: 'drivers_license.pdf' },
+      { type: 'Underlying Auto Policy Dec Page', desc: 'Current declarations page showing minimum $250k/$500k liability', sample: 'auto_declarations.pdf' },
+      { type: 'Underlying Homeowners Dec Page', desc: 'Current declarations page showing minimum $300k personal liability', sample: 'home_declarations.pdf' }
+    ],
+    fields: [
+      { id: 'underlying_auto_pol', label: 'Primary Auto Policy Number', type: 'text', placeholder: 'e.g. POL-2025-0100006', required: true },
+      { id: 'underlying_home_pol', label: 'Primary Homeowners / Renters Policy Number', type: 'text', placeholder: 'e.g. POL-2025-0100002', required: true },
+      { id: 'num_vehicles', label: 'Total Number of Household Vehicles', type: 'number', placeholder: 'e.g. 2', required: true },
+      { id: 'num_drivers', label: 'Number of Licensed Drivers in Household', type: 'number', placeholder: 'e.g. 2', required: true },
+      { id: 'has_watercraft', label: 'Do you own boats, recreational vehicles, or rental properties?', type: 'select', options: ['No recreational watercraft or secondary rentals', 'Yes, watercraft / RV owned', 'Yes, secondary rental properties owned'], required: true }
+    ]
+  }
+];
+
+window.policyAppState = {
+  activeTab: 'available',
+  activeCategory: 'all',
+  step: 1,
+  selectedProduct: null,
+  selectedTier: 'Standard',
+  durationMonths: 12,
+  effectiveDate: '',
+  applicantInfo: {},
+  policySpecificData: {},
+  uploadedDocs: [],
+  applications: []
+};
+
+function initPolicyApplicationModule() {
+  renderAvailablePoliciesCatalog();
+  // Ensure customer profile data is populated for Step 1
+  if (window.customerProfileData) {
+    window.policyAppState.applicantInfo = {
+      name: window.customerProfileData.name || '',
+      email: window.customerProfileData.email || '',
+      phone: window.customerProfileData.phone || '',
+      address: window.customerProfileData.address || '',
+      id: window.customerProfileData.id || ''
+    };
+  }
+}
+
+function renderAvailablePoliciesCatalog() {
+  const grid = document.getElementById('policy-catalog-cards-grid');
+  if (!grid) return;
+
+  const currentCat = window.policyAppState.activeCategory || 'all';
+  const products = AVAILABLE_POLICY_PRODUCTS.filter(p => {
+    if (currentCat === 'all') return true;
+    return p.category === currentCat;
+  });
+
+  if (products.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--gray-500);">No insurance products found in this category.</div>`;
+    return;
+  }
+
+  grid.innerHTML = products.map(p => `
+    <div class="policy-product-card">
+      <div class="policy-product-card-body" style="display:flex;flex-direction:column;flex:1 1 auto;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <div style="width:44px;height:44px;border-radius:10px;background:var(--cust-brown-100);color:var(--cust-brown-800);display:flex;align-items:center;justify-content:center;">
+            ${p.iconSvg}
+          </div>
+          <span class="badge" style="background:#FAF6F0;border:1px solid var(--cust-cream-border);color:var(--cust-brown-800);font-size:0.75rem;font-weight:600;">
+            ${p.categoryLabel}
+          </span>
+        </div>
+
+        <h3 style="font-family:'Playfair Display',Georgia,serif;font-size:1.15rem;color:var(--cust-brown-900);margin:0 0 8px;line-height:1.3;">
+          ${p.title}
+        </h3>
+        <p style="font-size:0.825rem;color:var(--gray-600);margin:0 0 16px;line-height:1.5;">
+          ${p.description}
+        </p>
+
+        <div style="margin-bottom:16px;">
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.04em;font-weight:700;color:var(--cust-brown-700);margin-bottom:8px;">
+            Key Coverage Highlights:
+          </div>
+          <ul style="margin:0;padding-left:16px;font-size:0.8rem;color:var(--gray-700);line-height:1.6;">
+            ${p.highlights.slice(0, 3).map(h => `<li>${h}</li>`).join('')}
+          </ul>
+        </div>
+      </div>
+
+      <div class="policy-product-card-footer" style="border-top:1px solid var(--cust-cream-border);padding-top:14px;margin-top:auto;flex-shrink:0;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;">
+          <span style="font-size:0.78rem;color:var(--gray-500);">Starting from:</span>
+          <div>
+            <span style="font-size:1.25rem;font-weight:800;color:var(--cust-brown-900);">$${p.basePremiumYear.toLocaleString()}</span>
+            <span style="font-size:0.78rem;color:var(--gray-600);">/yr</span>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:8px;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="openPolicyDetailsModal('${p.id}', 'catalog')" style="font-weight:600;font-size:0.8rem;">
+            View Details
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="startPolicyApplication('${p.id}')" style="font-weight:700;font-size:0.8rem;display:flex;align-items:center;justify-content:center;gap:4px;">
+            Apply Now →
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterPolicyCatalog(category) {
+  window.policyAppState.activeCategory = category;
+  document.querySelectorAll('#catalog-category-filter-pills .btn-filter-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-cat') === category);
+  });
+  renderAvailablePoliciesCatalog();
+}
+
+function switchPolicyAppTab(tab) {
+  window.policyAppState.activeTab = tab;
+  const availContainer = document.getElementById('view-available-policies-container');
+  const myAppsContainer = document.getElementById('view-my-applications-container');
+  const btnAvail = document.getElementById('tab-btn-available-policies');
+  const btnMyApps = document.getElementById('tab-btn-my-applications');
+
+  if (tab === 'available') {
+    if (availContainer) availContainer.style.display = 'block';
+    if (myAppsContainer) myAppsContainer.style.display = 'none';
+    if (btnAvail) {
+      btnAvail.classList.add('active');
+      btnAvail.style.borderBottom = '2px solid var(--cust-brown-700)';
+      btnAvail.style.color = 'var(--cust-brown-900)';
+    }
+    if (btnMyApps) {
+      btnMyApps.classList.remove('active');
+      btnMyApps.style.borderBottom = '2px solid transparent';
+      btnMyApps.style.color = 'var(--gray-500)';
+    }
+  } else {
+    if (availContainer) availContainer.style.display = 'none';
+    if (myAppsContainer) myAppsContainer.style.display = 'block';
+    if (btnMyApps) {
+      btnMyApps.classList.add('active');
+      btnMyApps.style.borderBottom = '2px solid var(--cust-brown-700)';
+      btnMyApps.style.color = 'var(--cust-brown-900)';
+    }
+    if (btnAvail) {
+      btnAvail.classList.remove('active');
+      btnAvail.style.borderBottom = '2px solid transparent';
+      btnAvail.style.color = 'var(--gray-500)';
+    }
+    fetchCustomerApplications();
+  }
+}
+
+function openPolicyDetailsModal(productId, context) {
+  const product = AVAILABLE_POLICY_PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+
+  const modal = document.getElementById('modal-policy-details');
+  const title = document.getElementById('modal-policy-title');
+  const sub = document.getElementById('modal-policy-subtitle');
+  const body = document.getElementById('modal-policy-details-body');
+  const applyBtn = document.getElementById('modal-policy-apply-btn');
+  const modalFooter = modal ? modal.querySelector('.uw-modal-footer') : null;
+
+  if (title) title.textContent = product.title;
+  if (sub) sub.textContent = `${product.categoryLabel} · Starting from $${product.basePremiumYear.toLocaleString()}/yr ($${product.basePremiumMonth}/mo)`;
+
+  const formStage = document.getElementById('policy-application-form-stage');
+  const isInsideActiveApp = (context === 'active_app') || (context !== 'catalog' && formStage && formStage.style.display !== 'none' && formStage.style.display !== '');
+
+  if (applyBtn) {
+    if (isInsideActiveApp) {
+      applyBtn.style.display = 'none';
+      if (modalFooter) modalFooter.style.justifyContent = 'flex-end';
+    } else {
+      applyBtn.style.display = 'inline-flex';
+      applyBtn.setAttribute('onclick', `applyFromPolicyModal('${product.id}')`);
+      if (modalFooter) modalFooter.style.justifyContent = 'space-between';
+    }
+  }
+
+  if (body) {
+    body.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:1.25rem;">
+        <!-- Description Banner -->
+        <div style="background:#FAF6F0;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem 1.25rem;font-size:0.875rem;color:var(--cust-brown-900);line-height:1.5;">
+          <strong>Overview:</strong> ${product.description}
+        </div>
+
+        <!-- 2 Columns: What is Covered vs Exclusions -->
+        <div class="grid grid-2" style="gap:1rem;">
+          <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:1rem 1.25rem;">
+            <div style="font-size:0.825rem;font-weight:700;color:#166534;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+              <svg width="16" height="16" fill="none" stroke="#16A34A" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              What is Covered
+            </div>
+            <ul style="margin:0;padding-left:18px;font-size:0.8rem;color:#15803D;line-height:1.6;">
+              ${product.highlights.map(h => `<li>${h}</li>`).join('')}
+            </ul>
+          </div>
+
+          <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:1rem 1.25rem;">
+            <div style="font-size:0.825rem;font-weight:700;color:#9A3412;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+              <svg width="16" height="16" fill="none" stroke="#EA580C" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              What is Not Covered (Exclusions)
+            </div>
+            <ul style="margin:0;padding-left:18px;font-size:0.8rem;color:#C2410C;line-height:1.6;">
+              ${product.exclusions.map(e => `<li>${e}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+
+        <!-- Coverage Tiers Table -->
+        <div style="background:#fff;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem 1.25rem;">
+          <div style="font-size:0.825rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:8px;">
+            Coverage Tiers & Deductible Options
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${Object.entries(product.coverageTiers).map(([tierKey, tier]) => `
+              <div style="display:flex;justify-content:space-between;align-items:center;background:#FAF6F0;border-radius:6px;padding:8px 12px;font-size:0.8rem;flex-wrap:wrap;gap:6px;">
+                <div>
+                  <strong style="color:var(--cust-brown-900);">${tier.label}:</strong>
+                  <span style="color:var(--gray-700);margin-left:4px;">${tier.limit}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="color:var(--gray-600);">Deductible: <strong>${tier.deductible}</strong></span>
+                  <span style="font-weight:700;color:var(--cust-brown-800);background:#fff;border:1px solid var(--cust-cream-border);padding:2px 8px;border-radius:4px;">
+                    ~$${tier.premiumYear}/yr
+                  </span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Required Information & Documents -->
+        <div style="background:#FBF9F5;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem 1.25rem;">
+          <div style="font-size:0.825rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:6px;">
+            Required Verification Documents:
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:0.8rem;color:var(--gray-700);">
+            ${product.requiredDocs.map(d => `
+              <div>• <strong>${d.type}:</strong> ${d.desc}</div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (modal) modal.style.display = 'flex';
+}
+
+function closePolicyAppModal(event, modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal && event.target === modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function closeModalById(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) modal.style.display = 'none';
+}
+
+function applyFromPolicyModal(productId) {
+  closeModalById('modal-policy-details');
+  if (productId) {
+    startPolicyApplication(productId);
+  } else if (window.policyAppState.selectedProduct) {
+    startPolicyApplication(window.policyAppState.selectedProduct.id);
+  }
+}
+
+function openSelectedProductDetailsModal() {
+  if (window.policyAppState.selectedProduct) {
+    openPolicyDetailsModal(window.policyAppState.selectedProduct.id, 'active_app');
+  }
+}
+
+function startPolicyApplication(productId) {
+  const product = AVAILABLE_POLICY_PRODUCTS.find(p => p.id === productId);
+  if (!product) return;
+
+  window.policyAppState.selectedProduct = product;
+  window.policyAppState.selectedTier = 'Standard';
+  window.policyAppState.durationMonths = 12;
+  window.policyAppState.uploadedDocs = [];
+  window.policyAppState.policySpecificData = {};
+
+  // Pre-fill effective date to tomorrow (YYYY-MM-DD)
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  window.policyAppState.effectiveDate = tomorrowStr;
+
+  // Toggle stage visibility
+  const catalogStage = document.getElementById('policy-catalog-stage');
+  const formStage = document.getElementById('policy-application-form-stage');
+  if (catalogStage) catalogStage.style.display = 'none';
+  if (formStage) formStage.style.display = 'block';
+
+  // Set Product Header Info
+  const titleEl = document.getElementById('app-form-product-title');
+  const catEl = document.getElementById('app-form-product-category-badge');
+  if (titleEl) titleEl.textContent = product.title;
+  if (catEl) catEl.textContent = product.categoryLabel;
+
+  // Populate Step 1 Pre-filled Customer Info
+  populateCustomerInfoStep();
+
+  // Populate Step 2 Coverage Tiers
+  renderCoverageTiers();
+
+  // Populate Step 3 Dynamic Fields
+  renderPolicySpecificFields();
+
+  // Populate Step 4 Required Docs
+  renderRequiredDocsChecklist();
+  renderUploadedFilesList();
+
+  // Go to step 1
+  policyAppGoToStep(1);
+}
+
+function cancelPolicyApplication() {
+  const catalogStage = document.getElementById('policy-catalog-stage');
+  const formStage = document.getElementById('policy-application-form-stage');
+  if (catalogStage) catalogStage.style.display = 'block';
+  if (formStage) formStage.style.display = 'none';
+  window.policyAppState.selectedProduct = null;
+}
+
+function resetPolicyAppFlow() {
+  cancelPolicyApplication();
+  renderAvailablePoliciesCatalog();
+}
+
+function populateCustomerInfoStep() {
+  const prof = window.customerProfileData || {};
+  const nameInp = document.getElementById('app-cust-name');
+  const emailInp = document.getElementById('app-cust-email');
+  const phoneInp = document.getElementById('app-cust-phone');
+  const idInp = document.getElementById('app-cust-id');
+  const addrInp = document.getElementById('app-cust-address');
+
+  if (nameInp) nameInp.value = prof.name || 'Valued Customer';
+  if (emailInp) emailInp.value = prof.email || 'customer@example.com';
+  if (phoneInp) phoneInp.value = prof.phone || '(555) 234-5678';
+  if (idInp) idInp.value = prof.id || '50001';
+  if (addrInp) addrInp.value = prof.address || '124 Grand Avenue, Suite 400, Chicago, IL 60611';
+}
+
+function policyAppGoToStep(targetStep) {
+  if (targetStep < 1 || targetStep > 6) return;
+  window.policyAppState.step = targetStep;
+
+  // Update step panes visibility
+  for (let i = 1; i <= 6; i++) {
+    const pane = document.getElementById(`app-step-pane-${i}`);
+    if (pane) pane.style.display = (i === targetStep) ? 'block' : 'none';
+  }
+
+  // Update stepper bar visual nodes
+  for (let i = 1; i <= 5; i++) {
+    const node = document.getElementById(`step-node-${i}`);
+    if (!node) continue;
+    const circle = node.querySelector('.step-circle');
+    const title = node.querySelector('.step-title');
+
+    if (i < targetStep) {
+      // Completed step
+      node.classList.add('completed');
+      node.classList.remove('active');
+      if (circle) {
+        circle.style.background = '#059669';
+        circle.style.color = '#fff';
+        circle.innerHTML = '✓';
+      }
+      if (title) title.style.color = '#059669';
+    } else if (i === targetStep) {
+      // Active step
+      node.classList.add('active');
+      node.classList.remove('completed');
+      if (circle) {
+        circle.style.background = 'var(--cust-brown-700)';
+        circle.style.color = '#fff';
+        circle.textContent = i.toString();
+      }
+      if (title) title.style.color = 'var(--cust-brown-900)';
+    } else {
+      // Upcoming step
+      node.classList.remove('active', 'completed');
+      if (circle) {
+        circle.style.background = 'var(--gray-200)';
+        circle.style.color = 'var(--gray-600)';
+        circle.textContent = i.toString();
+      }
+      if (title) title.style.color = 'var(--gray-500)';
+    }
+  }
+
+  if (targetStep === 5) {
+    populateReviewStep();
+  }
+}
+
+function policyAppNextStep(currentStep) {
+  if (currentStep === 1) {
+    // Save Step 1 contact values
+    const phoneInp = document.getElementById('app-cust-phone');
+    const addrInp = document.getElementById('app-cust-address');
+    const notesInp = document.getElementById('app-cust-notes');
+    window.policyAppState.applicantInfo = {
+      name: document.getElementById('app-cust-name')?.value || '',
+      email: document.getElementById('app-cust-email')?.value || '',
+      phone: phoneInp?.value || '',
+      address: addrInp?.value || '',
+      id: document.getElementById('app-cust-id')?.value || '',
+      notes: notesInp?.value || ''
+    };
+    policyAppGoToStep(2);
+  } else if (currentStep === 2) {
+    // Save Step 2 date & term
+    const dateInp = document.getElementById('app-effective-date');
+    if (dateInp && dateInp.value) {
+      window.policyAppState.effectiveDate = dateInp.value;
+    }
+    policyAppGoToStep(3);
+  } else if (currentStep === 3) {
+    // Collect & Validate Step 3 inputs
+    const p = window.policyAppState.selectedProduct;
+    if (p && p.fields) {
+      for (const field of p.fields) {
+        const inp = document.getElementById(`dyn-field-${field.id}`);
+        if (inp) {
+          if (field.required && !inp.value.trim()) {
+            showToast(`Please complete required field: ${field.label}`, 'error');
+            inp.focus();
+            return;
+          }
+          window.policyAppState.policySpecificData[field.id] = inp.value.trim();
+        }
+      }
+    }
+    policyAppGoToStep(4);
+  } else if (currentStep === 4) {
+    // Validate that at least one document is uploaded
+    const alertEl = document.getElementById('app-doc-validation-alert');
+    if (window.policyAppState.uploadedDocs.length === 0) {
+      if (alertEl) alertEl.style.display = 'block';
+      showToast('Please upload at least one verification document before proceeding.', 'error');
+      return;
+    }
+    if (alertEl) alertEl.style.display = 'none';
+    policyAppGoToStep(5);
+  }
+}
+
+function renderCoverageTiers() {
+  const container = document.getElementById('app-coverage-tiers-container');
+  const product = window.policyAppState.selectedProduct;
+  if (!container || !product || !product.coverageTiers) return;
+
+  const selectedTierKey = window.policyAppState.selectedTier || 'Standard';
+  const tierCount = Object.keys(product.coverageTiers).length;
+
+  container.className = tierCount === 4 ? 'grid grid-4' : (tierCount === 3 ? 'grid grid-3' : 'grid');
+
+  container.innerHTML = Object.entries(product.coverageTiers).map(([tierKey, tier]) => {
+    const isSelected = (tierKey === selectedTierKey);
+    return `
+      <div class="coverage-tier-card ${isSelected ? 'selected' : ''}" onclick="selectCoverageTier('${tierKey}')" id="tier-card-${tierKey}">
+        <div class="coverage-tier-card-body">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;min-height:24px;">
+            <span style="font-weight:700;font-size:0.95rem;color:var(--cust-brown-900);line-height:1.3;">${tier.label}</span>
+            ${isSelected ? `<span style="background:var(--cust-brown-700);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;flex-shrink:0;margin-left:6px;">✓</span>` : ''}
+          </div>
+          <div style="font-size:0.8rem;color:var(--gray-700);margin-bottom:8px;line-height:1.4;">
+            ${tier.limit}
+          </div>
+          <div class="coverage-tier-desc">
+            ${tier.desc}
+          </div>
+        </div>
+        <div class="coverage-tier-card-footer" style="display:flex;justify-content:space-between;align-items:baseline;">
+          <span style="font-size:0.75rem;color:var(--gray-500);">Deductible: <strong>${tier.deductible}</strong></span>
+          <span style="font-size:1.1rem;font-weight:800;color:var(--cust-brown-900);">$${tier.premiumYear}/yr</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Set default effective date if empty
+  const dateInp = document.getElementById('app-effective-date');
+  if (dateInp && !dateInp.value) {
+    dateInp.value = window.policyAppState.effectiveDate;
+  }
+
+  updateEstimatedPremiumDisplay();
+}
+
+function selectCoverageTier(tierKey) {
+  window.policyAppState.selectedTier = tierKey;
+  renderCoverageTiers();
+}
+
+function selectAppDuration(months) {
+  window.policyAppState.durationMonths = months;
+  document.querySelectorAll('#app-duration-selectors .btn-duration-pill').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.getAttribute('data-months')) === months);
+  });
+  updateEstimatedPremiumDisplay();
+}
+
+function updateEstimatedPremiumDisplay() {
+  const product = window.policyAppState.selectedProduct;
+  if (!product) return;
+
+  const tierKey = window.policyAppState.selectedTier || 'Standard';
+  const tier = product.coverageTiers[tierKey] || Object.values(product.coverageTiers)[0];
+  const months = window.policyAppState.durationMonths || 12;
+
+  let calculated = tier.premiumYear;
+  if (months === 6) calculated = Math.round(tier.premiumYear * 0.52);
+  else if (months === 24) calculated = Math.round(tier.premiumYear * 1.9);
+
+  const premEl = document.getElementById('app-estimated-premium-display');
+  const dedEl = document.getElementById('app-deductible-display');
+
+  if (premEl) premEl.textContent = `$${calculated.toLocaleString()} (${months} Months)`;
+  if (dedEl) dedEl.textContent = tier.deductible;
+}
+
+function renderPolicySpecificFields() {
+  const container = document.getElementById('app-policy-specific-fields-container');
+  const subEl = document.getElementById('app-step3-subtitle');
+  const product = window.policyAppState.selectedProduct;
+  if (!container || !product) return;
+
+  if (subEl) {
+    subEl.textContent = `Please answer these specific risk parameters for ${product.title}:`;
+  }
+
+  if (!product.fields || product.fields.length === 0) {
+    container.innerHTML = `<div style="color:var(--gray-600);font-size:0.85rem;">No additional specifications required for this policy.</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="grid grid-2" style="gap:1.25rem;">
+      ${product.fields.map(f => {
+        const val = window.policyAppState.policySpecificData[f.id] || '';
+        if (f.type === 'select') {
+          return `
+            <div class="form-group">
+              <label style="font-size:0.8rem;font-weight:600;color:var(--cust-brown-800);margin-bottom:4px;display:block;">
+                ${f.label} ${f.required ? '<span style="color:#DC2626;">*</span>' : ''}
+              </label>
+              <select id="dyn-field-${f.id}" class="form-control">
+                ${f.options.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+              </select>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="form-group">
+              <label style="font-size:0.8rem;font-weight:600;color:var(--cust-brown-800);margin-bottom:4px;display:block;">
+                ${f.label} ${f.required ? '<span style="color:#DC2626;">*</span>' : ''}
+              </label>
+              <input type="${f.type}" id="dyn-field-${f.id}" class="form-control" placeholder="${f.placeholder || ''}" value="${val}" ${f.required ? 'required' : ''}>
+            </div>
+          `;
+        }
+      }).join('')}
+    </div>
+  `;
+}
+
+function renderRequiredDocsChecklist() {
+  const checklist = document.getElementById('app-required-docs-checklist');
+  const product = window.policyAppState.selectedProduct;
+  if (!checklist || !product || !product.requiredDocs) return;
+
+  checklist.innerHTML = product.requiredDocs.map(d => `
+    <div style="display:flex;align-items:flex-start;gap:8px;">
+      <span style="color:#059669;font-weight:bold;">✓</span>
+      <div>
+        <strong>${d.type}:</strong> ${d.desc}
+      </div>
+    </div>
+  `).join('');
+}
+
+function triggerAppDocUpload() {
+  const fileInp = document.getElementById('app-doc-file-input');
+  if (fileInp) fileInp.click();
+}
+
+function handleAppFileUpload(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+
+  const alertEl = document.getElementById('app-doc-validation-alert');
+  if (alertEl) alertEl.style.display = 'none';
+
+  const product = window.policyAppState.selectedProduct;
+  const reqTypes = (product && product.requiredDocs) ? product.requiredDocs.map(d => d.type) : ['ID Proof', 'Verification Document'];
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    // File size check: 10MB
+    if (file.size > 10 * 1024 * 1024) {
+      showToast(`File "${file.name}" exceeds 10MB limit.`, 'error');
+      continue;
+    }
+
+    const assignedType = reqTypes[window.policyAppState.uploadedDocs.length % reqTypes.length];
+    const sizeFormatted = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+
+    window.policyAppState.uploadedDocs.push({
+      doc_type: assignedType,
+      file_name: file.name,
+      file_size: sizeFormatted,
+      file_data: '',
+      uploaded_at: new Date().toISOString()
+    });
+  }
+
+  renderUploadedFilesList();
+  showToast(`Added ${files.length} document(s).`);
+}
+
+function removeAppDoc(index) {
+  if (index >= 0 && index < window.policyAppState.uploadedDocs.length) {
+    const removed = window.policyAppState.uploadedDocs.splice(index, 1);
+    renderUploadedFilesList();
+    showToast(`Removed ${removed[0].file_name}`);
+  }
+}
+
+function renderUploadedFilesList() {
+  const container = document.getElementById('app-uploaded-files-container');
+  const noHint = document.getElementById('app-no-files-hint');
+  if (!container) return;
+
+  const docs = window.policyAppState.uploadedDocs || [];
+  if (noHint) noHint.style.display = (docs.length === 0) ? 'block' : 'none';
+
+  container.innerHTML = docs.map((doc, idx) => `
+    <div class="app-doc-badge">
+      <div style="display:flex;align-items:center;gap:10px;overflow:hidden;">
+        <div style="width:32px;height:32px;border-radius:6px;background:#F0FDF4;color:#059669;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          <div style="font-weight:600;color:var(--cust-brown-900);">${doc.file_name}</div>
+          <div style="font-size:0.75rem;color:var(--gray-500);">${doc.doc_type} · ${doc.file_size} · Ready</div>
+        </div>
+      </div>
+      <button type="button" onclick="removeAppDoc(${idx})" style="border:none;background:transparent;color:#DC2626;cursor:pointer;padding:4px 8px;font-size:1rem;" title="Remove document">✕</button>
+    </div>
+  `).join('');
+}
+
+function populateReviewStep() {
+  const product = window.policyAppState.selectedProduct;
+  const applicant = window.policyAppState.applicantInfo || {};
+  const tierKey = window.policyAppState.selectedTier || 'Standard';
+  const tier = (product && product.coverageTiers) ? product.coverageTiers[tierKey] : {};
+  const months = window.policyAppState.durationMonths || 12;
+
+  // Box 1
+  document.getElementById('rev-applicant-name').textContent = applicant.name || 'Valued Customer';
+  document.getElementById('rev-applicant-email').textContent = applicant.email || '-';
+  document.getElementById('rev-applicant-phone').textContent = applicant.phone || '-';
+  document.getElementById('rev-applicant-address').textContent = applicant.address || '-';
+
+  // Box 2
+  document.getElementById('rev-policy-product').textContent = product ? product.title : '-';
+  document.getElementById('rev-coverage-tier').textContent = tier.label || tierKey;
+  document.getElementById('rev-limit-deductible').textContent = `${tier.limit || '-'} (Deductible: ${tier.deductible || '$1,000'})`;
+  document.getElementById('rev-term-dates').textContent = `${months} Months (Starting ${window.policyAppState.effectiveDate || 'Tomorrow'})`;
+
+  let calcPrem = tier.premiumYear || 1200;
+  if (months === 6) calcPrem = Math.round(calcPrem * 0.52);
+  else if (months === 24) calcPrem = Math.round(calcPrem * 1.9);
+  document.getElementById('rev-premium-value').textContent = `$${calcPrem.toLocaleString()} (${months} Months)`;
+
+  // Box 3: Specific Data
+  const specSummary = document.getElementById('rev-specific-data-summary');
+  if (specSummary && product && product.fields) {
+    const data = window.policyAppState.policySpecificData || {};
+    specSummary.innerHTML = product.fields.map(f => `
+      <div><strong style="color:var(--cust-brown-900);">${f.label}:</strong> <span>${data[f.id] || 'Not specified'}</span></div>
+    `).join('');
+  }
+
+  // Box 4: Docs
+  const docsSummary = document.getElementById('rev-documents-summary-list');
+  const docsCount = document.getElementById('rev-docs-count');
+  const docs = window.policyAppState.uploadedDocs || [];
+  if (docsCount) docsCount.textContent = docs.length.toString();
+
+  if (docsSummary) {
+    if (docs.length === 0) {
+      docsSummary.innerHTML = `<span style="color:#DC2626;">No documents attached.</span>`;
+    } else {
+      docsSummary.innerHTML = docs.map(d => `
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="color:#059669;">✓</span>
+          <span><strong>${d.doc_type}:</strong> ${d.file_name} (${d.file_size})</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  // Reset declaration checkbox
+  const chk = document.getElementById('app-declaration-checkbox');
+  if (chk) chk.checked = false;
+}
+
+async function submitFinalPolicyApplication() {
+  const chk = document.getElementById('app-declaration-checkbox');
+  if (!chk || !chk.checked) {
+    showToast('Please check the Applicant Declaration box before submitting.', 'error');
+    if (chk) chk.focus();
+    return;
+  }
+
+  const submitBtn = document.getElementById('btn-submit-policy-app');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span class="spinner" style="width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block;animation:spin 0.8s linear infinite;"></span> Submitting to Underwriting...`;
+  }
+
+  const product = window.policyAppState.selectedProduct;
+  const tierKey = window.policyAppState.selectedTier || 'Standard';
+  const tier = product.coverageTiers[tierKey] || {};
+  const months = window.policyAppState.durationMonths || 12;
+
+  let calculatedPrem = tier.premiumYear || 1200;
+  if (months === 6) calculatedPrem = Math.round(calculatedPrem * 0.52);
+  else if (months === 24) calculatedPrem = Math.round(calculatedPrem * 1.9);
+
+  const payload = {
+    policy_type: product.policyType,
+    product_name: product.title,
+    coverage_tier: tierKey,
+    coverage_limit: tier.limitNum || 300000,
+    deductible: tier.deductibleNum || 1000,
+    duration_months: months,
+    start_date: window.policyAppState.effectiveDate || new Date().toISOString().split('T')[0],
+    estimated_premium: calculatedPrem,
+    applicant_info: window.policyAppState.applicantInfo || {},
+    policy_specific_data: window.policyAppState.policySpecificData || {},
+    documents: (window.policyAppState.uploadedDocs || []).map(d => ({
+      doc_type: d.doc_type,
+      file_name: d.file_name,
+      file_size: d.file_size,
+      file_data: d.file_data || '',
+      uploaded_at: d.uploaded_at
+    }))
+  };
+
+  const token = (typeof getActiveToken === 'function') ? getActiveToken() : localStorage.getItem('auth_token');
+
+  try {
+    const res = await fetch('http://localhost:8002/customer/applications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `Server returned HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    const refNum = data.application_id || 'APP-2026-SUCCESS';
+
+    const refEl = document.getElementById('app-confirmed-ref-number');
+    if (refEl) refEl.textContent = refNum;
+
+    // Show Confirmation Step
+    policyAppGoToStep(6);
+    showToast(`Application ${refNum} submitted successfully!`);
+
+    // Refresh applications count in background
+    fetchCustomerApplications();
+  } catch (err) {
+    console.error('Error submitting application:', err);
+    showToast(`Submission failed: ${err.message}`, 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Submit Application`;
+    }
+  }
+}
+
+async function fetchCustomerApplications(manualToast = false) {
+  const token = (typeof getActiveToken === 'function') ? getActiveToken() : localStorage.getItem('auth_token');
+  if (!token) return;
+
+  try {
+    const res = await fetch('http://localhost:8002/customer/applications', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      const apps = await res.json();
+      window.policyAppState.applications = apps || [];
+
+      // Update badge count
+      const badge = document.getElementById('my-apps-badge-count');
+      if (badge) badge.textContent = (apps.length || 0).toString();
+
+      renderMyApplicationsList();
+      if (manualToast) showToast(`Refreshed ${apps.length} application(s).`);
+    }
+  } catch (e) {
+    console.warn('Unable to load customer applications:', e);
+  }
+}
+
+function renderMyApplicationsList() {
+  const container = document.getElementById('my-applications-cards-container');
+  if (!container) return;
+
+  const currentStatusFilter = window.policyAppState.activeAppStatusFilter || 'all';
+  const apps = (window.policyAppState.applications || []).filter(a => {
+    if (currentStatusFilter === 'all') return true;
+    return (a.status || '').toLowerCase() === currentStatusFilter.toLowerCase();
+  });
+
+  if (apps.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:3rem 1.5rem;background:#fff;border:1px dashed var(--cust-cream-border);border-radius:12px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--cust-brown-100);color:var(--cust-brown-800);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <h4 style="font-family:'Playfair Display',Georgia,serif;font-size:1.15rem;color:var(--cust-brown-900);margin:0 0 6px;">No Submitted Applications</h4>
+        <p style="font-size:0.85rem;color:var(--gray-600);margin:0 0 16px;max-width:400px;margin-left:auto;margin-right:auto;">
+          You have not submitted any policy applications yet. Explore our supported insurance lines and apply online.
+        </p>
+        <button type="button" class="btn btn-primary btn-sm" onclick="switchPolicyAppTab('available')">
+          Browse Available Policies →
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = apps.map(app => {
+    let statusBg = '#ECFDF5';
+    let statusColor = '#065F46';
+    const st = (app.status || 'Submitted').toLowerCase();
+    if (st.includes('reject')) {
+      statusBg = '#FEF2F2';
+      statusColor = '#991B1B';
+    } else if (st.includes('review') || st.includes('pending')) {
+      statusBg = '#FFFBEB';
+      statusColor = '#92400E';
+    }
+
+    const subDate = app.created_at ? app.created_at.split('T')[0] : 'Today';
+
+    return `
+      <div class="my-app-card">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:44px;height:44px;border-radius:10px;background:var(--cust-brown-100);color:var(--cust-brown-800);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+              <span style="font-family:monospace;font-weight:700;font-size:0.95rem;color:var(--cust-brown-900);">${app.application_id}</span>
+              <span class="badge" style="background:${statusBg};color:${statusColor};font-size:0.75rem;font-weight:600;">
+                ${app.status || 'Submitted'}
+              </span>
+            </div>
+            <div style="font-size:0.9rem;font-weight:600;color:var(--cust-brown-900);margin-bottom:2px;">
+              ${app.product_name || app.policy_type}
+            </div>
+            <div style="font-size:0.78rem;color:var(--gray-500);">
+              Tier: <strong>${app.coverage_tier}</strong> · Term: <strong>${app.duration_months} Mos</strong> · Submitted: <strong>${subDate}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:18px;">
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem;color:var(--gray-500);">Est. Premium</div>
+            <div style="font-size:1.15rem;font-weight:800;color:var(--cust-brown-900);">${app.estimated_premium}</div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="openApplicationDetailsModal('${app.application_id}')" style="font-weight:600;font-size:0.8rem;">
+            View Details
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterMyApplications(status) {
+  window.policyAppState.activeAppStatusFilter = status;
+  document.querySelectorAll('#my-apps-status-filter-pills .btn-filter-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-status') === status);
+  });
+  renderMyApplicationsList();
+}
+
+function openApplicationDetailsModal(appId) {
+  const app = (window.policyAppState.applications || []).find(a => a.application_id === appId);
+  if (!app) return;
+
+  const modal = document.getElementById('modal-application-details');
+  const idEl = document.getElementById('modal-app-record-id');
+  const prodEl = document.getElementById('modal-app-record-product');
+  const badgeEl = document.getElementById('modal-app-record-status-badge');
+  const bodyEl = document.getElementById('modal-app-record-body');
+
+  if (idEl) idEl.textContent = app.application_id;
+  if (prodEl) prodEl.textContent = app.product_name || app.policy_type;
+  if (badgeEl) badgeEl.textContent = app.status || 'Submitted';
+
+  if (bodyEl) {
+    const applicant = app.applicant_info || {};
+    const riskData = app.policy_specific_data || {};
+    const docs = app.documents || [];
+
+    bodyEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:1.25rem;">
+        <!-- Summary Cards Grid -->
+        <div class="grid grid-2" style="gap:1rem;">
+          <div style="background:#FBF9F5;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:8px;border-bottom:1px solid var(--cust-cream-border);padding-bottom:4px;">Applicant Profile</div>
+            <div style="font-size:0.8rem;display:flex;flex-direction:column;gap:4px;color:var(--gray-800);">
+              <div><strong>Name:</strong> ${applicant.name || app.customer_name || '-'}</div>
+              <div><strong>Email:</strong> ${applicant.email || '-'}</div>
+              <div><strong>Phone:</strong> ${applicant.phone || '-'}</div>
+              <div><strong>Address:</strong> ${applicant.address || '-'}</div>
+            </div>
+          </div>
+
+          <div style="background:#FBF9F5;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:8px;border-bottom:1px solid var(--cust-cream-border);padding-bottom:4px;">Policy & Coverage Parameters</div>
+            <div style="font-size:0.8rem;display:flex;flex-direction:column;gap:4px;color:var(--gray-800);">
+              <div><strong>Coverage Tier:</strong> ${app.coverage_tier}</div>
+              <div><strong>Coverage Limit:</strong> ${app.coverage_limit || '$300,000'}</div>
+              <div><strong>Deductible:</strong> ${app.deductible || '$1,000'}</div>
+              <div><strong>Term & Start Date:</strong> ${app.duration_months} Months (From ${app.start_date || 'Standard'})</div>
+              <div><strong>Estimated Premium:</strong> <strong style="color:var(--cust-brown-900);">${app.estimated_premium}</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Specifications -->
+        ${Object.keys(riskData).length > 0 ? `
+          <div style="background:#fff;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:8px;">Risk & Specification Details</div>
+            <div class="grid grid-2" style="gap:8px;font-size:0.8rem;">
+              ${Object.entries(riskData).map(([k, v]) => `
+                <div><strong style="color:var(--cust-brown-900);text-transform:capitalize;">${k.replace(/_/g, ' ')}:</strong> <span>${v}</span></div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Uploaded Documents List -->
+        <div style="background:#FBF9F5;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem;">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:8px;">Attached Documents (${docs.length})</div>
+          ${docs.length === 0 ? `<div style="font-size:0.8rem;color:var(--gray-500);">No attached files.</div>` : `
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              ${docs.map(d => `
+                <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--cust-cream-border);padding:6px 10px;border-radius:6px;font-size:0.8rem;">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="color:#059669;">✓</span>
+                    <strong style="color:var(--cust-brown-900);">${d.doc_type}:</strong>
+                    <span>${d.file_name} (${d.file_size || '1.0 MB'})</span>
+                  </div>
+                  <span class="badge" style="background:#ECFDF5;color:#065F46;font-size:0.7rem;">Verified</span>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+
+        ${((app.status || '').toLowerCase().includes('more') || (app.status || '').toLowerCase().includes('info')) ? `
+          <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div>
+              <div style="font-weight:700;color:#92400E;font-size:0.85rem;">Action Required: Additional Information Requested</div>
+              <div style="font-size:0.8rem;color:#B45309;margin-top:2px;">${app.agent_notes || 'The reviewing Agent has requested additional verification documents.'}</div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="openCustomerProvideInfoModal('${app.application_id}')" style="font-weight:700;background:#B45309;border-color:#B45309;">
+              Upload & Respond →
+            </button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  if (modal) modal.style.display = 'flex';
+}
+
+// =========================================================================
+// AGENT APPLICATION INTAKE & FORWARD TO UNDERWRITER CONTROLLERS
+// =========================================================================
+window.agentApplicationsData = [];
+window.agentApplicationsFilter = 'all';
+window.agentApplicationsSearch = '';
+window.agentApplicationsCurrentPage = 1;
+window.agentApplicationsPageSize = 10;
+window.currentActiveReviewApp = null;
+window.currentCustomerRespondingAppId = null;
+
+async function fetchAgentApplications(manualToast = false) {
+  const token = (typeof getActiveToken === 'function') ? getActiveToken() : (localStorage.getItem('auth_token') || localStorage.getItem('token'));
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${AGENT_SERVICE_URL}/agent/applications`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      window.agentApplicationsData = data.applications || [];
+
+      // Update counters
+      const total = window.agentApplicationsData.length;
+      const pending = window.agentApplicationsData.filter(a => {
+        const s = (a.status || '').toUpperCase();
+        return s === 'SUBMITTED' || s === 'AGENT REVIEW' || s === 'AGENT_REVIEW' || s === 'PENDING VERIFICATION' || s === 'UNDER_REVIEW' || s === 'UNDER REVIEW';
+      }).length;
+      const infoReq = window.agentApplicationsData.filter(a => {
+        const s = (a.status || '').toUpperCase();
+        return s.includes('MORE_INFORMATION_REQUIRED') || s.includes('MORE INFO');
+      }).length;
+      const forwarded = window.agentApplicationsData.filter(a => {
+        const s = (a.status || '').toUpperCase();
+        return s.includes('FORWARDED') || s.includes('UNDERWRITER');
+      }).length;
+
+      const elTotal = document.getElementById('agent-metric-apps-total');
+      const elPending = document.getElementById('agent-metric-apps-pending');
+      const elInfo = document.getElementById('agent-metric-apps-info');
+      const elFwd = document.getElementById('agent-metric-apps-forwarded');
+      const pageTitle = document.getElementById('agent-apps-page-title');
+
+      if (elTotal) elTotal.textContent = total;
+      if (elPending) elPending.textContent = pending;
+      if (elInfo) elInfo.textContent = infoReq;
+      if (elFwd) elFwd.textContent = forwarded;
+      if (pageTitle) pageTitle.textContent = `Customer Policy Applications (${total})`;
+
+      renderAgentApplicationsTable();
+      if (manualToast) showToast(`Refreshed ${total} application(s) in queue.`);
+    }
+  } catch (e) {
+    console.warn('Error fetching agent applications:', e);
+  }
+}
+
+function renderAgentApplicationsTable() {
+  const tbody = document.getElementById('agent-applications-tbody');
+  if (!tbody) return;
+
+  const currentFilter = window.agentApplicationsFilter || 'all';
+  const query = (window.agentApplicationsSearch || '').toLowerCase().trim();
+
+  const filtered = (window.agentApplicationsData || []).filter(app => {
+    const s = (app.status || '').toUpperCase();
+    if (currentFilter === 'review') {
+      if (!(s === 'SUBMITTED' || s === 'AGENT REVIEW' || s === 'AGENT_REVIEW' || s === 'PENDING VERIFICATION' || s === 'UNDER_REVIEW' || s === 'UNDER REVIEW')) return false;
+    } else if (currentFilter === 'info') {
+      if (!(s.includes('MORE_INFORMATION_REQUIRED') || s.includes('MORE INFO'))) return false;
+    } else if (currentFilter === 'forwarded') {
+      if (!(s.includes('FORWARDED') || s.includes('UNDERWRITER') || s.includes('APPROVED') || s.includes('REJECTED'))) return false;
+    }
+
+    if (query) {
+      const matchId = (app.application_id || '').toLowerCase().includes(query);
+      const matchName = (app.customer_name || '').toLowerCase().includes(query);
+      const matchProd = (app.product_name || app.policy_type || '').toLowerCase().includes(query);
+      if (!matchId && !matchName && !matchProd) return false;
+    }
+    return true;
+  });
+
+  const totalItems = filtered.length;
+  const pageSize = window.agentApplicationsPageSize || 10;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+  if (window.agentApplicationsCurrentPage > totalPages) {
+    window.agentApplicationsCurrentPage = 1;
+  }
+  if (window.agentApplicationsCurrentPage < 1) {
+    window.agentApplicationsCurrentPage = 1;
+  }
+
+  const currentPage = window.agentApplicationsCurrentPage;
+  const startIdx = (currentPage - 1) * pageSize;
+  const endIdx = Math.min(startIdx + pageSize, totalItems);
+  const paginated = filtered.slice(startIdx, endIdx);
+
+  // Update Pagination Info
+  const pageInfoEl = document.getElementById('agent-apps-pagination-info');
+  const startDisplay = totalItems === 0 ? 0 : startIdx + 1;
+  const endDisplay = endIdx;
+  if (pageInfoEl) {
+    if (totalItems === 0) {
+      pageInfoEl.textContent = 'Showing 0 applications';
+    } else {
+      pageInfoEl.textContent = `Showing ${startDisplay}–${endDisplay} of ${totalItems} applications`;
+    }
+  }
+
+  // Update Pagination Controls
+  const controlsEl = document.getElementById('agent-apps-pagination-controls');
+  if (controlsEl) {
+    if (totalItems === 0) {
+      controlsEl.innerHTML = '';
+    } else {
+      let buttonsHtml = '';
+      
+      // Previous button
+      const isPrevDisabled = currentPage <= 1;
+      buttonsHtml += `
+        <button type="button" class="btn btn-outline btn-sm agent-app-page-btn" 
+          ${isPrevDisabled ? 'disabled style="opacity:0.4;cursor:not-allowed;padding:5px 12px;font-size:0.8rem;border-radius:6px;border:1px solid var(--cust-cream-border);background:var(--white);color:var(--cust-brown-900);"' : 'onclick="handleAgentAppPagination(' + (currentPage - 1) + ')" style="padding:5px 12px;font-size:0.8rem;border-radius:6px;border:1px solid var(--cust-cream-border);background:var(--white);color:var(--cust-brown-900);cursor:pointer;font-weight:600;"'}>
+          ← Previous
+        </button>
+      `;
+
+      // Page number buttons
+      for (let p = 1; p <= totalPages; p++) {
+        const isActive = p === currentPage;
+        if (isActive) {
+          buttonsHtml += `
+            <button type="button" class="btn btn-sm agent-app-page-btn active" 
+              style="min-width:32px;height:32px;padding:0 8px;font-size:0.8rem;border-radius:6px;background:var(--cust-brown-700);color:#ffffff;font-weight:700;border:none;cursor:default;">
+              ${p}
+            </button>
+          `;
+        } else {
+          buttonsHtml += `
+            <button type="button" class="btn btn-outline btn-sm agent-app-page-btn" 
+              onclick="handleAgentAppPagination(${p})" 
+              style="min-width:32px;height:32px;padding:0 8px;font-size:0.8rem;border-radius:6px;border:1px solid var(--cust-cream-border);background:var(--white);color:var(--cust-brown-900);font-weight:600;cursor:pointer;">
+              ${p}
+            </button>
+          `;
+        }
+      }
+
+      // Next button
+      const isNextDisabled = currentPage >= totalPages;
+      buttonsHtml += `
+        <button type="button" class="btn btn-outline btn-sm agent-app-page-btn" 
+          ${isNextDisabled ? 'disabled style="opacity:0.4;cursor:not-allowed;padding:5px 12px;font-size:0.8rem;border-radius:6px;border:1px solid var(--cust-cream-border);background:var(--white);color:var(--cust-brown-900);"' : 'onclick="handleAgentAppPagination(' + (currentPage + 1) + ')" style="padding:5px 12px;font-size:0.8rem;border-radius:6px;border:1px solid var(--cust-cream-border);background:var(--white);color:var(--cust-brown-900);cursor:pointer;font-weight:600;"'}>
+          Next →
+        </button>
+      `;
+
+      controlsEl.innerHTML = buttonsHtml;
+    }
+  }
+
+  if (paginated.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--gray-500);padding:2.5rem;">No policy applications found matching your criteria.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = paginated.map(app => {
+    const docs = app.documents || [];
+    const status = app.status || 'Submitted';
+    const statusUpper = status.toUpperCase();
+
+    let statusBadge = `<span class="agent-app-status-badge" style="background:#FEF3C7;color:#92400E;">Pending</span>`;
+    if (statusUpper.includes('APPROV')) {
+      statusBadge = `<span class="agent-app-status-badge" style="background:#ECFDF5;color:#065F46;">Approved</span>`;
+    } else if (statusUpper.includes('REJECT')) {
+      statusBadge = `<span class="agent-app-status-badge" style="background:#FEF2F2;color:#991B1B;">Rejected</span>`;
+    } else if (statusUpper.includes('FORWARDED') || statusUpper.includes('UNDERWRITER')) {
+      statusBadge = `<span class="agent-app-status-badge" style="background:#EFF6FF;color:#1D4ED8;">Forwarded</span>`;
+    } else if (statusUpper.includes('MORE_INFORMATION') || statusUpper.includes('MORE INFO') || statusUpper.includes('INFO REQUIRED')) {
+      statusBadge = `<span class="agent-app-status-badge" style="background:#FFFBEB;color:#B45309;">Info Required</span>`;
+    } else {
+      statusBadge = `<span class="agent-app-status-badge" style="background:#FEF3C7;color:#92400E;">Pending</span>`;
+    }
+
+    const isVerified = (
+      (app.verification_status || '').toLowerCase().includes('verified') ||
+      Boolean(app.forwarded_by_agent_id) ||
+      statusUpper.includes('FORWARDED') ||
+      statusUpper.includes('APPROV') ||
+      statusUpper.includes('REJECT')
+    );
+    const verifBadge = isVerified ? 
+      `<span style="color:#059669;font-size:0.8rem;font-weight:600;">Verified</span>` : 
+      `<span style="color:#D97706;font-size:0.8rem;font-weight:500;">Incomplete</span>`;
+
+    const docCount = docs.length;
+    const docLabel = `${docCount} ${docCount === 1 ? 'file' : 'files'}`;
+
+    return `
+      <tr>
+        <td><code style="font-size:0.825rem;font-weight:700;background:var(--cust-brown-100);color:var(--cust-brown-900);padding:3px 8px;border-radius:4px;">${app.application_id}</code></td>
+        <td><strong style="color:var(--cust-brown-900);">${app.customer_name}</strong></td>
+        <td>
+          <div style="font-weight:600;color:var(--cust-brown-900);font-size:0.85rem;">${app.product_name}</div>
+          <div style="font-size:0.75rem;color:var(--gray-500);">${app.policy_type}</div>
+        </td>
+        <td><span class="badge" style="background:#F3F4F6;color:#374151;font-size:0.75rem;">${app.coverage_tier}</span></td>
+        <td style="font-weight:700;color:var(--cust-brown-900);">${app.estimated_premium}</td>
+        <td>
+          <span style="font-size:0.825rem;color:var(--gray-700);font-weight:500;">${docLabel}</span>
+        </td>
+        <td>${verifBadge}</td>
+        <td class="td-status">${statusBadge}</td>
+        <td class="td-action" style="text-align:right;">
+          <button type="button" class="btn btn-outline btn-sm agent-app-review-btn" onclick="openAgentApplicationReviewModal('${app.application_id}')" title="Review application ${app.application_id}">
+            Review
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterAgentApplications(filterKey, btnElem) {
+  window.agentApplicationsFilter = filterKey;
+  window.agentApplicationsCurrentPage = 1;
+  document.querySelectorAll('#agent-app-filter-pills .agent-app-filter-pill').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = '';
+    b.style.color = '';
+  });
+  if (btnElem) {
+    btnElem.classList.add('active');
+    btnElem.style.background = 'var(--cust-brown-700)';
+    btnElem.style.color = '#fff';
+  }
+  renderAgentApplicationsTable();
+}
+
+function handleAgentAppSearch(q) {
+  window.agentApplicationsSearch = q;
+  window.agentApplicationsCurrentPage = 1;
+  renderAgentApplicationsTable();
+}
+
+function handleAgentAppPagination(pageNumber) {
+  window.agentApplicationsCurrentPage = Number(pageNumber);
+  renderAgentApplicationsTable();
+}
+
+async function openAgentApplicationReviewModal(appId) {
+  let app = (window.agentApplicationsData || []).find(a => a.application_id === appId);
+  const token = (typeof getActiveToken === 'function') ? getActiveToken() : (localStorage.getItem('auth_token') || localStorage.getItem('token'));
+
+  if (token) {
+    try {
+      const res = await fetch(`${AGENT_SERVICE_URL}/agent/applications/${appId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        app = await res.json();
+      }
+    } catch (e) {
+      console.warn('Error fetching fresh application details:', e);
+    }
+  }
+
+  if (!app) return;
+  window.currentActiveReviewApp = app;
+
+  const modal = document.getElementById('modal-agent-app-review');
+  const idEl = document.getElementById('agent-review-modal-id');
+  const prodEl = document.getElementById('agent-review-modal-product');
+  const statusBadgeEl = document.getElementById('agent-review-modal-status-badge');
+  const bodyEl = document.getElementById('agent-review-modal-body');
+  const forwardBtn = document.getElementById('btn-agent-forward-uw');
+
+  if (idEl) idEl.textContent = app.application_id;
+  if (prodEl) prodEl.textContent = `${app.product_name} · ${app.customer_name}`;
+
+  const status = app.status || 'Submitted';
+  const statusUpper = status.toUpperCase();
+  const isForwarded = statusUpper.includes('FORWARDED') || statusUpper.includes('UNDERWRITER') || statusUpper.includes('APPROVED') || statusUpper.includes('REJECTED');
+
+  if (statusBadgeEl) {
+    if (statusUpper.includes('APPROV')) {
+      statusBadgeEl.textContent = 'Approved';
+      statusBadgeEl.style.background = '#ECFDF5';
+      statusBadgeEl.style.color = '#065F46';
+    } else if (statusUpper.includes('REJECT')) {
+      statusBadgeEl.textContent = 'Rejected';
+      statusBadgeEl.style.background = '#FEF2F2';
+      statusBadgeEl.style.color = '#991B1B';
+    } else if (statusUpper.includes('FORWARDED') || statusUpper.includes('UNDERWRITER')) {
+      statusBadgeEl.textContent = 'Forwarded';
+      statusBadgeEl.style.background = '#EFF6FF';
+      statusBadgeEl.style.color = '#1D4ED8';
+    } else if (statusUpper.includes('MORE_INFORMATION') || statusUpper.includes('MORE INFO') || statusUpper.includes('INFO REQUIRED')) {
+      statusBadgeEl.textContent = 'Info Required';
+      statusBadgeEl.style.background = '#FFFBEB';
+      statusBadgeEl.style.color = '#B45309';
+    } else {
+      statusBadgeEl.textContent = 'Pending';
+      statusBadgeEl.style.background = '#FEF3C7';
+      statusBadgeEl.style.color = '#92400E';
+    }
+  }
+
+  // Update Button Actions
+  if (forwardBtn) {
+    if (isForwarded) {
+      forwardBtn.disabled = true;
+      forwardBtn.innerHTML = `<span>✓ Forwarded to Underwriter</span>`;
+      forwardBtn.style.opacity = '0.7';
+      forwardBtn.style.cursor = 'not-allowed';
+    } else {
+      forwardBtn.disabled = false;
+      forwardBtn.innerHTML = `<span>Forward to Underwriter →</span>`;
+      forwardBtn.style.opacity = '1';
+      forwardBtn.style.cursor = 'pointer';
+    }
+  }
+
+  if (bodyEl) {
+    const applicant = app.applicant_info || {};
+    const riskData = app.policy_specific_data || {};
+    const docs = app.documents || [];
+
+    bodyEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:1.25rem;">
+        <!-- Status & Audit Banner -->
+        ${app.forwarded_at ? `
+          <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 14px;font-size:0.825rem;color:#166534;display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <strong>Forwarded to Underwriting:</strong> Forwarded by <strong>${app.forwarded_by_agent_name || 'Agent'}</strong> on <strong>${app.forwarded_at.split('T')[0]}</strong>.
+            </div>
+            <span class="badge badge-active">In UW Queue</span>
+          </div>
+        ` : ''}
+
+        ${app.agent_notes ? `
+          <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:10px 14px;font-size:0.825rem;color:#92400E;">
+            <strong>Agent Audit / Missing Info Notes:</strong> ${app.agent_notes}
+          </div>
+        ` : ''}
+
+        <!-- 2 Column Overview -->
+        <div class="grid grid-2" style="gap:1rem;">
+          <div style="background:#FBF9F5;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:8px;border-bottom:1px solid var(--cust-cream-border);padding-bottom:4px;">Applicant Profile & Contact</div>
+            <div style="font-size:0.8rem;display:flex;flex-direction:column;gap:5px;color:var(--gray-800);">
+              <div><strong>Name:</strong> ${app.customer_name}</div>
+              <div><strong>Customer ID:</strong> ${app.customer_id}</div>
+              <div><strong>Email:</strong> ${applicant.email || app.customer_email || 'customer@example.com'}</div>
+              <div><strong>Phone:</strong> ${applicant.phone || app.customer_phone || '(555) 302-8819'}</div>
+              <div><strong>Address:</strong> ${applicant.address || '742 Evergreen Terrace, Springfield, IL'}</div>
+            </div>
+          </div>
+
+          <div style="background:#FBF9F5;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:8px;border-bottom:1px solid var(--cust-cream-border);padding-bottom:4px;">Policy Coverage Parameters</div>
+            <div style="font-size:0.8rem;display:flex;flex-direction:column;gap:5px;color:var(--gray-800);">
+              <div><strong>Selected Product:</strong> ${app.product_name}</div>
+              <div><strong>Coverage Tier:</strong> <span class="badge" style="background:var(--cust-brown-100);color:var(--cust-brown-900);">${app.coverage_tier}</span></div>
+              <div><strong>Coverage Limit:</strong> <strong>${app.coverage_limit || '$300,000'}</strong></div>
+              <div><strong>Policy Deductible:</strong> <strong>${app.deductible || '$1,000'}</strong></div>
+              <div><strong>Term & Effective Date:</strong> ${app.duration_months} Mos (From ${app.start_date || 'Immediate'})</div>
+              <div><strong>Calculated Premium:</strong> <strong style="color:var(--cust-brown-900);font-size:0.95rem;">${app.estimated_premium}</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Specifications / Questionnaire Data -->
+        ${Object.keys(riskData).length > 0 ? `
+          <div style="background:#fff;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:8px;">Risk & Underwriting Specifications</div>
+            <div class="grid grid-2" style="gap:8px;font-size:0.8rem;">
+              ${Object.entries(riskData).map(([k, v]) => `
+                <div style="background:#FAF6F2;padding:6px 10px;border-radius:6px;border:1px solid var(--cust-cream-border);">
+                  <strong style="color:var(--cust-brown-900);text-transform:capitalize;">${k.replace(/_/g, ' ')}:</strong> 
+                  <span style="color:var(--gray-800);">${v}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Uploaded Customer Documents Section -->
+        <div style="background:#FBF9F5;border:1px solid var(--cust-cream-border);border-radius:8px;padding:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--cust-brown-900);">Uploaded Verification Documents (${docs.length})</div>
+            <span style="font-size:0.75rem;color:var(--gray-600);">${docs.length > 0 ? 'All files ready for underwriter audit' : 'No documents uploaded yet'}</span>
+          </div>
+
+          ${docs.length === 0 ? `
+            <div style="background:#FFFDF7;border:1px dashed #FDE68A;border-radius:6px;padding:12px;font-size:0.8rem;color:#92400E;text-align:center;">
+              ⚠️ Customer has not uploaded supporting documents yet. You can use <strong>Request More Information</strong> below to request missing items.
+            </div>
+          ` : `
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              ${docs.map(d => `
+                <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--cust-cream-border);padding:8px 12px;border-radius:6px;font-size:0.825rem;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="color:#059669;font-weight:700;">✓</span>
+                    <div>
+                      <strong style="color:var(--cust-brown-900);">${d.doc_type || 'Document'}:</strong>
+                      <span style="color:var(--gray-700);">${d.file_name}</span>
+                      <span style="font-size:0.75rem;color:var(--gray-500);margin-left:4px;">(${d.file_size || '1.2 MB'})</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="badge" style="background:#ECFDF5;color:#065F46;font-size:0.725rem;">Verified</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  if (modal) modal.style.display = 'flex';
+}
+
+async function submitForwardToUnderwriter() {
+  if (!window.currentActiveReviewApp) return;
+  const app = window.currentActiveReviewApp;
+  const appId = app.application_id;
+
+  const btn = document.getElementById('btn-agent-forward-uw');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span>Forwarding...</span>`;
+  }
+
+  const token = (typeof getActiveToken === 'function') ? getActiveToken() : (localStorage.getItem('auth_token') || localStorage.getItem('token'));
+  if (!token) {
+    showToast('Authentication token missing. Please log in as Agent.', 'error');
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${AGENT_SERVICE_URL}/agent/applications/${appId}/forward`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        notes: "Verified application data and uploaded documents. Ready for underwriting binding decision.",
+        verification_status: "Verified by Agent"
+      })
+    });
+
+    if (res.ok) {
+      const updated = await res.json();
+      showToast("Application forwarded to Underwriter successfully.", "success");
+      closeModalById('modal-agent-app-review');
+      fetchAgentApplications(false);
+      if (typeof fetchUnderwriterQueue === 'function') fetchUnderwriterQueue();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.detail || 'Failed to forward application to Underwriter.', 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Forward to Underwriter →</span>`;
+      }
+    }
+  } catch (e) {
+    console.error('Error forwarding to underwriter:', e);
+    showToast('Network error forwarding application to Underwriter.', 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span>Forward to Underwriter →</span>`;
+    }
+  }
+}
+
+function openAgentRequestMoreInfoModal() {
+  if (!window.currentActiveReviewApp) return;
+  const app = window.currentActiveReviewApp;
+  const subEl = document.getElementById('agent-req-info-sub');
+  const inputEl = document.getElementById('agent-req-notes-input');
+  if (subEl) subEl.textContent = `Specify what is missing for application ${app.application_id} (${app.customer_name}).`;
+  if (inputEl) inputEl.value = '';
+
+  const modal = document.getElementById('modal-agent-request-more-info');
+  if (modal) modal.style.display = 'flex';
+}
+
+async function submitAgentRequestMoreInfo() {
+  if (!window.currentActiveReviewApp) return;
+  const app = window.currentActiveReviewApp;
+  const appId = app.application_id;
+  const notesInput = document.getElementById('agent-req-notes-input');
+  const notes = (notesInput ? notesInput.value : '').trim();
+
+  if (!notes) {
+    showToast('Please specify what information or documentation is required.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit-agent-req-info');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+  }
+
+  const token = (typeof getActiveToken === 'function') ? getActiveToken() : (localStorage.getItem('auth_token') || localStorage.getItem('token'));
+  try {
+    const res = await fetch(`${AGENT_SERVICE_URL}/agent/applications/${appId}/request-info`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ notes })
+    });
+
+    if (res.ok) {
+      showToast('Information request sent to customer successfully.', 'success');
+      closeModalById('modal-agent-request-more-info');
+      closeModalById('modal-agent-app-review');
+      fetchAgentApplications(false);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.detail || 'Failed to submit information request.', 'error');
+    }
+  } catch (e) {
+    console.error('Error requesting more info:', e);
+    showToast('Network error submitting request.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Submit Request to Customer';
+    }
+  }
+}
+
+function openCustomerProvideInfoModal(appId) {
+  const app = (window.policyAppState.applications || []).find(a => a.application_id === appId);
+  if (!app) return;
+
+  window.currentCustomerRespondingAppId = appId;
+  const noteText = document.getElementById('cust-provide-agent-note-text');
+  const noteBanner = document.getElementById('cust-provide-agent-note-banner');
+  const notesInput = document.getElementById('cust-provide-notes-input');
+  const docTypeInput = document.getElementById('cust-provide-doc-type');
+  const docFileInput = document.getElementById('cust-provide-doc-filename');
+
+  if (noteText) noteText.textContent = app.agent_notes || 'Please upload the required verification documentation.';
+  if (notesInput) notesInput.value = '';
+  if (docTypeInput) docTypeInput.value = '';
+  if (docFileInput) docFileInput.value = '';
+
+  const modal = document.getElementById('modal-customer-provide-info');
+  if (modal) modal.style.display = 'flex';
+}
+
+async function submitCustomerProvideInfo() {
+  const appId = window.currentCustomerRespondingAppId;
+  if (!appId) return;
+
+  const notesInput = document.getElementById('cust-provide-notes-input');
+  const docTypeInput = document.getElementById('cust-provide-doc-type');
+  const docFileInput = document.getElementById('cust-provide-doc-filename');
+
+  const notes = (notesInput ? notesInput.value : '').trim();
+  const docType = (docTypeInput ? docTypeInput.value : '').trim();
+  const docFile = (docFileInput ? docFileInput.value : '').trim();
+
+  const docs = [];
+  if (docType && docFile) {
+    docs.push({
+      doc_type: docType,
+      file_name: docFile,
+      file_size: '1.5 MB',
+      file_data: '',
+      uploaded_at: new Date().toISOString()
+    });
+  }
+
+  const token = (typeof getActiveToken === 'function') ? getActiveToken() : (localStorage.getItem('auth_token') || localStorage.getItem('token'));
+  const btn = document.getElementById('btn-submit-cust-provide-info');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Uploading...';
+  }
+
+  try {
+    const res = await fetch(`${CUSTOMER_SERVICE_URL}/customer/applications/${appId}/provide-info`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        additional_notes: notes,
+        documents: docs
+      })
+    });
+
+    if (res.ok) {
+      showToast('Information submitted. Application returned to Agent Review.', 'success');
+      closeModalById('modal-customer-provide-info');
+      closeModalById('modal-application-details');
+      fetchCustomerApplications(false);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.detail || 'Failed to submit information.', 'error');
+    }
+  } catch (e) {
+    console.error('Error submitting customer info:', e);
+    showToast('Network error submitting information.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Upload & Return to Agent Review';
+    }
+  }
+}
+
+// Global exports
+if (typeof initPolicyApplicationModule === 'function') window.initPolicyApplicationModule = initPolicyApplicationModule;
+if (typeof renderAvailablePoliciesCatalog === 'function') window.renderAvailablePoliciesCatalog = renderAvailablePoliciesCatalog;
+if (typeof filterPolicyCatalog === 'function') window.filterPolicyCatalog = filterPolicyCatalog;
+if (typeof switchPolicyAppTab === 'function') window.switchPolicyAppTab = switchPolicyAppTab;
+if (typeof openPolicyDetailsModal === 'function') window.openPolicyDetailsModal = openPolicyDetailsModal;
+if (typeof closePolicyAppModal === 'function') window.closePolicyAppModal = closePolicyAppModal;
+if (typeof closeModalById === 'function') window.closeModalById = closeModalById;
+if (typeof applyFromPolicyModal === 'function') window.applyFromPolicyModal = applyFromPolicyModal;
+if (typeof openSelectedProductDetailsModal === 'function') window.openSelectedProductDetailsModal = openSelectedProductDetailsModal;
+if (typeof startPolicyApplication === 'function') window.startPolicyApplication = startPolicyApplication;
+if (typeof cancelPolicyApplication === 'function') window.cancelPolicyApplication = cancelPolicyApplication;
+if (typeof resetPolicyAppFlow === 'function') window.resetPolicyAppFlow = resetPolicyAppFlow;
+if (typeof policyAppGoToStep === 'function') window.policyAppGoToStep = policyAppGoToStep;
+if (typeof policyAppNextStep === 'function') window.policyAppNextStep = policyAppNextStep;
+if (typeof selectCoverageTier === 'function') window.selectCoverageTier = selectCoverageTier;
+if (typeof selectAppDuration === 'function') window.selectAppDuration = selectAppDuration;
+if (typeof triggerAppDocUpload === 'function') window.triggerAppDocUpload = triggerAppDocUpload;
+if (typeof handleAppFileUpload === 'function') window.handleAppFileUpload = handleAppFileUpload;
+if (typeof removeAppDoc === 'function') window.removeAppDoc = removeAppDoc;
+if (typeof submitFinalPolicyApplication === 'function') window.submitFinalPolicyApplication = submitFinalPolicyApplication;
+if (typeof fetchCustomerApplications === 'function') window.fetchCustomerApplications = fetchCustomerApplications;
+if (typeof renderMyApplicationsList === 'function') window.renderMyApplicationsList = renderMyApplicationsList;
+if (typeof filterMyApplications === 'function') window.filterMyApplications = filterMyApplications;
+if (typeof openApplicationDetailsModal === 'function') window.openApplicationDetailsModal = openApplicationDetailsModal;
+if (typeof fetchAgentApplications === 'function') window.fetchAgentApplications = fetchAgentApplications;
+if (typeof renderAgentApplicationsTable === 'function') window.renderAgentApplicationsTable = renderAgentApplicationsTable;
+if (typeof filterAgentApplications === 'function') window.filterAgentApplications = filterAgentApplications;
+if (typeof handleAgentAppSearch === 'function') window.handleAgentAppSearch = handleAgentAppSearch;
+if (typeof openAgentApplicationReviewModal === 'function') window.openAgentApplicationReviewModal = openAgentApplicationReviewModal;
+if (typeof submitForwardToUnderwriter === 'function') window.submitForwardToUnderwriter = submitForwardToUnderwriter;
+if (typeof openAgentRequestMoreInfoModal === 'function') window.openAgentRequestMoreInfoModal = openAgentRequestMoreInfoModal;
+if (typeof submitAgentRequestMoreInfo === 'function') window.submitAgentRequestMoreInfo = submitAgentRequestMoreInfo;
+if (typeof openCustomerProvideInfoModal === 'function') window.openCustomerProvideInfoModal = openCustomerProvideInfoModal;
+if (typeof submitCustomerProvideInfo === 'function') window.submitCustomerProvideInfo = submitCustomerProvideInfo;
+if (typeof handleAgentAppPagination === 'function') window.handleAgentAppPagination = handleAgentAppPagination;
+
+

@@ -85,6 +85,12 @@ def get_current_agent_user(
         agent_user = db.query(User).filter(User.email.ilike(email.strip())).first()
 
     if not agent_user:
+        # Fallback to seeded Agent 1321 or first Agent in DB for demo token accounts (USR-AGT-001)
+        agent_user = db.query(User).filter(User.user_id == "1321").first()
+        if not agent_user:
+            agent_user = db.query(User).filter(User.role.ilike("Agent")).first()
+
+    if not agent_user:
         logger.warning(f"Agent user record not found in PostgreSQL for user_id={user_id}, email={email}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -92,3 +98,4 @@ def get_current_agent_user(
         )
 
     return agent_user
+

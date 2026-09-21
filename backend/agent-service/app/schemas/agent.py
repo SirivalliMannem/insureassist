@@ -237,10 +237,65 @@ class AgentPolicyDetailResponse(BaseModel):
     premium_amount: Optional[float] = None
     customer_id: str
     customer_name: str
-    customer_email: Optional[str] = None
-    customer_phone: Optional[str] = None
     coverages: List[CoverageItem] = Field(default_factory=list)
     exclusions: List[ExclusionItem] = Field(default_factory=list)
     claims: List[ClaimItem] = Field(default_factory=list)
     renewals: List[RenewalItem] = Field(default_factory=list)
+
+
+class ForwardApplicationRequest(BaseModel):
+    """
+    Request payload when Agent forwards verified application to Underwriter.
+    """
+    notes: Optional[str] = Field(None, description="Agent notes/recommendations for the underwriter")
+    verification_status: Optional[str] = Field("Verified by Agent", description="Verification state")
+
+
+class RequestMoreInfoRequest(BaseModel):
+    """
+    Request payload when Agent requests missing info or documents from customer.
+    """
+    notes: str = Field(..., description="Explanation of required information or missing documents", example="Please upload proof of recent roof inspection and updated alarm certificate.")
+    missing_fields: Optional[List[str]] = Field(default=[], description="List of fields requiring clarification")
+    missing_documents: Optional[List[str]] = Field(default=[], description="List of document types required")
+
+
+class AgentApplicationResponse(BaseModel):
+    """
+    Detailed schema for policy application in Agent workspace.
+    """
+    application_id: str
+    customer_id: str
+    customer_name: str
+    customer_email: Optional[str] = None
+    customer_phone: Optional[str] = None
+    policy_type: str
+    product_name: str
+    coverage_tier: str
+    coverage_limit: Optional[str] = None
+    deductible: Optional[str] = None
+    duration_months: int
+    start_date: Optional[str] = None
+    estimated_premium: str
+    status: str
+    policy_id: Optional[str] = None
+    applicant_info: Optional[dict] = None
+    policy_specific_data: Optional[dict] = None
+    documents: List[dict] = Field(default_factory=list)
+    forwarded_by_agent_id: Optional[str] = None
+    forwarded_by_agent_name: Optional[str] = None
+    forwarded_at: Optional[str] = None
+    agent_notes: Optional[str] = None
+    verification_status: Optional[str] = "Pending Verification"
+    created_at: str
+    updated_at: str
+
+
+class AgentApplicationsListResponse(BaseModel):
+    """
+    List of applications in Agent workspace.
+    """
+    total: int
+    applications: List[AgentApplicationResponse]
+
 

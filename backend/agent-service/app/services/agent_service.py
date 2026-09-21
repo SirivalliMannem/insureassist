@@ -14,7 +14,8 @@ from app.models.agent import (
     Claim,
     RenewalRequest,
     Notification,
-    CustomerAgentAssignment
+    CustomerAgentAssignment,
+    Application
 )
 from app.schemas.agent import (
     AgentProfileResponse,
@@ -31,8 +32,13 @@ from app.schemas.agent import (
     ExclusionItem,
     ClaimItem,
     RenewalItem,
-    ReminderResponse
+    ReminderResponse,
+    AgentApplicationResponse,
+    AgentApplicationsListResponse,
+    ForwardApplicationRequest,
+    RequestMoreInfoRequest
 )
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -648,4 +654,316 @@ class AgentService:
             claims=cl_list,
             renewals=ren_list
         )
+
+    @staticmethod
+    def _format_application(app_record: Application, db: Session) -> AgentApplicationResponse:
+        """Helper to format an Application ORM object into AgentApplicationResponse schema."""
+        customer = db.query(Customer).filter(Customer.customer_id == app_record.customer_id).first()
+        cust_name = customer.name if customer else "Valued Customer"
+        cust_email = customer.email if customer else None
+        cust_phone = (customer.mobile or customer.phone) if customer else None
+
+        agent_name = None
+        if app_record.forwarded_by_agent_id:
+            agent_user = db.query(User).filter(User.user_id == app_record.forwarded_by_agent_id).first()
+            agent_name = agent_user.name if agent_user else f"Agent #{app_record.forwarded_by_agent_id}"
+
+        app_info = json.loads(app_record.applicant_info) if app_record.applicant_info else {}
+        policy_data = json.loads(app_record.policy_specific_data) if app_record.policy_specific_data else {}
+        docs_list = json.loads(app_record.documents) if app_record.documents else []
+
+        # Coverage and deductible strings
+        cov_limit_str = f"${float(app_record.coverage_limit):,.0f}" if app_record.coverage_limit is not None else "$300,000"
+        deduct_str = f"${float(app_record.deductible):,.0f}" if app_record.deductible is not None else "$1,000"
+        prem_str = f"${float(app_record.estimated_premium):,.2f}/yr" if app_record.estimated_premium is not None else "$1,200.00/yr"
+
+        return AgentApplicationResponse(
+            application_id=app_record.application_id,
+            customer_id=app_record.customer_id,
+            customer_name=cust_name,
+            customer_email=cust_email,
+            customer_phone=cust_phone,
+            policy_type=app_record.policy_type,
+            product_name=app_record.product_name,
+            coverage_tier=app_record.coverage_tier or "Standard",
+            coverage_limit=cov_limit_str,
+            deductible=deduct_str,
+            duration_months=app_record.duration_months or 12,
+            start_date=str(app_record.start_date) if app_record.start_date else None,
+            estimated_premium=prem_str,
+            status=app_record.status or "Submitted",
+            policy_id=app_record.policy_id,
+            applicant_info=app_info,
+            policy_specific_data=policy_data,
+            documents=docs_list,
+            forwarded_by_agent_id=app_record.forwarded_by_agent_id,
+            forwarded_by_agent_name=agent_name,
+            forwarded_at=app_record.forwarded_at.isoformat() if app_record.forwarded_at else None,
+            agent_notes=app_record.agent_notes,
+            verification_status=app_record.verification_status or "Pending Verification",
+            created_at=app_record.created_at.isoformat() if app_record.created_at else datetime.datetime.utcnow().isoformat(),
+            updated_at=app_record.updated_at.isoformat() if app_record.updated_at else datetime.datetime.utcnow().isoformat()
+        )
+
+    @staticmethod
+    def get_applications(agent_user: User, db: Session, status_filter: Optional[str] = None) -> AgentApplicationsListResponse:
+        """
+        Retrieves policy applications submitted by customers assigned to this Agent
+        or unassigned intake applications available for Agent review.
+        """
+        assigned_cust_ids = AgentService._get_assigned_customer_ids(agent_user, db)
+
+        query = db.query(Application)
+        if assigned_cust_ids:
+            # Query all customer IDs actively assigned to ANY other agent
+            other_assigned_subquery = (
+                db.query(CustomerAgentAssignment.customer_id)
+                .filter(
+                    CustomerAgentAssignment.status == "Active",
+                    CustomerAgentAssignment.agent_id != str(agent_user.user_id)
+                )
+            )
+            # Match: assigned to this agent, or forwarded by this agent, or not assigned to any other agent
+            query = query.filter(
+                (Application.customer_id.in_(assigned_cust_ids)) |
+                (Application.forwarded_by_agent_id == str(agent_user.user_id)) |
+                (~Application.customer_id.in_(other_assigned_subquery))
+            )
+
+        if status_filter and status_filter.lower() != "all":
+            query = query.filter(Application.status.ilike(f"%{status_filter}%"))
+
+        apps = query.order_by(Application.created_at.desc()).all()
+        formatted_apps = [AgentService._format_application(a, db) for a in apps]
+
+        return AgentApplicationsListResponse(
+            total=len(formatted_apps),
+            applications=formatted_apps
+        )
+
+    @staticmethod
+    def get_application_detail(application_id: str, agent_user: User, db: Session) -> AgentApplicationResponse:
+        """
+        Retrieves full application details for Agent review.
+        """
+        app_record = db.query(Application).filter(Application.application_id == application_id).first()
+        if not app_record:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Application '{application_id}' not found."
+            )
+
+        return AgentService._format_application(app_record, db)
+
+    @staticmethod
+    def forward_to_underwriter(
+        application_id: str,
+        forward_in: ForwardApplicationRequest,
+        agent_user: User,
+        db: Session
+    ) -> AgentApplicationResponse:
+        """
+        Agent forwards verified application to Underwriter:
+        1. Validates application state.
+        2. Sets status to 'FORWARDED_TO_UNDERWRITER'.
+        3. Records agent ID, timestamp, and review notes.
+        4. Notifies Customer and Underwriter.
+        """
+        app_record = db.query(Application).filter(Application.application_id == application_id).first()
+        if not app_record:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Application '{application_id}' not found."
+            )
+
+        now = datetime.datetime.utcnow()
+
+        # Update application state
+        app_record.status = "FORWARDED_TO_UNDERWRITER"
+        app_record.forwarded_by_agent_id = str(agent_user.user_id)
+        app_record.forwarded_at = now
+        if forward_in.notes:
+            app_record.agent_notes = forward_in.notes
+        app_record.verification_status = forward_in.verification_status or "Verified by Agent"
+        app_record.updated_at = now
+
+        # Also update linked Pending policy if exists
+        if app_record.policy_id:
+            policy = db.query(Policy).filter(Policy.policy_id == app_record.policy_id).first()
+            if policy:
+                policy.status = "Pending"
+
+        # Customer Notification
+        cust_notif = Notification(
+            notification_id=f"NOTIF-AGT-{now.year}-{datetime.datetime.now().microsecond}",
+            recipient_role="Customer",
+            recipient_id=app_record.customer_id,
+            title="Application Forwarded to Underwriter",
+            message=f"Your policy application {app_record.application_id} for {app_record.product_name} has been verified by Agent {agent_user.name} and forwarded to Underwriting.",
+            policy_id=app_record.policy_id,
+            policy_number=None,
+            policy_type=app_record.policy_type,
+            customer_name=None,
+            status="Forwarded to Underwriter",
+            is_read=False,
+            created_at=now
+        )
+        db.add(cust_notif)
+
+        # Underwriter Notification
+        uw_notif = Notification(
+            notification_id=f"NOTIF-UW-{now.year}-{datetime.datetime.now().microsecond}",
+            recipient_role="Underwriter",
+            recipient_id=None,
+            title="New Application in Underwriting Queue",
+            message=f"Agent {agent_user.name} verified and forwarded policy application {app_record.application_id} ({app_record.product_name}) for underwriting review.",
+            policy_id=app_record.policy_id,
+            policy_number=None,
+            policy_type=app_record.policy_type,
+            customer_name=None,
+            status="Forwarded to Underwriter",
+            is_read=False,
+            created_at=now
+        )
+        db.add(uw_notif)
+
+        db.commit()
+        db.refresh(app_record)
+
+        return AgentService._format_application(app_record, db)
+
+    @staticmethod
+    def request_more_information(
+        application_id: str,
+        req_in: RequestMoreInfoRequest,
+        agent_user: User,
+        db: Session
+    ) -> AgentApplicationResponse:
+        """
+        Agent requests more info / missing documents from customer:
+        1. Sets status to 'MORE_INFORMATION_REQUIRED'.
+        2. Preserves agent request notes.
+        3. Creates in-app Notification for customer.
+        """
+        app_record = db.query(Application).filter(Application.application_id == application_id).first()
+        if not app_record:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Application '{application_id}' not found."
+            )
+
+        now = datetime.datetime.utcnow()
+
+        app_record.status = "MORE_INFORMATION_REQUIRED"
+        app_record.agent_notes = req_in.notes
+        app_record.verification_status = "More Information Required"
+        app_record.updated_at = now
+
+        # Customer Notification
+        cust_notif = Notification(
+            notification_id=f"NOTIF-REQ-{now.year}-{datetime.datetime.now().microsecond}",
+            recipient_role="Customer",
+            recipient_id=app_record.customer_id,
+            title="Additional Information Required for Policy Application",
+            message=f"Agent {agent_user.name} requested additional details for your application {app_record.application_id}: {req_in.notes}",
+            policy_id=app_record.policy_id,
+            policy_number=None,
+            policy_type=app_record.policy_type,
+            customer_name=None,
+            status="More Information Required",
+            is_read=False,
+            created_at=now
+        )
+        db.add(cust_notif)
+
+        db.commit()
+        db.refresh(app_record)
+
+        return AgentService._format_application(app_record, db)
+
+    @staticmethod
+    def get_application_reviewer(application_id: str, db: Session) -> dict:
+        """
+        Retrieves the reviewing/forwarding agent for a specific application record.
+        Strictly reads applications.forwarded_by_agent_id.
+        """
+        app_record = db.query(Application).filter(Application.application_id == application_id).first()
+        if not app_record:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Application '{application_id}' not found."
+            )
+
+        customer = db.query(Customer).filter(Customer.customer_id == app_record.customer_id).first()
+        cust_name = customer.name if customer else "Customer"
+
+        if app_record.forwarded_by_agent_id:
+            agent_user = db.query(User).filter(User.user_id == str(app_record.forwarded_by_agent_id)).first()
+            return {
+                "application_id": app_record.application_id,
+                "customer_id": app_record.customer_id,
+                "customer_name": cust_name,
+                "product_name": app_record.product_name,
+                "status": app_record.status,
+                "verification_status": app_record.verification_status or "Verified by Agent",
+                "forwarded_at": app_record.forwarded_at.isoformat() if app_record.forwarded_at else None,
+                "reviewing_agent": {
+                    "agent_id": str(app_record.forwarded_by_agent_id),
+                    "name": agent_user.name if agent_user else f"Agent {app_record.forwarded_by_agent_id}",
+                    "email": agent_user.email if agent_user else "",
+                    "role": agent_user.role if agent_user else "Agent"
+                },
+                "agent_notes": app_record.agent_notes
+            }
+        else:
+            return {
+                "application_id": app_record.application_id,
+                "customer_id": app_record.customer_id,
+                "customer_name": cust_name,
+                "product_name": app_record.product_name,
+                "status": app_record.status,
+                "verification_status": app_record.verification_status or "Pending Verification",
+                "forwarded_at": None,
+                "reviewing_agent": None,
+                "agent_notes": app_record.agent_notes
+            }
+
+    @staticmethod
+    def get_customer_assigned_agent(customer_id: str, db: Session) -> dict:
+        """
+        Retrieves static customer assignment strictly from customer_agent_assignments.
+        DOES NOT infer assigned agent from applications.forwarded_by_agent_id.
+        """
+        cust = db.query(Customer).filter(
+            (Customer.customer_id == customer_id) | (Customer.user_id == customer_id)
+        ).first()
+        actual_cust_id = cust.customer_id if cust else customer_id
+        cust_name = cust.name if cust else f"Customer {customer_id}"
+
+        assignment = db.query(CustomerAgentAssignment).filter(
+            CustomerAgentAssignment.customer_id == actual_cust_id,
+            CustomerAgentAssignment.status == "Active"
+        ).first()
+
+        if assignment:
+            agent_user = db.query(User).filter(User.user_id == str(assignment.agent_id)).first()
+            return {
+                "customer_id": actual_cust_id,
+                "customer_name": cust_name,
+                "assigned_agent": {
+                    "agent_id": str(assignment.agent_id),
+                    "name": agent_user.name if agent_user else f"Agent {assignment.agent_id}",
+                    "email": agent_user.email if agent_user else "",
+                    "role": agent_user.role if agent_user else "Agent"
+                },
+                "assignment_status": assignment.status or "Active"
+            }
+        else:
+            return {
+                "customer_id": actual_cust_id,
+                "customer_name": cust_name,
+                "assigned_agent": None,
+                "assignment_status": "Unassigned"
+            }
+
 

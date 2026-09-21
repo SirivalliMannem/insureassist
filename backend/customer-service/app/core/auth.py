@@ -112,3 +112,34 @@ def get_current_agent_or_staff(
         )
     return payload
 
+
+def get_current_underwriter(
+    payload: dict = Depends(get_token_payload)
+) -> dict:
+    """
+    Dependency that strictly requires the Underwriter role.
+    Admins are also allowed to access underwriter endpoints for oversight.
+    """
+    role = (payload.get("role") or "").strip().lower()
+    if role not in ["underwriter", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access forbidden: User role '{payload.get('role')}' is not authorized for Underwriter operations."
+        )
+    return payload
+
+
+def get_current_admin(
+    payload: dict = Depends(get_token_payload)
+) -> dict:
+    """
+    Dependency that strictly requires the Admin role.
+    """
+    role = (payload.get("role") or "").strip().lower()
+    if role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access forbidden: User role '{payload.get('role')}' is not authorized for Admin operations."
+        )
+    return payload
+

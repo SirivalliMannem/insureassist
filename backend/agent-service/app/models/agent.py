@@ -198,3 +198,38 @@ class CustomerAgentAssignment(Base):
 
     def __repr__(self):
         return f"<CustomerAgentAssignment(agent_id='{self.agent_id}', customer_id='{self.customer_id}')>"
+
+
+class Application(Base):
+    """
+    SQLAlchemy model representing a customer's submitted insurance policy application.
+    """
+    __tablename__ = "applications"
+
+    application_id = Column(String(64), primary_key=True, index=True)
+    customer_id = Column(String(64), ForeignKey("customers.customer_id"), nullable=False, index=True)
+    policy_type = Column(String(100), nullable=False)
+    product_name = Column(String(255), nullable=False)
+    coverage_tier = Column(String(50), default="Standard", nullable=False)
+    coverage_limit = Column(Numeric(12, 2), nullable=True)
+    deductible = Column(Numeric(12, 2), nullable=True)
+    duration_months = Column(Integer, default=12, nullable=False)
+    estimated_premium = Column(Numeric(12, 2), nullable=True)
+    start_date = Column(Date, nullable=True)
+    status = Column(String(50), default="Submitted", nullable=False, index=True)
+    applicant_info = Column(Text, nullable=True)          # JSON-encoded contact/profile details
+    policy_specific_data = Column(Text, nullable=True)    # JSON-encoded policy-specific responses
+    documents = Column(Text, nullable=True)               # JSON-encoded list of uploaded document metadata
+    policy_id = Column(String(64), nullable=True)         # Linked Pending Policy in policies table
+    forwarded_by_agent_id = Column(String(64), nullable=True) # Agent who forwarded application
+    forwarded_at = Column(DateTime, nullable=True)            # Forwarded timestamp
+    agent_notes = Column(Text, nullable=True)                 # Agent review or more info notes
+    verification_status = Column(String(50), default="Pending Verification", nullable=True) # Verification status
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
+
+    # Relationships
+    customer = relationship("Customer", foreign_keys=[customer_id])
+
+    def __repr__(self):
+        return f"<Application(application_id='{self.application_id}', policy_type='{self.policy_type}', status='{self.status}')>"
