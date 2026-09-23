@@ -43,6 +43,7 @@ class Customer(Base):
     claims = relationship("Claim", back_populates="customer", cascade="all, delete-orphan")
     renewal_requests = relationship("RenewalRequest", back_populates="customer", cascade="all, delete-orphan")
     applications = relationship("Application", back_populates="customer", cascade="all, delete-orphan")
+    chat_conversations = relationship("ChatConversation", back_populates="customer", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Customer(customer_id='{self.customer_id}', name='{self.name}', email='{self.email}')>"
@@ -244,5 +245,45 @@ class CustomerAgentAssignment(Base):
 
     def __repr__(self):
         return f"<CustomerAgentAssignment(id='{self.assignment_id}', agent='{self.agent_id}', customer='{self.customer_id}', status='{self.status}')>"
+
+
+class ChatConversation(Base):
+    """
+    SQLAlchemy model representing a persistent Customer AI conversation session.
+    """
+    __tablename__ = "chat_conversations"
+
+    conversation_id = Column(String(64), primary_key=True, index=True)
+    customer_id = Column(String(64), ForeignKey("customers.customer_id"), nullable=False, index=True)
+    title = Column(String(255), nullable=False, default="New Conversation")
+    role = Column(String(50), default="customer", nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False, index=True)
+
+    # Relationships
+    customer = relationship("Customer", back_populates="chat_conversations")
+    messages = relationship("ChatMessage", back_populates="conversation", cascade="all, delete-orphan", order_by="ChatMessage.created_at.asc()")
+
+    def __repr__(self):
+        return f"<ChatConversation(id='{self.conversation_id}', customer_id='{self.customer_id}', title='{self.title}')>"
+
+
+class ChatMessage(Base):
+    """
+    SQLAlchemy model representing individual messages within a persistent chat conversation.
+    """
+    __tablename__ = "chat_messages"
+
+    message_id = Column(String(64), primary_key=True, index=True)
+    conversation_id = Column(String(64), ForeignKey("chat_conversations.conversation_id"), nullable=False, index=True)
+    sender_type = Column(String(20), nullable=False)  # 'user' or 'bot'
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+
+    # Relationships
+    conversation = relationship("ChatConversation", back_populates="messages")
+
+    def __repr__(self):
+        return f"<ChatMessage(id='{self.message_id}', conv_id='{self.conversation_id}', sender='{self.sender_type}')>"
 
 

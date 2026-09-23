@@ -8,7 +8,12 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
-from app.models.customer import Customer, Policy, Coverage, Exclusion, Claim, RenewalRequest, Notification, Application, CustomerAgentAssignment, User
+import os
+import urllib.request
+import logging
+
+from app.models.customer import Customer, Policy, Coverage, Exclusion, Claim, RenewalRequest, Notification, Application, CustomerAgentAssignment, User, ChatConversation, ChatMessage
+from app.services.pdf_service import build_policy_pdf, build_application_doc_pdf, build_claim_pdf
 from app.schemas.customer import (
     CustomerProfileResponse,
     PolicySummaryResponse,
@@ -23,8 +28,15 @@ from app.schemas.customer import (
     PolicyApplicationResponse,
     ProvideMoreInfoRequest,
     AssignedAgentItem,
-    CustomerAssignedAgentResponse
+    CustomerAssignedAgentResponse,
+    ChatMessageItem,
+    ChatConversationItem,
+    CreateConversationRequest,
+    SendMessageRequest,
+    CustomerChatResponse
 )
+
+logger = logging.getLogger("customer_service.chat")
 
 
 def format_currency(value: Optional[float], suffix: str = "") -> str:
@@ -917,5 +929,566 @@ class CustomerService:
         db.refresh(app_record)
 
         return CustomerService._format_application_response(app_record, customer.name)
+
+    # =========================================================================
+    # Authenticated Document Downloads
+    # =========================================================================
+
+    @staticmethod
+    def download_policy_document(policy_ref: str, customer: Customer, db: Session) -> tuple[bytes, str]:
+        """
+        Authenticates and generates the official Policy Schedule & Declarations PDF for a policy owned by the customer.
+        Strictly prevents cross-customer unauthorized downloads.
+        """
+        clean_ref = (policy_ref or "").strip()
+        policy = db.query(Policy).filter(
+            (Policy.policy_id == clean_ref) | (Policy.policy_number == clean_ref),
+            Policy.customer_id == customer.customer_id
+        ).first()
+
+        if not policy:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Policy document '{clean_ref}' not found or access denied."
+            )
+
+        coverages = db.query(Coverage).filter(Coverage.policy_id == policy.policy_id).all()
+        exclusions = db.query(Exclusion).filter(Exclusion.policy_id == policy.policy_id).all()
+
+        pdf_bytes = build_policy_pdf(policy, customer, coverages, exclusions)
+        filename = f"{policy.policy_number}.pdf"
+        return pdf_bytes, filename
+
+    @staticmethod
+    def download_application_document(application_id: str, doc_name: str, customer: Customer, db: Session) -> tuple[bytes, str]:
+        """
+        Authenticates and downloads a verified submitted application document belonging to the customer.
+        """
+        clean_app_id = (application_id or "").strip()
+        clean_doc_name = (doc_name or "").strip()
+
+        app_record = db.query(Application).filter(
+            Application.application_id == clean_app_id,
+            Application.customer_id == customer.customer_id
+        ).first()
+
+        if not app_record:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Application '{clean_app_id}' not found or access denied."
+            )
+
+        doc_meta = None
+        if app_record.documents:
+            try:
+                docs = json.loads(app_record.documents)
+                for d in docs:
+                    if clean_doc_name.lower() in (d.get("doc_type", "").lower(), d.get("file_name", "").lower()):
+                        doc_meta = d
+                        break
+            except Exception:
+                pass
+
+        pdf_bytes = build_application_doc_pdf(app_record, customer, clean_doc_name, doc_meta)
+        target_name = (doc_meta and doc_meta.get("file_name")) or f"{clean_doc_name.replace(' ', '_')}.pdf"
+        if not target_name.lower().endswith(".pdf"):
+            target_name = f"{target_name}.pdf"
+        return pdf_bytes, target_name
+
+    @staticmethod
+    def download_claim_document(claim_ref: str, customer: Customer, db: Session) -> tuple[bytes, str]:
+        """
+        Authenticates and downloads the First Notice of Loss (FNOL) Claim Summary for a customer claim.
+        """
+        clean_ref = (claim_ref or "").strip()
+        claim = db.query(Claim).filter(
+            (Claim.claim_id == clean_ref) | (Claim.claim_number == clean_ref),
+            Claim.customer_id == customer.customer_id
+        ).first()
+
+        if not claim:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Claim '{clean_ref}' not found or access denied."
+            )
+
+        policy = db.query(Policy).filter(Policy.policy_id == claim.policy_id).first() if claim.policy_id else None
+        pdf_bytes = build_claim_pdf(claim, customer, policy)
+        filename = f"{claim.claim_number}_Summary.pdf"
+        return pdf_bytes, filename
+
+    @staticmethod
+    def resolve_document_download(doc_ref: Optional[str], doc_name: Optional[str], customer: Customer, db: Session) -> tuple[bytes, str]:
+        """
+        Flexible resolver to retrieve a verified document by reference (policy_id/number, app_id, claim_id) or title.
+        Strictly enforces customer identity checks.
+        """
+        import re
+        ref = (doc_ref or "").strip()
+        name = (doc_name or "").strip()
+
+        # If reference is embedded inside name (e.g. "Homeowners Policy Summary HOM-883920" or "POL-001")
+        if not ref and name:
+            match = re.search(r'([A-Za-z0-9]+-[A-Za-z0-9-]+)', name)
+            if match:
+                ref = match.group(1).strip()
+
+        # 1. Try Policy lookup by reference
+        if ref:
+            pol = db.query(Policy).filter(
+                (Policy.policy_id == ref) | (Policy.policy_number == ref) | (Policy.policy_number.ilike(f"%{ref}%")) | (Policy.policy_id.ilike(f"%{ref}%")),
+                Policy.customer_id == customer.customer_id
+            ).first()
+            if pol:
+                coverages = db.query(Coverage).filter(Coverage.policy_id == pol.policy_id).all()
+                exclusions = db.query(Exclusion).filter(Exclusion.policy_id == pol.policy_id).all()
+                return build_policy_pdf(pol, customer, coverages, exclusions), f"{pol.policy_number}.pdf"
+
+        # 2. Try Claim lookup by reference
+        if ref:
+            clm = db.query(Claim).filter(
+                (Claim.claim_id == ref) | (Claim.claim_number == ref) | (Claim.claim_number.ilike(f"%{ref}%")) | (Claim.claim_id.ilike(f"%{ref}%")),
+                Claim.customer_id == customer.customer_id
+            ).first()
+            if clm:
+                pol = db.query(Policy).filter(Policy.policy_id == clm.policy_id).first() if clm.policy_id else None
+                return build_claim_pdf(clm, customer, pol), f"{clm.claim_number}_Summary.pdf"
+
+        # 3. Try Application document lookup by ID
+        if ref and ("APP" in ref.upper()):
+            app_rec = db.query(Application).filter(
+                (Application.application_id == ref) | (Application.application_id.ilike(f"%{ref}%")),
+                Application.customer_id == customer.customer_id
+            ).first()
+            if app_rec:
+                return CustomerService.download_application_document(app_rec.application_id, name or "Application Document", customer, db)
+
+        # 4. Search customer's applications for matching filename/document
+        if ref or name:
+            target_search = (ref or name).lower()
+            apps = db.query(Application).filter(Application.customer_id == customer.customer_id).all()
+            for a in apps:
+                if a.documents:
+                    try:
+                        docs = json.loads(a.documents)
+                        for d in docs:
+                            f_name = d.get("file_name", "").lower()
+                            d_type = d.get("doc_type", "").lower()
+                            if (target_search in f_name or target_search in d_type or
+                                (d_type and d_type in target_search) or (f_name and f_name in target_search)):
+                                return CustomerService.download_application_document(a.application_id, d.get("doc_type", name), customer, db)
+                    except Exception:
+                        pass
+            # If application requested generally
+            if "app" in target_search or "application" in target_search:
+                app_first = db.query(Application).filter(Application.customer_id == customer.customer_id).order_by(Application.created_at.desc()).first()
+                if app_first:
+                    return CustomerService.download_application_document(app_first.application_id, name or "Application Filing", customer, db)
+
+        # 5. Search customer's policies by policy type match or keywords (e.g. Home, Auto, Umbrella)
+        if name or ref:
+            search_str = (name or ref).lower()
+            pols = db.query(Policy).filter(Policy.customer_id == customer.customer_id).all()
+            for p in pols:
+                p_type = (p.policy_type or "").lower()
+                p_num = (p.policy_number or "").lower()
+                # Check keyword overlap (e.g. "homeowners", "auto", "umbrella", "commercial")
+                keywords = ["home", "auto", "car", "vehicle", "umbrella", "commercial", "property", "flood"]
+                matched_keyword = any(kw in search_str and kw in p_type for kw in keywords)
+                if matched_keyword or p_type in search_str or search_str in p_type or p_num in search_str:
+                    coverages = db.query(Coverage).filter(Coverage.policy_id == p.policy_id).all()
+                    exclusions = db.query(Exclusion).filter(Exclusion.policy_id == p.policy_id).all()
+                    return build_policy_pdf(p, customer, coverages, exclusions), f"{p.policy_number}.pdf"
+
+        # 6. Try Claim keyword match
+        if name:
+            if "claim" in name.lower():
+                clm = db.query(Claim).filter(Claim.customer_id == customer.customer_id).order_by(Claim.created_at.desc()).first()
+                if clm:
+                    pol = db.query(Policy).filter(Policy.policy_id == clm.policy_id).first() if clm.policy_id else None
+                    return build_claim_pdf(clm, customer, pol), f"{clm.claim_number}_Summary.pdf"
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found or access denied."
+        )
+
+    # =========================================================================
+    # Persistent Customer AI Chat Operations
+    # =========================================================================
+
+    @staticmethod
+    def get_customer_ai_context(customer: Customer, db: Session) -> dict:
+        """
+        Extracts complete, live customer profile, active/historical policies, submitted applications,
+        claims, and assigned agent data directly from PostgreSQL for grounded AI intelligence.
+        """
+        # 1. Profile & Agent
+        agent_assignment = db.query(CustomerAgentAssignment).filter(
+            CustomerAgentAssignment.customer_id == customer.customer_id
+        ).first()
+        agent_info = None
+        if agent_assignment and agent_assignment.agent_id:
+            agent_user = db.query(User).filter(User.user_id == agent_assignment.agent_id).first()
+            if agent_user:
+                agent_info = {
+                    "agent_id": agent_user.user_id,
+                    "name": agent_user.name,
+                    "email": agent_user.email,
+                    "phone": getattr(agent_user, "phone", None) or "(555) 876-5432"
+                }
+
+        profile_data = {
+            "id": customer.customer_id,
+            "name": customer.name,
+            "email": customer.email,
+            "phone": customer.mobile or "(555) 000-0000",
+            "address": customer.address or "124 Grand Avenue, Suite 400, Chicago, IL 60611",
+            "assigned_agent": agent_info
+        }
+
+        # 2. Policies
+        pols = db.query(Policy).filter(Policy.customer_id == customer.customer_id).all()
+        policies_data = []
+        for p in pols:
+            eff_date = str(p.start_date) if p.start_date else (str(p.created_at.date()) if p.created_at else "2024-01-01")
+            exp_date = str(p.end_date) if p.end_date else "2027-01-01"
+            
+            # Primary deductible
+            deductible_str = "$500"
+            coverages_list = []
+            if p.coverages:
+                for cov in p.coverages:
+                    cov_ded = f"${float(cov.deductible):,.0f}" if (cov.deductible is not None and cov.deductible > 0) else None
+                    if cov_ded and deductible_str == "$500":
+                        deductible_str = cov_ded
+                    coverages_list.append({
+                        "name": cov.coverage_name,
+                        "limit": f"${float(cov.coverage_limit):,.0f}" if cov.coverage_limit else "N/A",
+                        "deductible": cov_ded or "$0"
+                    })
+            
+            exclusions_list = [ex.exclusion_name for ex in (p.exclusions or [])]
+
+            policies_data.append({
+                "id": p.policy_id,
+                "policy_number": p.policy_number,
+                "type": p.policy_type,
+                "category": determine_category(p.policy_type),
+                "status": p.status or "Active",
+                "premium": f"${float(p.premium):,.2f}" if p.premium else "$1,200.00",
+                "deductible": deductible_str,
+                "effective_date": eff_date,
+                "expiry_date": exp_date,
+                "coverages": coverages_list,
+                "exclusions": exclusions_list
+            })
+
+        # 3. Applications
+        apps = db.query(Application).filter(Application.customer_id == customer.customer_id).all()
+        applications_data = []
+        for a in apps:
+            docs_parsed = []
+            if a.documents:
+                try:
+                    docs_parsed = json.loads(a.documents) if isinstance(a.documents, str) else a.documents
+                except Exception:
+                    pass
+            applications_data.append({
+                "application_id": a.application_id,
+                "product_name": a.product_name or a.policy_type,
+                "policy_type": a.policy_type,
+                "coverage_tier": a.coverage_tier or "Standard",
+                "coverage_limit": f"${float(a.coverage_limit):,.0f}" if a.coverage_limit else "N/A",
+                "deductible": f"${float(a.deductible):,.0f}" if a.deductible else "N/A",
+                "estimated_premium": f"${float(a.estimated_premium):,.2f}" if a.estimated_premium else "N/A",
+                "status": a.status or "Pending Review",
+                "verification_status": a.verification_status or "Verified",
+                "created_at": a.created_at.strftime("%Y-%m-%d %H:%M") if a.created_at else "",
+                "documents": docs_parsed,
+                "agent_notes": a.agent_notes
+            })
+
+        # 4. Claims
+        claims_list = db.query(Claim).filter(Claim.customer_id == customer.customer_id).all()
+        claims_data = []
+        for c in claims_list:
+            claims_data.append({
+                "id": c.claim_id,
+                "claim_number": c.claim_number,
+                "policy_id": c.policy_id,
+                "incident_date": str(c.incident_date) if c.incident_date else "",
+                "incident_type": c.incident_type or "Property Damage",
+                "incident_description": c.incident_description or "",
+                "status": c.claim_status or "Submitted",
+                "estimated_amount": f"${float(c.claim_amount):,.2f}" if c.claim_amount else "$0.00"
+            })
+
+        return {
+            "profile": profile_data,
+            "policies": policies_data,
+            "applications": applications_data,
+            "claims": claims_data
+        }
+
+    @staticmethod
+    def _call_ai_service(message: str, customer_id: str, conversation_id: str, history: List[dict], context: Optional[dict] = None) -> str:
+        """
+        Dispatches prompt + bounded history + live customer context to the standalone AI Service.
+        """
+        ai_service_url = os.environ.get("AI_SERVICE_URL", "http://insureassist-ai-container:8006")
+        endpoint = f"{ai_service_url}/api/v1/ai/customer/chat"
+        payload = {
+            "message": message,
+            "customer_id": customer_id,
+            "conversation_id": conversation_id,
+            "history": history,
+            "context": context or {}
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            endpoint,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=45) as resp:
+                res_data = json.loads(resp.read().decode("utf-8"))
+                return res_data.get("response", "No response received.")
+        except Exception as e:
+            logger.error(f"Failed to reach AI service at {endpoint}: {e}")
+            return "I apologize, but I am temporarily unable to reach the AI intelligence service. Please check back in a moment or contact your assigned agent."
+
+    @staticmethod
+    def list_chat_conversations(customer: Customer, db: Session) -> List[ChatConversationItem]:
+        """
+        Retrieves all chat conversations for the authenticated customer ordered by last activity.
+        """
+        conversations = db.query(ChatConversation).filter(
+            ChatConversation.customer_id == customer.customer_id
+        ).order_by(ChatConversation.updated_at.desc()).all()
+
+        results = []
+        for conv in conversations:
+            last_msg = db.query(ChatMessage).filter(
+                ChatMessage.conversation_id == conv.conversation_id
+            ).order_by(ChatMessage.created_at.desc()).first()
+
+            msg_count = db.query(ChatMessage).filter(
+                ChatMessage.conversation_id == conv.conversation_id
+            ).count()
+
+            snippet = last_msg.message[:60] + "..." if (last_msg and len(last_msg.message) > 60) else (last_msg.message if last_msg else None)
+
+            c_at = (conv.created_at.isoformat() + "Z") if conv.created_at else ""
+            u_at = (conv.updated_at.isoformat() + "Z") if conv.updated_at else ""
+
+            results.append(ChatConversationItem(
+                conversation_id=conv.conversation_id,
+                customer_id=conv.customer_id,
+                title=conv.title,
+                role=conv.role,
+                created_at=c_at,
+                updated_at=u_at,
+                last_message=snippet,
+                message_count=msg_count
+            ))
+        return results
+
+    @staticmethod
+    def create_chat_conversation(customer: Customer, req: CreateConversationRequest, db: Session) -> ChatConversationItem:
+        """
+        Creates a new persistent conversation for the authenticated customer.
+        """
+        now = datetime.datetime.utcnow()
+        conv_id = f"conv-cust-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        title = req.title.strip() if (req.title and req.title.strip()) else "New Conversation"
+
+        conv = ChatConversation(
+            conversation_id=conv_id,
+            customer_id=customer.customer_id,
+            title=title,
+            role="customer",
+            created_at=now,
+            updated_at=now
+        )
+        db.add(conv)
+        db.commit()
+        db.refresh(conv)
+
+        # If an initial message was supplied, process it
+        if req.initial_message and req.initial_message.strip():
+            CustomerService.send_chat_message(
+                SendMessageRequest(message=req.initial_message, conversation_id=conv.conversation_id),
+                customer,
+                db
+            )
+            db.refresh(conv)
+
+        c_at = (conv.created_at.isoformat() + "Z") if conv.created_at else ""
+        u_at = (conv.updated_at.isoformat() + "Z") if conv.updated_at else ""
+
+        return ChatConversationItem(
+            conversation_id=conv.conversation_id,
+            customer_id=conv.customer_id,
+            title=conv.title,
+            role=conv.role,
+            created_at=c_at,
+            updated_at=u_at,
+            last_message=None,
+            message_count=db.query(ChatMessage).filter(ChatMessage.conversation_id == conv.conversation_id).count()
+        )
+
+    @staticmethod
+    def get_conversation_messages(conversation_id: str, customer: Customer, db: Session) -> List[ChatMessageItem]:
+        """
+        Retrieves all messages for a customer conversation in strict chronological order.
+        Strictly prevents cross-customer unauthorized access.
+        """
+        conv = db.query(ChatConversation).filter(
+            ChatConversation.conversation_id == conversation_id,
+            ChatConversation.customer_id == customer.customer_id
+        ).first()
+
+        if not conv:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Conversation '{conversation_id}' not found or access denied."
+            )
+
+        messages = db.query(ChatMessage).filter(
+            ChatMessage.conversation_id == conversation_id
+        ).order_by(ChatMessage.created_at.asc()).all()
+
+        return [
+            ChatMessageItem(
+                message_id=m.message_id,
+                conversation_id=m.conversation_id,
+                sender_type=m.sender_type,
+                message=m.message,
+                created_at=(m.created_at.isoformat() + "Z") if m.created_at else ""
+            )
+            for m in messages
+        ]
+
+    @staticmethod
+    def send_chat_message(req: SendMessageRequest, customer: Customer, db: Session) -> CustomerChatResponse:
+        """
+        1. Finds or creates the customer's persistent conversation.
+        2. Persists the user message to PostgreSQL.
+        3. Retrieves bounded conversation history (last 8 messages).
+        4. Extracts real live customer data from PostgreSQL.
+        5. Calls AI Service for grounded LLM answer.
+        6. Persists the AI response to PostgreSQL.
+        7. Returns the response with conversation metadata.
+        """
+        now = datetime.datetime.utcnow()
+        conv = None
+
+        if req.conversation_id:
+            conv = db.query(ChatConversation).filter(
+                ChatConversation.conversation_id == req.conversation_id,
+                ChatConversation.customer_id == customer.customer_id
+            ).first()
+
+        if not conv:
+            # Create a new conversation session
+            conv_id = req.conversation_id if req.conversation_id and req.conversation_id.startswith("conv-") else f"conv-cust-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+            initial_title = (req.message[:32] + "...") if len(req.message) > 32 else req.message
+            conv = ChatConversation(
+                conversation_id=conv_id,
+                customer_id=customer.customer_id,
+                title=initial_title,
+                role="customer",
+                created_at=now,
+                updated_at=now
+            )
+            db.add(conv)
+            db.flush()
+
+        # 1. Persist User Message
+        user_msg_id = f"msg-u-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        user_msg = ChatMessage(
+            message_id=user_msg_id,
+            conversation_id=conv.conversation_id,
+            sender_type="user",
+            message=req.message,
+            created_at=now
+        )
+        db.add(user_msg)
+        db.commit()
+
+        # 2. Retrieve bounded history from PostgreSQL (last 8 messages prior to this user message)
+        prior_messages = db.query(ChatMessage).filter(
+            ChatMessage.conversation_id == conv.conversation_id,
+            ChatMessage.message_id != user_msg_id
+        ).order_by(ChatMessage.created_at.desc()).limit(8).all()
+        prior_messages.reverse()
+
+        history_payload = [
+            {"sender": m.sender_type, "message": m.message}
+            for m in prior_messages
+        ]
+
+        # 3. Extract Live Customer Context directly from PostgreSQL
+        customer_context = CustomerService.get_customer_ai_context(customer, db)
+
+        # 4. Call AI Service (Standalone Groq + Grounding Engine)
+        bot_reply = CustomerService._call_ai_service(
+            message=req.message,
+            customer_id=customer.customer_id,
+            conversation_id=conv.conversation_id,
+            history=history_payload,
+            context=customer_context
+        )
+
+        # 5. Persist AI Response Message
+        bot_time = datetime.datetime.utcnow()
+        bot_msg_id = f"msg-b-{bot_time.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        bot_msg = ChatMessage(
+            message_id=bot_msg_id,
+            conversation_id=conv.conversation_id,
+            sender_type="bot",
+            message=bot_reply,
+            created_at=bot_time
+        )
+        db.add(bot_msg)
+
+        # Update conversation timestamp & title if default
+        conv.updated_at = bot_time
+        if conv.title in ("New Conversation", "New Chat") or len(conv.title) <= 3:
+            conv.title = (req.message[:32] + "...") if len(req.message) > 32 else req.message
+
+        db.commit()
+
+        return CustomerChatResponse(
+            conversation_id=conv.conversation_id,
+            title=conv.title,
+            response=bot_reply,
+            message_id=bot_msg_id,
+            created_at=bot_time.isoformat() + "Z"
+        )
+
+    @staticmethod
+    def delete_chat_conversation(conversation_id: str, customer: Customer, db: Session) -> dict:
+        """
+        Deletes a conversation and all its messages.
+        """
+        conv = db.query(ChatConversation).filter(
+            ChatConversation.conversation_id == conversation_id,
+            ChatConversation.customer_id == customer.customer_id
+        ).first()
+
+        if not conv:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Conversation '{conversation_id}' not found or access denied."
+            )
+
+        db.delete(conv)
+        db.commit()
+        return {"success": True, "detail": "Conversation deleted successfully."}
+
+
 
 

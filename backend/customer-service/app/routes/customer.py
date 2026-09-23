@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, Response
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_current_customer, get_token_payload, get_current_agent_or_staff
@@ -17,7 +17,12 @@ from app.schemas.customer import (
     NotificationResponse,
     PolicyApplicationRequest,
     PolicyApplicationResponse,
-    ProvideMoreInfoRequest
+    ProvideMoreInfoRequest,
+    ChatMessageItem,
+    ChatConversationItem,
+    CreateConversationRequest,
+    SendMessageRequest,
+    CustomerChatResponse
 )
 from app.services.customer_service import CustomerService
 
@@ -246,6 +251,217 @@ async def customer_provide_more_info(
     Customer resubmits requested info/documents.
     """
     return CustomerService.provide_more_information(application_id, req_in, current_customer, db)
+
+
+# =========================================================================
+# Authenticated Document Downloads (Policies, Applications, Claims)
+# =========================================================================
+
+@router.get(
+    "/policies/{policy_ref}/download",
+    summary="Download Authenticated Policy Document (PDF)",
+    description="Returns the official Policy Schedule & Declarations PDF for a policy owned by the authenticated customer."
+)
+async def download_policy_document_endpoint(
+    policy_ref: str,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Download authentic Policy Schedule & Endorsement PDF.
+    """
+    pdf_bytes, filename = CustomerService.download_policy_document(policy_ref, current_customer, db)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+
+
+@router.get(
+    "/applications/{application_id}/documents/{doc_name}/download",
+    summary="Download Authenticated Application Document (PDF)",
+    description="Returns the verified document PDF for a submitted application owned by the authenticated customer."
+)
+async def download_application_document_endpoint(
+    application_id: str,
+    doc_name: str,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Download authentic application document / verified archive PDF.
+    """
+    pdf_bytes, filename = CustomerService.download_application_document(application_id, doc_name, current_customer, db)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+
+
+@router.get(
+    "/claims/{claim_ref}/download",
+    summary="Download Authenticated Claim Summary Document (PDF)",
+    description="Returns the First Notice of Loss (FNOL) Claims Summary PDF for a claim owned by the authenticated customer."
+)
+async def download_claim_document_endpoint(
+    claim_ref: str,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Download authentic FNOL Claim Summary PDF.
+    """
+    pdf_bytes, filename = CustomerService.download_claim_document(claim_ref, current_customer, db)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+
+
+@router.get(
+    "/documents/download",
+    summary="Generic Authenticated Document Download Resolver (PDF)",
+    description="Resolves and downloads customer policy, application, or claim documents by reference ID or title."
+)
+async def resolve_document_download_endpoint(
+    ref: Optional[str] = None,
+    name: Optional[str] = None,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Download customer document by reference or document name.
+    """
+    pdf_bytes, filename = CustomerService.resolve_document_download(ref, name, current_customer, db)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+
+
+# =========================================================================
+# Persistent Customer AI Chat Endpoints
+# =========================================================================
+
+@router.get(
+    "/chat/conversations",
+    response_model=List[ChatConversationItem],
+    summary="List Customer Chat Conversations",
+    description="Retrieves all persistent chat conversations belonging to the authenticated customer from PostgreSQL."
+)
+async def list_customer_conversations(
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    List all chat conversations for authenticated customer.
+    """
+    return CustomerService.list_chat_conversations(current_customer, db)
+
+
+@router.post(
+    "/chat/conversations",
+    response_model=ChatConversationItem,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create Chat Conversation",
+    description="Creates a new persistent conversation for the authenticated customer."
+)
+async def create_customer_conversation(
+    req: CreateConversationRequest,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new chat conversation session in PostgreSQL.
+    """
+    return CustomerService.create_chat_conversation(current_customer, req, db)
+
+
+@router.get(
+    "/chat/conversations/{conversation_id}/messages",
+    response_model=List[ChatMessageItem],
+    summary="Get Conversation Messages",
+    description="Retrieves all messages for a specific conversation in chronological order with customer isolation."
+)
+async def get_conversation_messages_endpoint(
+    conversation_id: str,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Get messages for a customer conversation.
+    """
+    return CustomerService.get_conversation_messages(conversation_id, current_customer, db)
+
+
+@router.post(
+    "/chat/messages",
+    response_model=CustomerChatResponse,
+    summary="Send Chat Message (with AI & Persistence)",
+    description="Persists user message, calls AI Service with bounded context, persists AI response, and updates conversation."
+)
+async def send_chat_message_endpoint(
+    req: SendMessageRequest,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Process and persist customer chat prompt through Customer Service & AI Service.
+    """
+    return CustomerService.send_chat_message(req, current_customer, db)
+
+
+@router.post(
+    "/chat/conversations/{conversation_id}/messages",
+    response_model=CustomerChatResponse,
+    summary="Send Message in Specific Conversation",
+    description="Convenience endpoint to send a message within a specific conversation ID."
+)
+async def send_message_in_conversation(
+    conversation_id: str,
+    req: SendMessageRequest,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Send and persist message in specified conversation.
+    """
+    req.conversation_id = conversation_id
+    return CustomerService.send_chat_message(req, current_customer, db)
+
+
+@router.delete(
+    "/chat/conversations/{conversation_id}",
+    summary="Delete Chat Conversation",
+    description="Permanently deletes a customer conversation and its messages from PostgreSQL."
+)
+async def delete_conversation_endpoint(
+    conversation_id: str,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a customer conversation.
+    """
+    return CustomerService.delete_chat_conversation(conversation_id, current_customer, db)
+
+
 
 
 

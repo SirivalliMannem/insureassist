@@ -3,6 +3,7 @@ const CUSTOMER_SERVICE_URL = 'http://127.0.0.1:8002';
 const AGENT_SERVICE_URL = 'http://127.0.0.1:8003';
 const UNDERWRITER_SERVICE_URL = 'http://127.0.0.1:8004';
 const ADMIN_SERVICE_URL = 'http://127.0.0.1:8005';
+const AI_SERVICE_URL = 'http://127.0.0.1:8006';
 
 /**
      * MOCK DATA REPOSITORIES (ORGANIZED SEPARATELY)
@@ -282,9 +283,9 @@ const MOCK_DB = {
           updated_at: '2026-03-28 10:35',
           messages: [
             { message_id: 'msg-c1', conversation_id: 'conv-cust-1', sender: 'user', content: 'What does my home insurance cover?', timestamp: '10:30 AM' },
-            { message_id: 'msg-c2', conversation_id: 'conv-cust-1', sender: 'bot', content: 'Your sample Home Insurance policy includes dwelling ($450,000), personal property ($225,000), liability ($300,000), and loss-of-use coverage.', timestamp: '10:30 AM', source: 'Policy Information', confidence: '94%' },
+            { message_id: 'msg-c2', conversation_id: 'conv-cust-1', sender: 'bot', content: 'Your sample Home Insurance policy includes dwelling ($450,000), personal property ($225,000), liability ($300,000), and loss-of-use coverage.', timestamp: '10:30 AM' },
             { message_id: 'msg-c3', conversation_id: 'conv-cust-1', sender: 'user', content: 'What is my deductible?', timestamp: '10:32 AM' },
-            { message_id: 'msg-c4', conversation_id: 'conv-cust-1', sender: 'bot', content: 'Your current sample policy has a $1,000 all-perils deductible and a $2,500 wind/hail deductible.', timestamp: '10:32 AM', source: 'Policy Information', confidence: '96%' }
+            { message_id: 'msg-c4', conversation_id: 'conv-cust-1', sender: 'bot', content: 'Your current sample policy has a $1,000 all-perils deductible and a $2,500 wind/hail deductible.', timestamp: '10:32 AM' }
           ]
         },
         {
@@ -294,7 +295,7 @@ const MOCK_DB = {
           updated_at: '2026-03-26 14:20',
           messages: [
             { message_id: 'msg-c5', conversation_id: 'conv-cust-2', sender: 'user', content: 'Does my auto policy include liability coverage?', timestamp: '2:15 PM' },
-            { message_id: 'msg-c6', conversation_id: 'conv-cust-2', sender: 'bot', content: 'Your sample Auto Insurance policy includes bodily injury liability ($100k/$300k), collision ($500 ded.), and comprehensive coverage ($250 ded.).', timestamp: '2:15 PM', source: 'Policy Information', confidence: '95%' }
+            { message_id: 'msg-c6', conversation_id: 'conv-cust-2', sender: 'bot', content: 'Your sample Auto Insurance policy includes bodily injury liability ($100k/$300k), collision ($500 ded.), and comprehensive coverage ($250 ded.).', timestamp: '2:15 PM' }
           ]
         },
         {
@@ -304,7 +305,7 @@ const MOCK_DB = {
           updated_at: '2026-03-24 09:05',
           messages: [
             { message_id: 'msg-c7', conversation_id: 'conv-cust-3', sender: 'user', content: 'When is my policy renewal?', timestamp: '9:00 AM' },
-            { message_id: 'msg-c8', conversation_id: 'conv-cust-3', sender: 'bot', content: 'Your sample policy is scheduled for renewal in 45 days (March 15, 2026).', timestamp: '9:00 AM', source: 'Policy Information', confidence: '98%' }
+            { message_id: 'msg-c8', conversation_id: 'conv-cust-3', sender: 'bot', content: 'Your sample policy is scheduled for renewal in 45 days (March 15, 2026).', timestamp: '9:00 AM' }
           ]
         },
         {
@@ -314,7 +315,7 @@ const MOCK_DB = {
           updated_at: '2026-03-20 16:45',
           messages: [
             { message_id: 'msg-c9', conversation_id: 'conv-cust-4', sender: 'user', content: 'What is my deductible?', timestamp: '4:40 PM' },
-            { message_id: 'msg-c10', conversation_id: 'conv-cust-4', sender: 'bot', content: 'Your current sample deductible is $1,000 for standard property losses.', timestamp: '4:40 PM', source: 'Policy Information', confidence: '97%' }
+            { message_id: 'msg-c10', conversation_id: 'conv-cust-4', sender: 'bot', content: 'Your current sample deductible is $1,000 for standard property losses.', timestamp: '4:40 PM' }
           ]
         },
         {
@@ -324,7 +325,7 @@ const MOCK_DB = {
           updated_at: '2026-03-15 15:15',
           messages: [
             { message_id: 'msg-c11', conversation_id: 'conv-cust-5', sender: 'user', content: 'Are water backups covered under standard home insurance?', timestamp: '3:10 PM' },
-            { message_id: 'msg-c12', conversation_id: 'conv-cust-5', sender: 'bot', content: 'Standard HO-3 excludes sewer/drain backup unless an endorsement is attached. Your sample portfolio includes an active Water Backup Rider providing up to $25,000 in coverage.', timestamp: '3:10 PM', source: 'Policy Information', confidence: '95%' }
+            { message_id: 'msg-c12', conversation_id: 'conv-cust-5', sender: 'bot', content: 'Standard HO-3 excludes sewer/drain backup unless an endorsement is attached. Your sample portfolio includes an active Water Backup Rider providing up to $25,000 in coverage.', timestamp: '3:10 PM' }
           ]
         }
       ]
@@ -340,7 +341,7 @@ const MOCK_DB = {
           updated_at: '2026-03-29 11:15',
           messages: [
             { message_id: 'msg-a1', conversation_id: 'conv-agent-1', sender: 'user', content: 'Summarize Sarah Mitchell\'s active policies and upcoming renewal dates.', timestamp: '11:00 AM' },
-            { message_id: 'msg-a2', conversation_id: 'conv-agent-1', sender: 'bot', content: 'Sarah Mitchell (CUST-001) holds 12 total active policies with $4,840/yr total premium portfolio. Her Homeowners HO-3 (POL-002, $1,840/yr) renews in 45 days. Her Auto Comprehensive (POL-001, $1,260/yr) renews in 60 days.', timestamp: '11:01 AM', source: 'Agency Portfolio Ledger', confidence: '96%' }
+            { message_id: 'msg-a2', conversation_id: 'conv-agent-1', sender: 'bot', content: 'Sarah Mitchell (CUST-001) holds 12 total active policies with $4,840/yr total premium portfolio. Her Homeowners HO-3 (POL-002, $1,840/yr) renews in 45 days. Her Auto Comprehensive (POL-001, $1,260/yr) renews in 60 days.', timestamp: '11:01 AM' }
           ]
         },
         {
@@ -350,7 +351,7 @@ const MOCK_DB = {
           updated_at: '2026-03-27 14:45',
           messages: [
             { message_id: 'msg-a3', conversation_id: 'conv-agent-2', sender: 'user', content: 'Show coverage limits for Emily Johnson\'s commercial policy', timestamp: '2:30 PM' },
-            { message_id: 'msg-a4', conversation_id: 'conv-agent-2', sender: 'bot', content: 'Emily Johnson (CUST-003) has 3 active commercial policies totaling $9,700/yr. Her Commercial General Liability policy is approaching renewal in 20 days (April 22, 2027) with $1,000,000 per-occurrence limit.', timestamp: '2:31 PM', source: 'Agency Portfolio Ledger', confidence: '95%' }
+            { message_id: 'msg-a4', conversation_id: 'conv-agent-2', sender: 'bot', content: 'Emily Johnson (CUST-003) has 3 active commercial policies totaling $9,700/yr. Her Commercial General Liability policy is approaching renewal in 20 days (April 22, 2027) with $1,000,000 per-occurrence limit.', timestamp: '2:31 PM' }
           ]
         },
         {
@@ -360,7 +361,7 @@ const MOCK_DB = {
           updated_at: '2026-03-25 09:35',
           messages: [
             { message_id: 'msg-a5', conversation_id: 'conv-agent-3', sender: 'user', content: 'Which clients have renewals in the next 30 days?', timestamp: '9:20 AM' },
-            { message_id: 'msg-a6', conversation_id: 'conv-agent-3', sender: 'bot', content: 'Across your 18 assigned clients, 5 policies are approaching renewal in the next 90 days: Sarah Mitchell (Home), John Carter (Auto), Emily Johnson (Commercial), Michael Brown (Commercial Property), and David Chen (Boat).', timestamp: '9:21 AM', source: 'Agency Portfolio Ledger', confidence: '98%' }
+            { message_id: 'msg-a6', conversation_id: 'conv-agent-3', sender: 'bot', content: 'Across your 18 assigned clients, 5 policies are approaching renewal in the next 90 days: Sarah Mitchell (Home), John Carter (Auto), Emily Johnson (Commercial), Michael Brown (Commercial Property), and David Chen (Boat).', timestamp: '9:21 AM' }
           ]
         },
         {
@@ -370,7 +371,7 @@ const MOCK_DB = {
           updated_at: '2026-03-22 16:25',
           messages: [
             { message_id: 'msg-a7', conversation_id: 'conv-agent-4', sender: 'user', content: 'What is my total commercial book value?', timestamp: '4:10 PM' },
-            { message_id: 'msg-a8', conversation_id: 'conv-agent-4', sender: 'bot', content: 'Your assigned book of business consists of 18 active clients, 32 total policies, and an annual premium portfolio of $48,650 (Home: 38%, Auto: 31%, Commercial: 20%, Umbrella: 11%).', timestamp: '4:11 PM', source: 'Agency Portfolio Ledger', confidence: '97%' }
+            { message_id: 'msg-a8', conversation_id: 'conv-agent-4', sender: 'bot', content: 'Your assigned book of business consists of 18 active clients, 32 total policies, and an annual premium portfolio of $48,650 (Home: 38%, Auto: 31%, Commercial: 20%, Umbrella: 11%).', timestamp: '4:11 PM' }
           ]
         }
       ]
@@ -386,7 +387,7 @@ const MOCK_DB = {
           updated_at: '2026-03-29 13:20',
           messages: [
             { message_id: 'msg-u1', conversation_id: 'conv-uw-1', sender: 'user', content: 'Review risk score factors for APP-8802', timestamp: '1:00 PM' },
-            { message_id: 'msg-u2', conversation_id: 'conv-uw-1', sender: 'bot', content: 'Application UW-1002 (John Carter) is rated High Risk (Score 78) due to 2 recent speeding violations within 24 months, high vehicle horsepower (BMW M340i), and aggressive braking telematics score (62/100).', timestamp: '1:01 PM', source: 'Underwriting Risk Model', confidence: '96%' }
+            { message_id: 'msg-u2', conversation_id: 'conv-uw-1', sender: 'bot', content: 'Application UW-1002 (John Carter) is rated High Risk (Score 78) due to 2 recent speeding violations within 24 months, high vehicle horsepower (BMW M340i), and aggressive braking telematics score (62/100).', timestamp: '1:01 PM' }
           ]
         },
         {
@@ -396,7 +397,7 @@ const MOCK_DB = {
           updated_at: '2026-03-26 10:30',
           messages: [
             { message_id: 'msg-u3', conversation_id: 'conv-uw-2', sender: 'user', content: 'What are the Tier 3 property exposure guidelines?', timestamp: '10:15 AM' },
-            { message_id: 'msg-u4', conversation_id: 'conv-uw-2', sender: 'bot', content: 'Tier 3 exposure guidelines require minimum 5% named hurricane deductible, mandatory hurricane shutter verification, and exclusion of exterior unattached structures without separate rating.', timestamp: '10:16 AM', source: 'Underwriting Guidelines Tier 3', confidence: '94%' }
+            { message_id: 'msg-u4', conversation_id: 'conv-uw-2', sender: 'bot', content: 'Tier 3 exposure guidelines require minimum 5% named hurricane deductible, mandatory hurricane shutter verification, and exclusion of exterior unattached structures without separate rating.', timestamp: '10:16 AM' }
           ]
         },
         {
@@ -406,7 +407,7 @@ const MOCK_DB = {
           updated_at: '2026-03-23 15:55',
           messages: [
             { message_id: 'msg-u5', conversation_id: 'conv-uw-3', sender: 'user', content: 'What is the loss ratio threshold for commercial auto?', timestamp: '3:40 PM' },
-            { message_id: 'msg-u6', conversation_id: 'conv-uw-3', sender: 'bot', content: 'Standard target 3-year loss ratio threshold for commercial auto fleets is < 55%. Accounts exceeding 65% loss ratio require senior underwriter referral and safety telematics mandatory mandate.', timestamp: '3:41 PM', source: 'Underwriting Guidelines', confidence: '97%' }
+            { message_id: 'msg-u6', conversation_id: 'conv-uw-3', sender: 'bot', content: 'Standard target 3-year loss ratio threshold for commercial auto fleets is < 55%. Accounts exceeding 65% loss ratio require senior underwriter referral and safety telematics mandatory mandate.', timestamp: '3:41 PM' }
           ]
         }
       ]
@@ -422,7 +423,7 @@ const MOCK_DB = {
           updated_at: '2026-03-30 09:20',
           messages: [
             { message_id: 'msg-adm1', conversation_id: 'conv-admin-1', sender: 'user', content: 'What are the RBAC permissions for Underwriters?', timestamp: '9:00 AM' },
-            { message_id: 'msg-adm2', conversation_id: 'conv-admin-1', sender: 'bot', content: 'Underwriter role has permissions to: view submissions queue, execute risk score evaluations, request loss runs, approve/bind policies up to $5.0M authority, and attach standard exclusion riders.', timestamp: '9:01 AM', source: 'System Governance Matrix', confidence: '98%' }
+            { message_id: 'msg-adm2', conversation_id: 'conv-admin-1', sender: 'bot', content: 'Underwriter role has permissions to: view submissions queue, execute risk score evaluations, request loss runs, approve/bind policies up to $5.0M authority, and attach standard exclusion riders.', timestamp: '9:01 AM' }
           ]
         },
         {
@@ -432,7 +433,7 @@ const MOCK_DB = {
           updated_at: '2026-03-28 11:45',
           messages: [
             { message_id: 'msg-adm3', conversation_id: 'conv-admin-2', sender: 'user', content: 'How many users are currently in Pending status?', timestamp: '11:30 AM' },
-            { message_id: 'msg-adm4', conversation_id: 'conv-admin-2', sender: 'bot', content: 'Currently 1 user (USR-012, Rachel Green) is in Pending status awaiting identity verification. 247 other enterprise accounts are fully Active.', timestamp: '11:31 AM', source: 'User Directory Ledger', confidence: '99%' }
+            { message_id: 'msg-adm4', conversation_id: 'conv-admin-2', sender: 'bot', content: 'Currently 1 user (USR-012, Rachel Green) is in Pending status awaiting identity verification. 247 other enterprise accounts are fully Active.', timestamp: '11:31 AM' }
           ]
         },
         {
@@ -442,7 +443,7 @@ const MOCK_DB = {
           updated_at: '2026-03-25 14:15',
           messages: [
             { message_id: 'msg-adm5', conversation_id: 'conv-admin-3', sender: 'user', content: 'Summarize enterprise policy count by category', timestamp: '2:00 PM' },
-            { message_id: 'msg-adm6', conversation_id: 'conv-admin-3', sender: 'bot', content: 'The enterprise policy registry holds 426 total policies (378 active): Property (148), Vehicle (124), Commercial (96), and Specialty Lines (58), totaling $1.42M annual in-force portfolio.', timestamp: '2:01 PM', source: 'Enterprise Policy Ledger', confidence: '97%' }
+            { message_id: 'msg-adm6', conversation_id: 'conv-admin-3', sender: 'bot', content: 'The enterprise policy registry holds 426 total policies (378 active): Property (148), Vehicle (124), Commercial (96), and Specialty Lines (58), totaling $1.42M annual in-force portfolio.', timestamp: '2:01 PM' }
           ]
         }
       ]
@@ -771,6 +772,235 @@ function getMockChatResponse(query, role) {
     : `Your question regarding "${query}" is noted. In this prototype demonstration, simulated responses illustrate policy assistance before the full FastAPI backend and RAG model are connected.`;
 }
 
+/**
+ * Downloads an authenticated document referenced in AI Chat responses
+ */
+async function downloadOrViewDoc(docName, docRef) {
+  if (!docName && !docRef) return;
+  const cleanName = (docName || 'Policy Document').replace(/[^\w\s\-\.]/g, '').trim();
+  const cleanRef = (docRef || '').trim();
+
+  try {
+    const token = (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('auth_token') : null) ||
+                  (typeof localStorage !== 'undefined' ? localStorage.getItem('auth_token') : null) ||
+                  (typeof MOCK_DB !== 'undefined' && MOCK_DB.authToken ? MOCK_DB.authToken : null);
+
+    const headers = { 'Accept': 'application/pdf, application/json, */*' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const params = new URLSearchParams();
+    if (cleanRef) params.append('ref', cleanRef);
+    if (cleanName) params.append('name', cleanName);
+
+    const res = await fetch(`${CUSTOMER_SERVICE_URL}/customer/documents/download?${params.toString()}`, {
+      method: 'GET',
+      headers: headers
+    });
+
+    if (!res.ok) {
+      if (res.status === 404 || res.status === 403) {
+        showToast('Document currently unavailable.', 'error');
+        return;
+      }
+      const errData = await res.json().catch(() => ({}));
+      showToast(errData.detail || 'Document currently unavailable.', 'error');
+      return;
+    }
+
+    // Extract filename from Content-Disposition header
+    let filename = '';
+    const disposition = res.headers.get('Content-Disposition') || res.headers.get('content-disposition');
+    if (disposition && disposition.includes('filename=')) {
+      const match = disposition.match(/filename=["']?([^"';]+)["']?/i);
+      if (match && match[1]) filename = match[1].trim();
+    }
+    if (!filename) {
+      filename = cleanRef.toLowerCase().endsWith('.pdf') ? cleanRef : `${(cleanRef || cleanName).replace(/\s+/g, '_')}.pdf`;
+    }
+
+    // Trigger native browser download via Blob
+    const blob = await res.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+    }, 250);
+
+    showToast(`Downloaded: ${filename}`);
+  } catch (err) {
+    console.error('Error downloading document:', err);
+    showToast('Document currently unavailable.', 'error');
+  }
+}
+window.downloadOrViewDoc = downloadOrViewDoc;
+
+/**
+ * Robust Client-Side Markdown Formatter for InsureAssist AI Chatbot
+ */
+function renderChatMarkdown(rawText) {
+  if (!rawText) return '';
+  let text = String(rawText).trim();
+
+  // If already contains typing indicator markup, return untouched
+  if (text.includes('chat-typing-indicator')) return text;
+
+  // Escape basic HTML entities
+  text = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Format Multi-line Code Blocks
+  text = text.replace(/```([\s\S]*?)```/g, (match, code) => {
+    return `<pre class="chat-code-block"><code>${code.trim()}</code></pre>`;
+  });
+
+  // Format Inline Code
+  text = text.replace(/`([^`]+)`/g, '<code class="chat-inline-code">$1</code>');
+
+  // Format Markdown Tables if present
+  const lines = text.split('\n');
+  let inTable = false;
+  let tableHtml = '';
+  let processedLines = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('|') && line.endsWith('|')) {
+      if (/^\|[\s\-:|]+\|$/.test(line)) {
+        continue;
+      }
+      const cells = line.split('|').slice(1, -1).map(c => c.trim());
+      if (!inTable) {
+        inTable = true;
+        tableHtml = '<div class="chat-table-wrapper"><table class="chat-table"><thead><tr>';
+        cells.forEach(c => { tableHtml += `<th>${c}</th>`; });
+        tableHtml += '</tr></thead><tbody>';
+      } else {
+        tableHtml += '<tr>';
+        cells.forEach(c => { tableHtml += `<td>${c}</td>`; });
+        tableHtml += '</tr>';
+      }
+    } else {
+      if (inTable) {
+        inTable = false;
+        tableHtml += '</tbody></table></div>';
+        processedLines.push(tableHtml);
+        tableHtml = '';
+      }
+      processedLines.push(lines[i]);
+    }
+  }
+  if (inTable) {
+    tableHtml += '</tbody></table></div>';
+    processedLines.push(tableHtml);
+  }
+
+  text = processedLines.join('\n');
+
+  // Format Headings
+  text = text.replace(/^### (.*$)/gim, '<h4 class="chat-heading-3">$1</h4>');
+  text = text.replace(/^## (.*$)/gim, '<h3 class="chat-heading-2">$1</h3>');
+  text = text.replace(/^# (.*$)/gim, '<h2 class="chat-heading-1">$1</h2>');
+
+  // Format Document Attachment Cards
+  text = text.replace(/📄\s*(?:\*\*(.*?)\*\*|(.*?))(?:\s*\((.*?)\)|\r?\n\s*([A-Za-z0-9]+-[A-Za-z0-9-]+))?(?:\r?\n|\s)*(?:(?:\[?(?:Download\s+(?:PDF|Document)(?:\s*↓)?|View\s+Document(?:\s*→)?)\]?(?:\([^)]*\))?)|(?:Download\s+(?:PDF|Document)|View\s*Document))/gi, (match, titleBold, titlePlain, refParen, refLine) => {
+    let title = (titleBold || titlePlain || 'Policy Document').trim();
+    let cleanRef = (refParen || refLine || '').trim();
+
+    if (title.includes('\n')) {
+      const parts = title.split('\n').map(p => p.trim()).filter(Boolean);
+      title = parts[0] || 'Policy Document';
+      if (!cleanRef && parts[1] && /[A-Za-z0-9]+-[A-Za-z0-9-]+/.test(parts[1])) {
+        cleanRef = parts[1];
+      }
+    }
+
+    if (!cleanRef) {
+      const idMatch = title.match(/([A-Za-z0-9]+-[A-Za-z0-9-]+)/);
+      if (idMatch) {
+        cleanRef = idMatch[1];
+      }
+    }
+
+    const safeTitle = title.replace(/'/g, "\\'");
+    const safeRef = cleanRef.replace(/'/g, "\\'");
+    const refBadge = cleanRef ? `<span class="chat-doc-id">(${cleanRef})</span>` : '';
+    return `<div class="chat-doc-card">
+      <div class="chat-doc-icon">📄</div>
+      <div class="chat-doc-info">
+        <div class="chat-doc-title">${title} ${refBadge}</div>
+        <div class="chat-doc-action" onclick="downloadOrViewDoc('${safeTitle}', '${safeRef}')">
+          <span>Download PDF</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // Format Standalone Document Links ([📄 Download PDF: Title](#) or [📄 View Document: Title](#))
+  text = text.replace(/\[📄\s*([^\]]+)\]\([^)]*\)/gi, (match, title) => {
+    const safeTitle = title.replace(/'/g, "\\'");
+    return `<div class="chat-doc-card">
+      <div class="chat-doc-icon">📄</div>
+      <div class="chat-doc-info">
+        <div class="chat-doc-title">${title}</div>
+        <div class="chat-doc-action" onclick="downloadOrViewDoc('${safeTitle}', '')">
+          <span>Download PDF</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  // Format Bold
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+  // Format Italic (avoid matching within filenames with underscores like doc_file_name.pdf)
+  text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  text = text.replace(/(?:\b|\s)_([a-zA-Z0-9 ]+?)_(?:\b|\s)/g, ' <em>$1</em> ');
+
+  // Format Bullet Lists (* or - or •)
+  text = text.replace(/(?:^[ \t]*[\*\-\•][ \t]+(.+)(?:\r?\n|$))+/gm, (match) => {
+    const items = match.trim().split(/\r?\n/).map(item => {
+      const cleaned = item.replace(/^[ \t]*[\*\-\•][ \t]+/, '').trim();
+      return `<li>${cleaned}</li>`;
+    }).join('');
+    return `<ul class="chat-bullet-list">${items}</ul>`;
+  });
+
+  // Format Numbered Lists (1. item)
+  text = text.replace(/(?:^[ \t]*\d+\.[ \t]+(.+)(?:\r?\n|$))+/gm, (match) => {
+    const items = match.trim().split(/\r?\n/).map(item => {
+      const cleaned = item.replace(/^[ \t]*\d+\.[ \t]+/, '').trim();
+      return `<li>${cleaned}</li>`;
+    }).join('');
+    return `<ol class="chat-numbered-list">${items}</ol>`;
+  });
+
+  // Clean Paragraph Formatting
+  const paragraphs = text.split(/\n\s*\n/);
+  const formattedParagraphs = paragraphs.map(p => {
+    const trimmed = p.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('<h') || trimmed.startsWith('<div') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol') || trimmed.startsWith('<pre')) {
+      return trimmed;
+    }
+    return `<p class="chat-p">${trimmed.replace(/\n/g, '<br>')}</p>`;
+  });
+
+  return formattedParagraphs.filter(Boolean).join('');
+}
+
 // Render Chatbot inside Right-Side Slide-Out Panel
 function openAIChatSlidePanel() {
   const role = MOCK_DB.currentRole;
@@ -781,8 +1011,8 @@ function openAIChatSlidePanel() {
         <div class="chat-msg ${m.sender}">
           <div class="chat-avatar">${m.sender === 'bot' ? '🤖' : userInitials}</div>
           <div>
-            <div class="chat-bubble">${m.text}</div>
-            <div class="chat-bubble-meta">${m.sender === 'bot' ? '<span>InsureAssist AI</span> · <span>Prototype Response</span>' : '<span>You</span>'}</div>
+            <div class="chat-bubble">${renderChatMarkdown(m.text || m.content)}</div>
+            <div class="chat-bubble-meta"><span>${m.timestamp || 'Just now'}</span></div>
           </div>
         </div>
       `).join('');
@@ -810,9 +1040,10 @@ function openAIChatSlidePanel() {
 
   const customerChips = `
         <button class="chat-chip" onclick="handleChatPromptClick('What is a deductible?')">What is a deductible?</button>
-        <button class="chat-chip" onclick="handleChatPromptClick('What does my auto policy cover?')">What does my auto policy cover?</button>
-        <button class="chat-chip" onclick="handleChatPromptClick('What policies are available?')">What policies are available?</button>
-        <button class="chat-chip" onclick="handleChatPromptClick('Am I covered for flood damage?')">Am I covered for flood damage?</button>
+        <button class="chat-chip" onclick="handleChatPromptClick('What is my deductible?')">What is my deductible?</button>
+        <button class="chat-chip" onclick="handleChatPromptClick('What does my policy cover?')">What does my policy cover?</button>
+        <button class="chat-chip" onclick="handleChatPromptClick('What is the status of my application?')">Application status?</button>
+        <button class="chat-chip" onclick="handleChatPromptClick('Do I have any claims?')">Do I have any claims?</button>
       `;
 
   const roleBannerText = role === 'admin'
@@ -821,7 +1052,7 @@ function openAIChatSlidePanel() {
       ? 'Underwriting Risk Analysis & Case Evaluation'
       : role === 'agent'
         ? 'Agent Customer Support'
-        : 'Customer Guidance';
+        : 'Customer Policy Guidance';
 
   const rolePlaceholder = role === 'admin'
     ? 'Ask about total users, active policies, agents, or audit activity...'
@@ -829,13 +1060,13 @@ function openAIChatSlidePanel() {
       ? 'Ask about risk factors, application summary, or underwriting guidelines...'
       : role === 'agent'
         ? 'Ask about an assigned client or policy...'
-        : 'Ask about your policies...';
+        : 'Ask about your policies, deductible, coverage, claims...';
 
   const contentHtml = `
         <div class="chat-container-layout">
           <div class="chat-prototype-banner">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            <span><strong>Prototype Mode:</strong> Predefined mock responses for ${roleBannerText}. RAG backend connects in Phase 2.</span>
+            <span><strong>AI Assistant:</strong> Conversational insurance and policy guidance.</span>
           </div>
 
           <div class="chat-messages-scroll" id="panel-chat-scroll">
@@ -843,7 +1074,7 @@ function openAIChatSlidePanel() {
           </div>
 
           <div class="chat-chips-area">
-            <div style="font-size:0.75rem;color:var(--gray-500);width:100%;margin-bottom:2px;">Quick Prompts to try:</div>
+            <div style="font-size:0.75rem;color:var(--gray-500);width:100%;margin-bottom:2px;">Quick Prompts:</div>
             ${role === 'admin' ? adminChips : role === 'underwriter' ? underwriterChips : role === 'agent' ? agentChips : customerChips}
           </div>
 
@@ -858,7 +1089,7 @@ function openAIChatSlidePanel() {
 
   openOrUpdateSlidePanel(
     role === 'admin' ? 'Enterprise Governance AI Assistant' : role === 'underwriter' ? 'Underwriting AI Assistant' : role === 'agent' ? 'Agent AI Assistant' : 'AI Policy Assistant',
-    role === 'admin' ? 'Platform Management & System Telemetry' : role === 'underwriter' ? 'Risk Evaluation & Decision Guidance' : role === 'agent' ? 'Client & Policy Support Assistant' : 'Interactive prototype assistance',
+    role === 'admin' ? 'Platform Management & System Telemetry' : role === 'underwriter' ? 'Risk Evaluation & Decision Guidance' : role === 'agent' ? 'Client & Policy Support Assistant' : 'Live Grounded Insurance Guidance',
     contentHtml
   );
   attachChatEventListeners();
@@ -875,13 +1106,52 @@ function attachChatEventListeners() {
   const sendBtn = document.getElementById('panel-chat-send-btn');
   if (!input || !sendBtn) return;
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const text = input.value.trim();
     if (!text) return;
 
     const role = MOCK_DB.currentRole;
     chatHistory[role].push({ sender: 'user', text: text });
-    openAIChatSlidePanel();
+    if (input) input.value = '';
+
+    if (role === 'customer') {
+      // Add typing indicator
+      chatHistory[role].push({
+        sender: 'bot',
+        text: '<div class="chat-typing-indicator"><span></span><span></span><span></span></div>',
+        isTyping: true
+      });
+      openAIChatSlidePanel();
+
+      try {
+        const headers = getAuthHeaders();
+        const currentCustomerId = (typeof MOCK_DB !== 'undefined' && MOCK_DB.customer && MOCK_DB.customer.id) ? MOCK_DB.customer.id : 'CUST-001';
+        const res = await fetch(`${AI_SERVICE_URL}/api/v1/ai/customer/chat`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            message: text,
+            customer_id: currentCustomerId
+          })
+        });
+
+        // Remove typing indicator
+        const typingIdx = chatHistory[role].findIndex(m => m.isTyping);
+        if (typingIdx !== -1) chatHistory[role].splice(typingIdx, 1);
+
+        if (res.ok) {
+          const data = await res.json();
+          const botReply = data.response || 'No response received from AI service.';
+          chatHistory[role].push({ sender: 'bot', text: botReply });
+          openAIChatSlidePanel();
+          return;
+        }
+      } catch (err) {
+        console.warn('Slide panel AI call error:', err);
+        const typingIdx = chatHistory[role].findIndex(m => m.isTyping);
+        if (typingIdx !== -1) chatHistory[role].splice(typingIdx, 1);
+      }
+    }
 
     setTimeout(() => {
       const reply = getMockChatResponse(text, role);
@@ -899,10 +1169,46 @@ function attachChatEventListeners() {
   };
 }
 
-function handleChatPromptClick(promptText) {
+async function handleChatPromptClick(promptText) {
   const role = MOCK_DB.currentRole;
   chatHistory[role].push({ sender: 'user', text: promptText });
-  openAIChatSlidePanel();
+
+  if (role === 'customer') {
+    chatHistory[role].push({
+      sender: 'bot',
+      text: '<div class="chat-typing-indicator"><span></span><span></span><span></span></div>',
+      isTyping: true
+    });
+    openAIChatSlidePanel();
+
+    try {
+      const headers = getAuthHeaders();
+      const currentCustomerId = (typeof MOCK_DB !== 'undefined' && MOCK_DB.customer && MOCK_DB.customer.id) ? MOCK_DB.customer.id : 'CUST-001';
+      const res = await fetch(`${AI_SERVICE_URL}/api/v1/ai/customer/chat`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          message: promptText,
+          customer_id: currentCustomerId
+        })
+      });
+
+      const typingIdx = chatHistory[role].findIndex(m => m.isTyping);
+      if (typingIdx !== -1) chatHistory[role].splice(typingIdx, 1);
+
+      if (res.ok) {
+        const data = await res.json();
+        const botReply = data.response || 'No response received from AI service.';
+        chatHistory[role].push({ sender: 'bot', text: botReply });
+        openAIChatSlidePanel();
+        return;
+      }
+    } catch (err) {
+      console.warn('Chat prompt AI call error:', err);
+      const typingIdx = chatHistory[role].findIndex(m => m.isTyping);
+      if (typingIdx !== -1) chatHistory[role].splice(typingIdx, 1);
+    }
+  }
 
   setTimeout(() => {
     const reply = getMockChatResponse(promptText, role);
@@ -5061,6 +5367,113 @@ function renderRoleChatHistory(role) {
       `).join('');
 }
 
+/**
+ * Loads persistent Customer AI chat conversations from PostgreSQL.
+ */
+async function loadCustomerChatHistoryFromBackend() {
+  try {
+    const headers = (typeof getAuthHeaders === 'function') ? getAuthHeaders() : { 'Content-Type': 'application/json' };
+    const res = await fetch(`${CUSTOMER_SERVICE_URL}/customer/chat/conversations`, {
+      method: 'GET',
+      headers: headers
+    });
+
+    if (!res.ok) {
+      console.warn('Unable to load chat conversations from backend:', res.status);
+      return;
+    }
+
+    const conversations = await res.json();
+    const data = getRoleAiData('customer');
+
+    data.conversations = (conversations || []).map(c => ({
+      conversation_id: c.conversation_id,
+      title: c.title || 'Conversation',
+      created_at: c.created_at,
+      updated_at: c.updated_at,
+      last_message: c.last_message,
+      message_count: c.message_count || 0,
+      messages: []
+    }));
+
+    if (data.conversations.length > 0) {
+      if (!data.activeConversationId || !data.conversations.some(c => c.conversation_id === data.activeConversationId)) {
+        data.activeConversationId = data.conversations[0].conversation_id;
+      }
+      await fetchConversationMessages('customer', data.activeConversationId);
+    } else {
+      data.activeConversationId = null;
+      renderRoleChatMessages('customer', null);
+    }
+    renderRoleChatHistory('customer');
+  } catch (err) {
+    console.error('Error loading customer chat history:', err);
+  }
+}
+window.loadCustomerChatHistoryFromBackend = loadCustomerChatHistoryFromBackend;
+
+function formatChatTimestamp(val) {
+  if (!val) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  try {
+    let d;
+    if (val instanceof Date) {
+      d = val;
+    } else if (typeof val === 'string') {
+      if (val.includes('T') && !val.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(val)) {
+        d = new Date(val + 'Z');
+      } else {
+        d = new Date(val);
+      }
+    } else {
+      d = new Date(val);
+    }
+    if (isNaN(d.getTime())) {
+      return typeof val === 'string' ? val : 'Just now';
+    }
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (_) {
+    return 'Just now';
+  }
+}
+window.formatChatTimestamp = formatChatTimestamp;
+
+/**
+ * Fetches all persistent messages for a specific conversation from PostgreSQL.
+ */
+async function fetchConversationMessages(role, conversationId) {
+  if (!conversationId) return;
+  if (role !== 'customer') return;
+
+  const data = getRoleAiData(role);
+  const conv = data.conversations.find(c => c.conversation_id === conversationId);
+  if (!conv) return;
+
+  try {
+    const headers = (typeof getAuthHeaders === 'function') ? getAuthHeaders() : { 'Content-Type': 'application/json' };
+    const res = await fetch(`${CUSTOMER_SERVICE_URL}/customer/chat/conversations/${conversationId}/messages`, {
+      method: 'GET',
+      headers: headers
+    });
+
+    if (res.ok) {
+      const messages = await res.json();
+      conv.messages = (messages || []).map(m => {
+        return {
+          message_id: m.message_id,
+          conversation_id: m.conversation_id,
+          sender: m.sender_type,
+          content: m.message,
+          timestamp: formatChatTimestamp(m.created_at)
+        };
+      });
+      renderRoleChatMessages(role, conversationId);
+    }
+  } catch (err) {
+    console.error('Error fetching conversation messages:', err);
+  }
+}
+window.fetchConversationMessages = fetchConversationMessages;
+
 function renderRoleChatMessages(role, conversationId) {
   const container = document.getElementById(`${role}-chat-messages-container`);
   const titleEl = document.getElementById(`${role}-chat-current-title`);
@@ -5097,11 +5510,9 @@ function renderRoleChatMessages(role, conversationId) {
         <div class="message ${m.sender}">
           <div class="message-avatar">${m.sender === 'bot' ? '🤖' : def.avatar}</div>
           <div>
-            <div class="message-bubble">${m.content}</div>
+            <div class="message-bubble">${renderChatMarkdown(m.content || m.text)}</div>
             <div class="message-meta">
               <span>${m.timestamp || 'Just now'}</span>
-              ${m.source ? `<span class="meta-badge"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg> Source: ${m.source}</span>` : ''}
-              ${m.confidence ? `<span class="confidence-tag">✓ ${m.confidence} Confidence</span>` : ''}
             </div>
           </div>
         </div>
@@ -5110,11 +5521,20 @@ function renderRoleChatMessages(role, conversationId) {
   container.scrollTop = container.scrollHeight;
 }
 
-function selectRoleChatConversation(role, convId) {
+async function selectRoleChatConversation(role, convId) {
   const data = getRoleAiData(role);
   data.activeConversationId = convId;
   renderRoleChatHistory(role);
-  renderRoleChatMessages(role, convId);
+  if (role === 'customer') {
+    const conv = data.conversations.find(c => c.conversation_id === convId);
+    if (!conv || !conv.messages || conv.messages.length === 0) {
+      await fetchConversationMessages(role, convId);
+    } else {
+      renderRoleChatMessages(role, convId);
+    }
+  } else {
+    renderRoleChatMessages(role, convId);
+  }
 }
 
 function startNewRoleChat(role) {
@@ -5129,13 +5549,104 @@ function startNewRoleChat(role) {
   }
 }
 
-function sendRoleChatMessage(role, customText = null) {
+async function sendRoleChatMessage(role, customText = null) {
   const input = document.getElementById(`${role}-page-chat-input`);
   const text = (customText || (input ? input.value : '')).trim();
   if (!text) return;
 
   const data = getRoleAiData(role);
 
+  if (role === 'customer') {
+    let conv = data.activeConversationId ? data.conversations.find(c => c.conversation_id === data.activeConversationId) : null;
+    if (!conv) {
+      const tempId = `temp-${Date.now()}`;
+      const newTitle = text.length > 32 ? text.substring(0, 29) + '...' : text;
+      conv = {
+        conversation_id: tempId,
+        title: newTitle,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        messages: []
+      };
+      data.conversations.unshift(conv);
+      data.activeConversationId = tempId;
+    }
+
+    const userMsg = {
+      message_id: `msg-${Date.now()}`,
+      conversation_id: conv.conversation_id,
+      sender: 'user',
+      content: text,
+      timestamp: formatChatTimestamp(new Date())
+    };
+    conv.messages.push(userMsg);
+    if (input) input.value = '';
+    renderRoleChatHistory(role);
+
+    // Show typing animation
+    const typingMsg = {
+      message_id: `msg-typing-${Date.now()}`,
+      conversation_id: conv.conversation_id,
+      sender: 'bot',
+      content: '<div class="chat-typing-indicator"><span></span><span></span><span></span></div>',
+      timestamp: 'Thinking...',
+      isTyping: true
+    };
+    conv.messages.push(typingMsg);
+    renderRoleChatMessages(role, conv.conversation_id);
+
+    try {
+      const headers = (typeof getAuthHeaders === 'function') ? getAuthHeaders() : { 'Content-Type': 'application/json' };
+      const targetConvId = (conv.conversation_id && !conv.conversation_id.startsWith('temp-')) ? conv.conversation_id : null;
+      const res = await fetch(`${CUSTOMER_SERVICE_URL}/customer/chat/messages`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          message: text,
+          conversation_id: targetConvId
+        })
+      });
+
+      // Remove typing indicator
+      const typingIdx = conv.messages.findIndex(m => m.isTyping);
+      if (typingIdx !== -1) conv.messages.splice(typingIdx, 1);
+
+      if (res.ok) {
+        const chatData = await res.json();
+        if (chatData.conversation_id) {
+          conv.conversation_id = chatData.conversation_id;
+          data.activeConversationId = chatData.conversation_id;
+        }
+        if (chatData.title) {
+          conv.title = chatData.title;
+        }
+
+        const botMsg = {
+          message_id: chatData.message_id || `msg-${Date.now() + 1}`,
+          conversation_id: conv.conversation_id,
+          sender: 'bot',
+          content: chatData.response,
+          timestamp: formatChatTimestamp(chatData.created_at || new Date())
+        };
+        conv.messages.push(botMsg);
+        renderRoleChatHistory(role);
+        renderRoleChatMessages(role, conv.conversation_id);
+        return;
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        showToast(errJson.detail || 'Unable to send message.', 'error');
+      }
+    } catch (err) {
+      console.warn('Persistent chat send error:', err);
+      const typingIdx = conv.messages.findIndex(m => m.isTyping);
+      if (typingIdx !== -1) conv.messages.splice(typingIdx, 1);
+      showToast('Unable to connect to chat service.', 'error');
+    }
+    renderRoleChatMessages(role, conv.conversation_id);
+    return;
+  }
+
+  // Non-customer roles fallback
   if (!data.activeConversationId) {
     const newId = `conv-${role}-${Date.now()}`;
     const newTitle = text.length > 32 ? text.substring(0, 29) + '...' : text;
@@ -5168,20 +5679,12 @@ function sendRoleChatMessage(role, customText = null) {
 
   setTimeout(() => {
     const botReply = getMockChatResponse(text, role);
-    const sourceMap = {
-      customer: 'Policy Information',
-      agent: 'Agency Portfolio Ledger',
-      underwriter: 'Underwriting Guidelines & Risk Model',
-      admin: 'System Governance Matrix'
-    };
     const botMsg = {
       message_id: `msg-${Date.now() + 1}`,
       conversation_id: conv.conversation_id,
       sender: 'bot',
       content: botReply,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      source: sourceMap[role] || 'System Knowledge Base',
-      confidence: '95%'
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     conv.messages.push(botMsg);
     renderRoleChatMessages(role, conv.conversation_id);
@@ -7330,6 +7833,7 @@ function switchRole(role, targetPage = null) {
     fetchCustomerClaims();
     fetchCustomerRenewals();
     fetchNotifications();
+    loadCustomerChatHistoryFromBackend();
     navigateTo(pageToOpen);
   }
 }

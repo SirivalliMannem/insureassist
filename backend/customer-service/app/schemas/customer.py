@@ -218,4 +218,67 @@ class ProvideMoreInfoRequest(BaseModel):
     updated_answers: Optional[dict] = Field(default={}, description="Updated risk or policy answers")
 
 
+# =========================================================================
+# Customer AI Chat Schemas
+# =========================================================================
+
+class ChatMessageItem(BaseModel):
+    """
+    Schema representing an individual chat message in a conversation.
+    """
+    message_id: str = Field(..., description="Unique message ID")
+    conversation_id: str = Field(..., description="Conversation ID")
+    sender_type: str = Field(..., description="Sender type: 'user' or 'bot'")
+    message: str = Field(..., description="Message text content")
+    created_at: str = Field(..., description="Message creation timestamp")
+
+    class Config:
+        from_attributes = True
+
+
+class ChatConversationItem(BaseModel):
+    """
+    Schema representing a chat conversation session metadata.
+    """
+    conversation_id: str = Field(..., description="Unique conversation ID")
+    customer_id: str = Field(..., description="Owning customer ID")
+    title: str = Field(..., description="Conversation title or preview")
+    role: str = Field("customer", description="Target role")
+    created_at: str = Field(..., description="Creation ISO timestamp")
+    updated_at: str = Field(..., description="Last updated ISO timestamp")
+    last_message: Optional[str] = Field(None, description="Snippet of latest message")
+    message_count: int = Field(0, description="Total messages in conversation")
+
+    class Config:
+        from_attributes = True
+
+
+class CreateConversationRequest(BaseModel):
+    """
+    Request to start a new chat conversation.
+    """
+    title: Optional[str] = Field(None, description="Optional title for conversation")
+    initial_message: Optional[str] = Field(None, description="Optional initial user prompt")
+
+
+class SendMessageRequest(BaseModel):
+    """
+    Request to send a chat message within a conversation.
+    """
+    message: str = Field(..., min_length=1, max_length=4000, description="User prompt or question")
+    conversation_id: Optional[str] = Field(None, description="Target conversation ID; if omitted, active or new conversation is used")
+
+
+class CustomerChatResponse(BaseModel):
+    """
+    Response returned to frontend after processing Customer AI prompt.
+    """
+    conversation_id: str = Field(..., description="Conversation ID")
+    title: str = Field(..., description="Conversation title")
+    response: str = Field(..., description="AI response text")
+    message_id: str = Field(..., description="Message ID of the AI response")
+    created_at: str = Field(..., description="Response timestamp")
+
+
+
 
