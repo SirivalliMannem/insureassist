@@ -7663,29 +7663,305 @@ function updateComparisonTable() {
     `Both policies provide distinct and complementary coverage lines for complete portfolio protection.`;
 }
 
-function runCoverageCheck(query) {
-  const q = (query || '').toLowerCase();
-  let result = MOCK_DB.scenarios.default;
-  if (q.includes('pipe') || q.includes('water') || q.includes('leak') || q.includes('burst')) result = MOCK_DB.scenarios.pipe;
-  else if (q.includes('flood') || q.includes('storm surge') || q.includes('rising river')) result = MOCK_DB.scenarios.flood;
-  else if (q.includes('theft') || q.includes('stolen') || q.includes('robbery')) result = MOCK_DB.scenarios.theft;
-  else if (q.includes('accident') || q.includes('car') || q.includes('collision') || q.includes('auto')) result = MOCK_DB.scenarios.accident;
-  else if (q.includes('medical') || q.includes('abroad') || q.includes('travel') || q.includes('international')) result = MOCK_DB.scenarios.medical;
+function cleanCoverageText(txt) {
+  if (!txt) return '';
+  return txt
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/__(.*?)__/g, '<strong>$1</strong>')
+    .replace(/_(.*?)_/g, '$1');
+}
 
+function renderCoverageResult(data) {
   const resultBox = document.getElementById('coverage-result-box');
-  const statusBanner = document.getElementById('coverage-status-banner');
+  if (!resultBox) return;
 
-  resultBox.classList.add('visible');
-  statusBanner.className = 'coverage-status ' + (result.covered ? 'covered' : 'not-covered');
-  document.getElementById('coverage-status-title').textContent = result.covered ? '✓ Covered under Policy' : '✕ Not Covered (Excluded)';
-  document.getElementById('coverage-status-desc').textContent = result.desc;
-  document.getElementById('coverage-reason-text').textContent = result.reason;
-  document.getElementById('coverage-clause-text').textContent = result.clause;
-  document.getElementById('coverage-ref-text').textContent = result.ref;
+  const assessment = data.assessment || 'Requires Policy Review';
+  let bannerClass = 'coverage-status review';
+  let iconSvg = '<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+  if (assessment.toLowerCase().includes('potentially covered') || assessment.toLowerCase().includes('covered')) {
+    bannerClass = 'coverage-status covered';
+    iconSvg = '<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+  } else if (assessment.toLowerCase().includes('not listed') || assessment.toLowerCase().includes('not covered') || assessment.toLowerCase().includes('excluded')) {
+    bannerClass = 'coverage-status not-covered';
+    iconSvg = '<svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+  }
+
+  let cardsHtml = '';
+
+  // Why (Explanation & Details)
+  if (data.reason) {
+    cardsHtml += `
+      <div class="card" style="margin-bottom: 1rem;">
+        <div class="card-title" style="margin-bottom: 0.5rem; font-size: 0.95rem; font-weight: 700; color: #3B241D;">Why</div>
+        <p style="color: var(--gray-700); font-size: 0.9rem; line-height: 1.6; margin: 0;">${cleanCoverageText(data.reason)}</p>
+      </div>
+    `;
+  }
+
+  // Policy & Coverage Details (Relevant Policy, Relevant Coverage, Deductible)
+  const hasPolicyInfo = data.relevant_policy || data.relevant_coverage || data.applicable_deductible;
+  if (hasPolicyInfo) {
+    let policyDetails = [];
+    if (data.relevant_policy) {
+      policyDetails.push(`
+        <div style="flex: 1; min-width: 200px;">
+          <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); margin-bottom: 4px;">Relevant Policy</div>
+          <div style="font-weight: 600; color: #1E3A8A; font-size: 0.95rem;">${cleanCoverageText(data.relevant_policy)}</div>
+        </div>
+      `);
+    }
+    if (data.relevant_coverage) {
+      policyDetails.push(`
+        <div style="flex: 1; min-width: 200px;">
+          <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); margin-bottom: 4px;">Relevant Coverage</div>
+          <div style="font-weight: 600; color: #065F46; font-size: 0.95rem;">${cleanCoverageText(data.relevant_coverage)}</div>
+        </div>
+      `);
+    }
+    if (data.applicable_deductible) {
+      policyDetails.push(`
+        <div style="flex: 1; min-width: 150px;">
+          <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); margin-bottom: 4px;">Deductible</div>
+          <div style="font-weight: 700; color: #3B241D; font-size: 0.95rem;">${cleanCoverageText(data.applicable_deductible)}</div>
+        </div>
+      `);
+    }
+
+    cardsHtml += `
+      <div class="card" style="margin-bottom: 1rem; background: #FAF5F0; border: 1px solid #EADBCE;">
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start;">
+          ${policyDetails.join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Important (Relevant Exclusion or Limitation)
+  if (data.relevant_exclusion) {
+    cardsHtml += `
+      <div class="card" style="margin-bottom: 1rem; background: #FFFBEB; border: 1px solid #FDE68A;">
+        <div class="card-title" style="margin-bottom: 0.4rem; font-size: 0.9rem; font-weight: 700; color: #92400E; display: flex; align-items: center; gap: 6px;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Important
+        </div>
+        <p style="color: #78350F; font-size: 0.875rem; line-height: 1.5; margin: 0;">${cleanCoverageText(data.relevant_exclusion)}</p>
+      </div>
+    `;
+  }
+
+  // Next Step
+  if (data.recommended_action) {
+    cardsHtml += `
+      <div class="card" style="background: #F0FDF4; border: 1px solid #BBF7D0;">
+        <div class="card-title" style="margin-bottom: 0.4rem; font-size: 0.9rem; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 6px;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 16 16 12 12 8"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Next Step
+        </div>
+        <p style="color: #14532D; font-size: 0.875rem; line-height: 1.5; margin: 0;">${cleanCoverageText(data.recommended_action)}</p>
+      </div>
+    `;
+  }
+
+  resultBox.innerHTML = `
+    <div class="${bannerClass}" id="coverage-status-banner">
+      ${iconSvg}
+      <div>
+        <h3 id="coverage-status-title">${cleanCoverageText(assessment)}</h3>
+        ${data.status_description ? `<p id="coverage-status-desc" style="font-size: 0.9rem; margin-top: 2px;">${cleanCoverageText(data.status_description)}</p>` : ''}
+      </div>
+    </div>
+    ${cardsHtml}
+  `;
+}
+
+async function runCoverageCheck(query) {
+  if (!query || !query.trim()) return;
+
+  const submitBtn = document.getElementById('coverage-submit-btn');
+  const resultBox = document.getElementById('coverage-result-box');
+
+  const originalBtnText = submitBtn ? submitBtn.textContent : 'Check Coverage';
+  if (submitBtn) {
+    submitBtn.textContent = 'Checking Coverage...';
+    submitBtn.disabled = true;
+  }
+
+  if (resultBox) {
+    resultBox.classList.add('visible');
+    resultBox.innerHTML = `
+      <div style="padding: 2rem; text-align: center; color: var(--gray-600); background: #FAF5F0; border: 1px solid #EADBCE; border-radius: 16px;">
+        <div style="display: inline-block; width: 24px; height: 24px; border: 3px solid #D97706; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 0.75rem;"></div>
+        <div style="font-weight: 600; color: #3B241D; font-size: 0.95rem;">Checking Coverage...</div>
+        <div style="font-size: 0.8rem; color: var(--gray-500); margin-top: 4px;">Evaluating scenario against your active policies, deductibles, and exclusions</div>
+      </div>
+    `;
+  }
+
+  try {
+    const headers = (typeof getAuthHeaders === 'function') ? getAuthHeaders() : { 'Content-Type': 'application/json' };
+    const res = await fetch(`${CUSTOMER_SERVICE_URL}/customer/coverage/check`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ scenario: query.trim() })
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || `Coverage check failed (${res.status})`);
+    }
+
+    const data = await res.json();
+    renderCoverageResult(data);
+  } catch (err) {
+    console.error('Coverage check error:', err);
+    if (resultBox) {
+      resultBox.innerHTML = `
+        <div class="coverage-status not-covered">
+          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          <div>
+            <h3>Unable to Check Coverage</h3>
+            <p style="font-size: 0.9rem; margin-top: 2px;">${err.message || 'Please verify your connection and try again.'}</p>
+          </div>
+        </div>
+      `;
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.textContent = originalBtnText;
+      submitBtn.disabled = false;
+    }
+  }
+}
+
+function cleanGlossaryText(txt) {
+  if (!txt) return '';
+  return txt
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/__(.*?)__/g, '<strong>$1</strong>')
+    .replace(/_(.*?)_/g, '$1');
+}
+
+const glossaryAiCache = {};
+
+async function explainGlossaryTermWithAI(term, definition, termId) {
+  const resultContainer = document.getElementById(`glossary-ai-result-${termId}`);
+  const btn = document.getElementById(`btn-explain-${termId}`);
+  if (!resultContainer) return;
+
+  // Toggle if already visible
+  if (resultContainer.dataset.expanded === 'true') {
+    resultContainer.innerHTML = '';
+    resultContainer.dataset.expanded = 'false';
+    if (btn) btn.innerHTML = '✨ Explain with AI';
+    return;
+  }
+
+  // If cached, render immediately
+  if (glossaryAiCache[termId]) {
+    renderGlossaryAiCard(glossaryAiCache[termId], termId);
+    resultContainer.dataset.expanded = 'true';
+    if (btn) btn.innerHTML = '✨ Hide AI Explanation';
+    return;
+  }
+
+  // Show loading indicator
+  if (btn) {
+    btn.classList.add('loading');
+    btn.innerHTML = '✨ Generating...';
+  }
+  resultContainer.innerHTML = `
+    <div class="glossary-ai-card">
+      <div class="glossary-ai-card-title">✨ AI Explanation</div>
+      <div class="chat-typing-indicator" style="margin: 0.5rem 0;"><span></span><span></span><span></span></div>
+      <div style="font-size:0.825rem; color:#7A4A3A;">Analyzing insurance concept and your active policies...</div>
+    </div>
+  `;
+
+  try {
+    const headers = (typeof getAuthHeaders === 'function') ? getAuthHeaders() : { 'Content-Type': 'application/json' };
+    const res = await fetch(`${CUSTOMER_SERVICE_URL}/customer/glossary/explain`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        term: term,
+        definition: definition
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      glossaryAiCache[termId] = data;
+      renderGlossaryAiCard(data, termId);
+      resultContainer.dataset.expanded = 'true';
+      if (btn) {
+        btn.classList.remove('loading');
+        btn.innerHTML = '✨ Hide AI Explanation';
+      }
+    } else {
+      const errJson = await res.json().catch(() => ({}));
+      resultContainer.innerHTML = '';
+      if (btn) {
+        btn.classList.remove('loading');
+        btn.innerHTML = '✨ Explain with AI';
+      }
+      showToast(errJson.detail || 'Unable to generate AI explanation.', 'error');
+    }
+  } catch (err) {
+    console.error('Glossary AI error:', err);
+    resultContainer.innerHTML = '';
+    if (btn) {
+      btn.classList.remove('loading');
+      btn.innerHTML = '✨ Explain with AI';
+    }
+    showToast('Unable to connect to AI explanation service.', 'error');
+  }
+}
+
+function renderGlossaryAiCard(data, termId) {
+  const resultContainer = document.getElementById(`glossary-ai-result-${termId}`);
+  if (!resultContainer) return;
+
+  const simplified = cleanGlossaryText(data.simplified_explanation || '');
+  const example = cleanGlossaryText(data.example || '');
+  const policyCtx = cleanGlossaryText(data.your_policy_context || '');
+  const takeaways = Array.isArray(data.key_takeaways) ? data.key_takeaways : [];
+
+  resultContainer.innerHTML = `
+    <div class="glossary-ai-card">
+      <div class="glossary-ai-card-title">✨ AI Explanation</div>
+      
+      <div class="glossary-ai-section">
+        <div class="glossary-ai-content">${simplified}</div>
+      </div>
+
+      <div class="glossary-ai-section">
+        <div class="glossary-ai-label">Real-world example</div>
+        <div class="glossary-ai-content">${example}</div>
+      </div>
+
+      ${policyCtx ? `
+      <div class="glossary-ai-section">
+        <div class="glossary-ai-label">In your policy</div>
+        <div class="glossary-ai-policy-box">${policyCtx}</div>
+      </div>` : ''}
+
+      ${takeaways.length > 0 ? `
+      <div class="glossary-ai-section">
+        <div class="glossary-ai-label">Key takeaways</div>
+        <ul class="glossary-ai-takeaways-list">
+          ${takeaways.map(t => `<li>${cleanGlossaryText(t)}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+    </div>
+  `;
 }
 
 function renderGlossaryList(searchTerm = '') {
   const container = document.getElementById('glossary-container');
+  if (!container) return;
   const q = searchTerm.toLowerCase().trim();
   const filtered = MOCK_DB.glossary.filter(item =>
     item.term.toLowerCase().includes(q) || item.definition.toLowerCase().includes(q)
@@ -7696,14 +7972,27 @@ function renderGlossaryList(searchTerm = '') {
     return;
   }
 
-  container.innerHTML = filtered.map(item => `
-        <div class="card glossary-term">
+  container.innerHTML = filtered.map(item => {
+    const termId = item.term.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const safeTerm = item.term.replace(/'/g, "\\'");
+    const safeDef = item.definition.replace(/'/g, "\\'");
+
+    return `
+      <div class="card glossary-term" id="glossary-term-${termId}">
+        <div class="glossary-term-header">
           <h4>${item.term}</h4>
-          <p class="definition">${item.definition}</p>
-          <div class="example"><strong>Example:</strong> ${item.example}</div>
+          <button class="btn-ai-explain" id="btn-explain-${termId}" onclick="explainGlossaryTermWithAI('${safeTerm}', '${safeDef}', '${termId}')">
+            ✨ Explain with AI
+          </button>
         </div>
-      `).join('');
+        <p class="definition">${item.definition}</p>
+        <div class="example"><strong>Example:</strong> ${item.example}</div>
+        <div id="glossary-ai-result-${termId}" data-expanded="false"></div>
+      </div>
+    `;
+  }).join('');
 }
+
 
 function switchRole(role, targetPage = null) {
   const normalizedRole = (role || 'customer').toString().toLowerCase();
@@ -9994,6 +10283,7 @@ if (typeof renderComparisonSelectors === 'function') window.renderComparisonSele
 if (typeof updateComparisonTable === 'function') window.updateComparisonTable = updateComparisonTable;
 if (typeof runCoverageCheck === 'function') window.runCoverageCheck = runCoverageCheck;
 if (typeof renderGlossaryList === 'function') window.renderGlossaryList = renderGlossaryList;
+if (typeof explainGlossaryTermWithAI === 'function') window.explainGlossaryTermWithAI = explainGlossaryTermWithAI;
 if (typeof switchRole === 'function') window.switchRole = switchRole;
 if (typeof navigateTo === 'function') window.navigateTo = navigateTo;
 if (typeof showToast === 'function') window.showToast = showToast;

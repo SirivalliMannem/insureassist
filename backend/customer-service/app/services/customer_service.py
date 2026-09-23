@@ -33,7 +33,11 @@ from app.schemas.customer import (
     ChatConversationItem,
     CreateConversationRequest,
     SendMessageRequest,
-    CustomerChatResponse
+    CustomerChatResponse,
+    GlossaryExplainRequest,
+    GlossaryExplainResponse,
+    CoverageCheckRequest,
+    CoverageCheckResponse
 )
 
 logger = logging.getLogger("customer_service.chat")
@@ -1488,6 +1492,100 @@ class CustomerService:
         db.delete(conv)
         db.commit()
         return {"success": True, "detail": "Conversation deleted successfully."}
+
+    @staticmethod
+    def explain_glossary_term(req: GlossaryExplainRequest, customer: Customer, db: Session) -> GlossaryExplainResponse:
+        """
+        Retrieves live customer context from PostgreSQL and forwards glossary explanation request to AI Service.
+        """
+        customer_context = CustomerService.get_customer_ai_context(customer, db)
+        ai_service_url = os.environ.get("AI_SERVICE_URL", "http://insureassist-ai-container:8006")
+        endpoint = f"{ai_service_url}/api/v1/ai/customer/glossary/explain"
+
+        payload = {
+            "term": req.term,
+            "definition": req.definition,
+            "custom_question": req.custom_question,
+            "context": customer_context
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req_obj = urllib.request.Request(
+            endpoint,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+        try:
+            with urllib.request.urlopen(req_obj, timeout=30) as resp:
+                res_data = json.loads(resp.read().decode("utf-8"))
+                return GlossaryExplainResponse(
+                    term=res_data.get("term", req.term),
+                    simplified_explanation=res_data.get("simplified_explanation", req.definition or f"Explanation of {req.term}"),
+                    example=res_data.get("example", f"For example, in standard insurance, {req.term.lower()} is a key contract term."),
+                    your_policy_context=res_data.get("your_policy_context", ""),
+                    key_takeaways=res_data.get("key_takeaways", [])
+                )
+        except Exception as e:
+            logger.error(f"Failed to reach AI service for glossary explanation at {endpoint}: {e}")
+            return GlossaryExplainResponse(
+                term=req.term,
+                simplified_explanation=req.definition or f"An essential insurance term relating to {req.term.lower()}.",
+                example=f"In standard Property & Casualty insurance, {req.term.lower()} establishes specific rights and responsibilities on covered claims.",
+                your_policy_context="",
+                key_takeaways=[
+                    f"Check your policy declarations page to see how {req.term.lower()} applies to your coverage.",
+                    "Contact your assigned insurance agent for assistance."
+                ]
+            )
+
+    @staticmethod
+    def check_coverage(req: CoverageCheckRequest, customer: Customer, db: Session) -> CoverageCheckResponse:
+        """
+        Retrieves live customer policy/coverage/deductible/exclusion context from PostgreSQL
+        and evaluates scenario through AI Service.
+        """
+        customer_context = CustomerService.get_customer_ai_context(customer, db)
+        ai_service_url = os.environ.get("AI_SERVICE_URL", "http://insureassist-ai-container:8006")
+        endpoint = f"{ai_service_url}/api/v1/ai/customer/coverage/check"
+
+        payload = {
+            "scenario": req.scenario,
+            "context": customer_context
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req_obj = urllib.request.Request(
+            endpoint,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+        try:
+            with urllib.request.urlopen(req_obj, timeout=30) as resp:
+                res_data = json.loads(resp.read().decode("utf-8"))
+                return CoverageCheckResponse(
+                    scenario=res_data.get("scenario", req.scenario),
+                    assessment=res_data.get("assessment", "Requires Policy Review"),
+                    status_description=res_data.get("status_description", "Coverage assessment based on active policy records."),
+                    reason=res_data.get("reason", "Please check your declarations page for peril details."),
+                    relevant_policy=res_data.get("relevant_policy"),
+                    relevant_coverage=res_data.get("relevant_coverage"),
+                    relevant_exclusion=res_data.get("relevant_exclusion"),
+                    applicable_deductible=res_data.get("applicable_deductible"),
+                    recommended_action=res_data.get("recommended_action", "Contact your assigned agent for full policy verification.")
+                )
+        except Exception as e:
+            logger.error(f"Failed to reach AI service for coverage evaluation at {endpoint}: {e}")
+            return CoverageCheckResponse(
+                scenario=req.scenario,
+                assessment="Requires Policy Review",
+                status_description="Temporary AI service interruption. Please review your active policy binder or contact your assigned agent.",
+                reason="Unable to connect to real-time AI evaluation service at this moment.",
+                relevant_policy=None,
+                relevant_coverage=None,
+                relevant_exclusion=None,
+                applicable_deductible=None,
+                recommended_action="Contact your assigned insurance agent to confirm coverage."
+            )
+
+
 
 
 

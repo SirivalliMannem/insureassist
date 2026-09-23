@@ -219,12 +219,21 @@ class CustomerContextService:
                 for p in policies[:8]:
                     pol_num = p.get('policy_number', p.get('id'))
                     pol_type = p.get('type', 'Insurance')
-                    lines.append(
+                    pol_line = (
                         f"  * Policy {pol_num}: Type='{pol_type}', Category='{p.get('category')}', "
                         f"Status='{p.get('status')}', Premium='{p.get('premium')}', Deductible='{p.get('deductible')}', "
                         f"Effective='{p.get('effective_date')}' to '{p.get('expiry_date')}' | "
                         f"Available Document: '{pol_type} Policy' ({pol_num})"
                     )
+                    covs = p.get('coverages')
+                    if covs and isinstance(covs, list):
+                        cov_names = [f"{c.get('name') or c.get('coverage_name')} (Limit: {c.get('limit') or c.get('coverage_limit', 'N/A')}, Ded: {c.get('deductible', '$0')})" if isinstance(c, dict) else str(c) for c in covs]
+                        pol_line += f" | Coverages: [{', '.join(cov_names)}]"
+                    excls = p.get('exclusions')
+                    if excls and isinstance(excls, list):
+                        ex_names = [e.get('exclusion_name') if isinstance(e, dict) else str(e) for e in excls]
+                        pol_line += f" | Exclusions: [{', '.join(ex_names)}]"
+                    lines.append(pol_line)
             else:
                 lines.append("- Active Policies: Customer has no active insurance policies recorded.")
 
@@ -272,4 +281,55 @@ class CustomerContextService:
         lines = ["CUSTOMER CONTEXT (Explicit):"]
         for k, v in explicit_context.items():
             lines.append(f"- {k}: {v}")
+        return "\n".join(lines)
+
+    @classmethod
+    def format_coverage_context(cls, ctx: Dict[str, Any]) -> str:
+        """
+        Formats complete policy, coverage, limit, deductible, and exclusion details specifically
+        for Coverage Checker AI analysis.
+        """
+        lines: List[str] = ["CUSTOMER ACTIVE POLICIES & COVERAGE RULES:"]
+        policies = ctx.get("policies") or []
+        if not policies:
+            return "No active policies found on file for this customer."
+
+        for p in policies:
+            pol_num = p.get('policy_number', p.get('id', 'N/A'))
+            pol_type = p.get('type', 'Insurance')
+            status = p.get('status', 'Active')
+            deductible = p.get('deductible', 'N/A')
+            category = p.get('category', 'P&C')
+            eff = p.get('effective_date', 'N/A')
+            exp = p.get('expiry_date', 'N/A')
+
+            lines.append(f"\n--- Policy: {pol_type} ({pol_num}) ---")
+            lines.append(f"Status: {status} | Category: {category} | Primary Deductible: {deductible}")
+            lines.append(f"Effective Dates: {eff} to {exp}")
+
+            # Coverages
+            covs = p.get('coverages') or []
+            if covs:
+                lines.append("Included Coverage Lines:")
+                for c in covs:
+                    if isinstance(c, dict):
+                        cov_name = c.get('name') or c.get('coverage_name', 'Coverage')
+                        cov_limit = c.get('limit') or c.get('coverage_limit', 'N/A')
+                        cov_ded = c.get('deductible') or deductible
+                        lines.append(f"  • {cov_name} | Limit: {cov_limit} | Deductible: {cov_ded}")
+                    elif isinstance(c, str):
+                        lines.append(f"  • {c}")
+            else:
+                lines.append("Included Coverage Lines: Standard comprehensive policy schedule")
+
+            # Exclusions
+            excls = p.get('exclusions') or []
+            if excls:
+                lines.append("Explicit Exclusions & Limitations:")
+                for e in excls:
+                    ex_name = e.get('exclusion_name') if isinstance(e, dict) else str(e)
+                    lines.append(f"  • {ex_name}")
+            else:
+                lines.append("Explicit Exclusions: Standard unendorsed flood, intentional acts, and international territorial exclusions")
+
         return "\n".join(lines)

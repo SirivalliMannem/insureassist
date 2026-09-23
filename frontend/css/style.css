@@ -4113,19 +4113,73 @@
       padding: 1.25rem; border-radius: 16px; margin-bottom: 1rem;
     }
     .coverage-status.covered { background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; }
+    .coverage-status.review { background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; }
     .coverage-status.not-covered { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
-    .coverage-status h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.2rem; font-weight: 700; }
+    .coverage-status h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.2rem; font-weight: 700; margin: 0; }
 
     /* Glossary Page */
     .glossary-search { margin-bottom: 1.5rem; }
-    .glossary-search input { width: 100%; padding: 0.85rem 1rem; border: 1px solid #EADBCE; border-radius: 10px; }
-    .glossary-term { margin-bottom: 1rem; }
-    .glossary-term h4 { font-family: 'Playfair Display', Georgia, serif; color: #3B241D; font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 700; }
-    .glossary-term .definition { color: #5C4740; margin-bottom: 0.65rem; font-size: 0.925rem; }
+    .glossary-search input { width: 100%; padding: 0.85rem 1rem; border: 1px solid #EADBCE; border-radius: 10px; font-size: 0.95rem; }
+    .glossary-term { margin-bottom: 1.25rem; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .glossary-term-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem; }
+    .glossary-term h4 { font-family: 'Playfair Display', Georgia, serif; color: #3B241D; font-size: 1.15rem; font-weight: 700; margin: 0; }
+    .btn-ai-explain {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 0.4rem 0.85rem; border-radius: 20px;
+      font-size: 0.8rem; font-weight: 600;
+      color: #9A3412; background: #FFF7ED;
+      border: 1px solid #FFEDD5; cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-ai-explain:hover {
+      background: #FFEDD5; color: #7C2D12; border-color: #FDBA74;
+      transform: translateY(-1px);
+    }
+    .btn-ai-explain.loading {
+      opacity: 0.7; pointer-events: none;
+    }
+    .glossary-term .definition { color: #5C4740; margin-bottom: 0.75rem; font-size: 0.925rem; line-height: 1.5; }
     .glossary-term .example {
       padding: 0.85rem 1rem; background: #FFF7ED; border-radius: 10px;
       font-size: 0.85rem; color: #9A3412; border-left: 3px solid #C2410C;
+      margin-bottom: 0.5rem;
     }
+    .glossary-ai-card {
+      margin-top: 1rem; padding: 1.15rem; background: #FAF5F0;
+      border: 1px solid #EADBCE; border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(59, 36, 29, 0.04);
+      animation: fadeIn 0.25s ease-in-out;
+    }
+    .glossary-ai-card-title {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.85rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #9A3412; margin-bottom: 0.75rem;
+    }
+    .glossary-ai-section {
+      margin-bottom: 0.85rem;
+    }
+    .glossary-ai-section:last-child {
+      margin-bottom: 0;
+    }
+    .glossary-ai-label {
+      font-size: 0.775rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #7A4A3A; margin-bottom: 0.25rem;
+    }
+    .glossary-ai-content {
+      font-size: 0.875rem; color: #3B241D; line-height: 1.5;
+    }
+    .glossary-ai-policy-box {
+      padding: 0.75rem 0.9rem; background: #F0FDF4; border: 1px solid #BBF7D0;
+      border-radius: 8px; color: #166534; font-size: 0.85rem; line-height: 1.45;
+    }
+    .glossary-ai-takeaways-list {
+      margin: 0.35rem 0 0 1.25rem; padding: 0; font-size: 0.85rem; color: #5C4740;
+    }
+    .glossary-ai-takeaways-list li {
+      margin-bottom: 0.25rem;
+    }
+
 
     /* Profile Page */
     .profile-header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; }

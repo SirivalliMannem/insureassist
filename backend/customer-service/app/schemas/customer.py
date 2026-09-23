@@ -280,5 +280,49 @@ class CustomerChatResponse(BaseModel):
     created_at: str = Field(..., description="Response timestamp")
 
 
+class GlossaryExplainRequest(BaseModel):
+    """
+    Customer request to explain an insurance glossary term with AI.
+    """
+    term: str = Field(..., min_length=1, description="Insurance term to explain")
+    definition: Optional[str] = Field(None, description="Standard definition of the term")
+    custom_question: Optional[str] = Field(None, description="Optional custom question from customer")
+
+
+class GlossaryExplainResponse(BaseModel):
+    """
+    AI-generated explanation and contextual policy application for a glossary term.
+    """
+    term: str = Field(..., description="The insurance term explained")
+    simplified_explanation: str = Field(..., description="Simple, plain-language explanation")
+    example: str = Field(..., description="Clear real-world insurance example")
+    your_policy_context: str = Field("", description="How the term applies to customer's actual policy if context available")
+    key_takeaways: List[str] = Field(default_factory=list, description="Key takeaways or summary points")
+
+
+class CoverageCheckRequest(BaseModel):
+    """
+    Customer request to evaluate a coverage scenario against their policies.
+    """
+    scenario: str = Field(..., min_length=1, max_length=4000, description="Customer incident or scenario to evaluate")
+
+
+class CoverageCheckResponse(BaseModel):
+    """
+    AI-assisted coverage assessment and policy application details.
+    """
+    scenario: str = Field(..., description="The scenario evaluated")
+    assessment: str = Field(..., description="Coverage assessment: 'Potentially Covered', 'Not Listed in Available Coverage', or 'Requires Policy Review'")
+    status_description: str = Field(..., description="High-level description of the assessment")
+    reason: str = Field(..., description="Detailed explanation of why this assessment was reached")
+    relevant_policy: Optional[str] = Field(None, description="Name and number of the matching policy if applicable")
+    relevant_coverage: Optional[str] = Field(None, description="Specific coverage line item if applicable")
+    relevant_exclusion: Optional[str] = Field(None, description="Relevant policy exclusion or limitation if applicable")
+    applicable_deductible: Optional[str] = Field(None, description="Applicable deductible amount if found in policy")
+    recommended_action: Optional[str] = Field(None, description="Recommended next steps for the customer")
+
+
+
+
 
 

@@ -22,7 +22,11 @@ from app.schemas.customer import (
     ChatConversationItem,
     CreateConversationRequest,
     SendMessageRequest,
-    CustomerChatResponse
+    CustomerChatResponse,
+    GlossaryExplainRequest,
+    GlossaryExplainResponse,
+    CoverageCheckRequest,
+    CoverageCheckResponse
 )
 from app.services.customer_service import CustomerService
 
@@ -462,7 +466,40 @@ async def delete_conversation_endpoint(
     return CustomerService.delete_chat_conversation(conversation_id, current_customer, db)
 
 
+@router.post(
+    "/glossary/explain",
+    response_model=GlossaryExplainResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Explain Insurance Glossary Term with AI",
+    description="Generates a simplified explanation, real-world example, and personalized policy application for the authenticated customer."
+)
+async def explain_glossary_term_endpoint(
+    req: GlossaryExplainRequest,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Explain insurance glossary term with AI grounding for the authenticated customer.
+    """
+    return CustomerService.explain_glossary_term(req, current_customer, db)
 
+
+@router.post(
+    "/coverage/check",
+    response_model=CoverageCheckResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Check Coverage Scenario with AI",
+    description="Evaluates a real-world scenario against the customer's active policies, limits, deductibles, and exclusions."
+)
+async def check_coverage_endpoint(
+    req: CoverageCheckRequest,
+    current_customer: Customer = Depends(get_current_customer),
+    db: Session = Depends(get_db)
+):
+    """
+    Check customer scenario against live active policies and coverage rules using AI Service.
+    """
+    return CustomerService.check_coverage(req, current_customer, db)
 
 
 # =========================================================================
