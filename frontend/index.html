@@ -13,39 +13,223 @@
 
 
   <!-- ==========================================================================
-       1. LOGIN SCREEN WITH ROLE SELECTOR (CUSTOMER / AGENT)
+       1. STANDALONE PUBLIC LANDING PAGE (APPROVED DESIGN)
        ========================================================================== -->
-  <div id="login-screen">
-    <div class="login-left">
-      <div class="login-brand">
-        <div class="login-brand-icon">
-          <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <div id="landing-page" class="landing-container">
+    <!-- MINIMAL LANDING HEADER -->
+    <header class="landing-header">
+      <div class="landing-brand">
+        <div class="landing-brand-logo">
+          <svg width="22" height="22" fill="none" stroke="#FFFFFF" stroke-width="2.3" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <h1>InsureAssist</h1>
+        <span class="landing-brand-name">InsureAssist</span>
       </div>
-      <h2>Intelligent insurance management for customers and agents</h2>
-      <p>Seamlessly manage assigned customer portfolios, policy lifecycles, renewal tracking, and AI-powered policy guidance.</p>
-    </div>
-    <div class="login-right">
-      <div class="login-card">
-        <h3 id="login-title">Sign In to InsureAssist</h3>
-        <p class="subtitle" id="login-subtitle">Enter your email and password to access your portal</p>
+      <div class="landing-header-right">
+        <button type="button" class="btn-landing-user-signin" id="landing-header-signin-btn" onclick="showLoginScreen()" title="Sign in to Portal" aria-label="Sign in to Portal">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Sign in</span>
+        </button>
+      </div>
+    </header>
 
-        <form id="login-form">
-          <div class="form-group">
-            <label for="email" id="login-email-label">Email Address</label>
-            <input type="email" id="email" placeholder="name@example.com" required>
-          </div>
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Enter your password" required>
-          </div>
-          <button type="submit" class="btn btn-primary btn-block" id="login-submit-btn">Sign In</button>
-        </form>
+    <!-- LANDING HERO SECTION -->
+    <main class="landing-hero">
+      <!-- LEFT HERO CONTENT -->
+      <div class="landing-hero-left">
+        <div class="landing-eyebrow">INTELLIGENT INSURANCE PLATFORM</div>
+        <h1 class="landing-title">
+          One platform.<br>
+          <span class="landing-title-italic">Every policy.</span>
+        </h1>
+        <div class="landing-tagline">Protection, connected.</div>
+        <p class="landing-description">
+          Manage policies, applications, claims, and intelligent policy guidance in one secure, unified platform.
+        </p>
+        <div class="landing-actions">
+          <button type="button" class="btn btn-hero-cta" id="landing-hero-signin-btn" onclick="showLoginScreen()">
+            <span>Sign in to Portal</span>
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
 
-        <div class="login-hint">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <span id="login-hint-text">Your portal dashboard and permissions are automatically authenticated by the backend service.</span>
+      <!-- RIGHT HERO VISUAL: CONNECTED CIRCULAR 6-CAPABILITY HUB (RADIAL STAGGERED) -->
+      <div class="landing-hero-right">
+        <div class="hub-visual-container">
+          <!-- Concentric Orbit Rings & Radial Connector Lines SVG -->
+          <svg class="hub-svg-backdrop" viewBox="0 0 520 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="260" cy="250" r="70" stroke="rgba(200, 90, 50, 0.18)" stroke-width="1.2" stroke-dasharray="3 3" />
+            <circle cx="260" cy="250" r="140" stroke="rgba(200, 90, 50, 0.14)" stroke-width="1.2" />
+            <circle cx="260" cy="250" r="205" stroke="rgba(42, 24, 16, 0.08)" stroke-width="1" stroke-dasharray="5 5" />
+            <!-- Radial Connection Lines from Center (260,250) to 6 Staggered Nodes -->
+            <!-- 1. Top Center (260, 55) -->
+            <line x1="260" y1="250" x2="260" y2="55" stroke="rgba(200, 90, 50, 0.22)" stroke-width="1.2" stroke-dasharray="3 3" />
+            <!-- 6. Upper Left (110, 120) -->
+            <line x1="260" y1="250" x2="110" y2="120" stroke="rgba(200, 90, 50, 0.22)" stroke-width="1.2" stroke-dasharray="3 3" />
+            <!-- 2. Upper Right (410, 160) - Slightly Lower than Card 6 -->
+            <line x1="260" y1="250" x2="410" y2="160" stroke="rgba(200, 90, 50, 0.22)" stroke-width="1.2" stroke-dasharray="3 3" />
+            <!-- 5. Lower Left (110, 335) -->
+            <line x1="260" y1="250" x2="110" y2="335" stroke="rgba(200, 90, 50, 0.22)" stroke-width="1.2" stroke-dasharray="3 3" />
+            <!-- 3. Lower Right (410, 380) - Slightly Lower than Card 5 -->
+            <line x1="260" y1="250" x2="410" y2="380" stroke="rgba(200, 90, 50, 0.22)" stroke-width="1.2" stroke-dasharray="3 3" />
+            <!-- 4. Bottom Center (260, 445) -->
+            <line x1="260" y1="250" x2="260" y2="445" stroke="rgba(200, 90, 50, 0.22)" stroke-width="1.2" stroke-dasharray="3 3" />
+          </svg>
+
+          <!-- Central Shield Logo Hub -->
+          <div class="hub-center-logo" title="InsureAssist Platform">
+            <div class="hub-center-icon">
+              <svg width="26" height="26" fill="none" stroke="#FFFFFF" stroke-width="2.3" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+          </div>
+
+          <!-- EXACTLY SIX CUSTOMER CAPABILITY CARDS (RADIAL STAGGERED ORBIT - HOVER INTERACTIVE ONLY) -->
+          <!-- 1. MY POLICIES (Top Center) -->
+          <div class="capability-card cap-node-1">
+            <div class="capability-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="capability-content">
+              <div class="capability-title">MY POLICIES</div>
+              <div class="capability-desc">Manage Active Policies</div>
+            </div>
+          </div>
+
+          <!-- 2. COVERAGE CHECKER (Upper Right - Slightly Lower than Card 6) -->
+          <div class="capability-card cap-node-2">
+            <div class="capability-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div class="capability-content">
+              <div class="capability-title">COVERAGE CHECKER</div>
+              <div class="capability-desc">Understand Your Coverage</div>
+            </div>
+          </div>
+
+          <!-- 3. AI ASSISTANT (Lower Right - Slightly Lower than Card 5) -->
+          <div class="capability-card cap-node-3">
+            <div class="capability-icon terracotta-tint">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="capability-content">
+              <div class="capability-title">AI ASSISTANT</div>
+              <div class="capability-desc">Get Policy Guidance</div>
+            </div>
+          </div>
+
+          <!-- 4. CLAIMS (Bottom Center) -->
+          <div class="capability-card cap-node-4">
+            <div class="capability-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="capability-content">
+              <div class="capability-title">CLAIMS</div>
+              <div class="capability-desc">Track Your Claims</div>
+            </div>
+          </div>
+
+          <!-- 5. POLICY APPLICATIONS (Lower Left) -->
+          <div class="capability-card cap-node-5">
+            <div class="capability-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div class="capability-content">
+              <div class="capability-title">POLICY APPLICATIONS</div>
+              <div class="capability-desc">Apply & Track Policies</div>
+            </div>
+          </div>
+
+          <!-- 6. INSURANCE GLOSSARY (Upper Left - Higher than Card 2) -->
+          <div class="capability-card cap-node-6">
+            <div class="capability-icon">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <div class="capability-content">
+              <div class="capability-title">INSURANCE GLOSSARY</div>
+              <div class="capability-desc">Understand Insurance Terms</div>
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+
+
+  <!-- ==========================================================================
+       2. REDESIGNED SEPARATE LOGIN SCREEN (INSUREASSIST AUTHENTICATION)
+       ========================================================================== -->
+  <div id="login-screen" style="display: none;">
+    <div class="login-wrapper">
+      <!-- Back to Landing Link -->
+      <button type="button" class="login-back-btn" onclick="showLandingPage()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span>Back to Overview</span>
+      </button>
+
+      <div class="login-split-container">
+        <!-- LEFT SIDE: InsureAssist Brand & Product Statement -->
+        <div class="login-left-brand">
+          <div class="login-brand-header">
+            <div class="login-brand-logo-sq">
+              <svg width="26" height="26" fill="none" stroke="#FFFFFF" stroke-width="2.3" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h2 class="login-brand-heading">InsureAssist</h2>
+          </div>
+
+          <div class="login-editorial-block">
+            <h3 class="login-editorial-title">
+              One platform.<br>
+              <span class="editorial-italic">Every policy.</span>
+            </h3>
+            <div class="login-editorial-tagline">Protection, connected.</div>
+            <p class="login-editorial-desc">
+              Manage your insurance with clarity, confidence, and intelligent guidance.
+            </p>
+          </div>
+
+          <div class="login-footer-pill">
+            <span class="dot-indicator"></span>
+            <span>Enterprise Insurance Portal</span>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDE: Clean, Warm-White Authentication Card -->
+        <div class="login-right-card">
+          <div class="login-card-inner">
+            <div class="login-card-header">
+              <h3 id="login-title">Welcome back</h3>
+              <p class="subtitle" id="login-subtitle">Sign in to continue to your portal</p>
+            </div>
+
+            <form id="login-form">
+              <div class="form-group">
+                <label for="email" id="login-email-label">Email Address</label>
+                <div class="input-with-icon">
+                  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <input type="email" id="email" placeholder="name@example.com" required autocomplete="email">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label for="password">Password</label>
+                </div>
+                <div class="input-with-icon">
+                  <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block btn-login-submit" id="login-submit-btn">
+                <span>Sign In</span>
+                <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+            </form>
+
+            <div class="login-hint-clean">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span id="login-hint-text">Your portal dashboard and permissions are automatically authenticated by the backend service.</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -299,8 +483,11 @@
           </div>
 
 
-          <!-- 3. User Full Name Only -->
-          <span class="header-user-name" id="user-name">User</span>
+          <!-- 3. User Avatar Initials & Full Name (No Role Subtitle) -->
+          <div class="header-user-profile">
+            <div class="user-avatar-badge" id="user-avatar">SM</div>
+            <span class="header-user-name" id="user-name">User</span>
+          </div>
           
           <!-- 4. Sign out -->
           <button class="btn btn-outline btn-sm" id="logout-btn" data-tooltip="Sign out of InsureAssist">
@@ -318,10 +505,14 @@
              ========================================================================== -->
         <!-- Customer Page 1: Dashboard -->
         <section id="page-customer-dashboard" class="page active">
-          <div class="page-header">
-            <div>
-              <h2 class="page-title" id="cust-dash-welcome">Welcome to your Portal</h2>
-              <p class="page-subtitle">Here is a real-time summary of your comprehensive insurance portfolio.</p>
+          <div class="page-header editorial-page-header">
+            <div class="editorial-header-content">
+              <div class="header-eyebrow">YOUR INSURANCE. SIMPLIFIED.</div>
+              <h2 class="page-title editorial-title" id="cust-dash-welcome">
+                Welcome back, <span id="cust-dash-name">Sarah</span>!<br>
+                <span class="editorial-title-italic">Your protection matters.</span>
+              </h2>
+              <p class="page-subtitle editorial-subtitle">Manage your policies, track claims, and get instant guidance with InsureAssist.</p>
             </div>
           </div>
 
@@ -1512,14 +1703,20 @@
              ========================================================================== -->
         <!-- Agent Page 1: Dashboard -->
         <section id="page-agent-dashboard" class="page">
-          <div class="page-header">
-            <div>
-              <h2 class="page-title" id="agent-welcome-title">Welcome back, Agent!</h2>
-              <p class="page-subtitle">Here's an overview of your assigned customer portfolio.</p>
-            </div>
-            <div class="portal-tag" style="background:#FAF6F2;border-color:#EADBCE;color:#3B241D;">
-              <span class="portal-dot" style="background:#7A4A3A;"></span>
-              Agent Workspace Active
+          <div class="page-header editorial-page-header">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; width: 100%;">
+              <div>
+                <div class="header-eyebrow">EMPOWERING AGENTS</div>
+                <h2 class="page-title editorial-title" id="agent-welcome-title">
+                  Hello <span id="agent-dash-name">Aarav</span>,<br>
+                  <span class="editorial-title-italic">Create better outcomes.</span>
+                </h2>
+                <p class="page-subtitle editorial-subtitle">Manage your customers, track applications, and deliver the right protection.</p>
+              </div>
+              <div class="portal-identity-badge">
+                <span class="portal-identity-dot"></span>
+                <span>Agent Workspace · Serve customers. Create impact.</span>
+              </div>
             </div>
           </div>
 
@@ -2108,14 +2305,20 @@
              ========================================================================== -->
         <!-- Underwriter Page 1: Dashboard (Executive Summary & Decision Insights) -->
         <section id="page-underwriter-dashboard" class="page">
-          <div class="page-header">
-            <div>
-              <h2 class="page-title" id="uw-dashboard-greeting">Welcome back!</h2>
-              <p class="page-subtitle">Executive underwriting decision insights, case pipeline triage, and portfolio risk distribution.</p>
-            </div>
-            <div class="portal-tag" style="background:#FAF6F2;border-color:#EADBCE;color:#3B241D;">
-              <span class="portal-dot" style="background:#8C5343;"></span>
-              Senior Underwriter (CPCU Authority)
+          <div class="page-header editorial-page-header">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; width: 100%;">
+              <div>
+                <div class="header-eyebrow">INFORMED DECISIONS</div>
+                <h2 class="page-title editorial-title" id="uw-dashboard-greeting">
+                  Hello <span id="uw-dash-name">Alex</span>,<br>
+                  <span class="editorial-title-italic">Assess today. Protect tomorrow.</span>
+                </h2>
+                <p class="page-subtitle editorial-subtitle">Review applications, assess risk, and help build a safer tomorrow.</p>
+              </div>
+              <div class="portal-identity-badge">
+                <span class="portal-identity-dot" style="background:#8C5343;"></span>
+                <span>Underwriter Portal · Assess risk. Enable confidence.</span>
+              </div>
             </div>
           </div>
 
@@ -3022,14 +3225,20 @@
              ========================================================================== -->
         <!-- Admin Page 1: Dashboard (Req 4, 5, 12) -->
         <section id="page-admin-dashboard" class="page">
-          <div class="page-header">
-            <div>
-              <h2 class="page-title">Welcome back, Admin!</h2>
-              <p class="page-subtitle">Manage users, policies, roles, and monitor the insurance platform</p>
-            </div>
-            <div class="portal-tag" style="background:#f1f5f9;border-color:#cbd5e1;color:#0f172a">
-              <span class="portal-dot" style="background:#0f172a"></span>
-              System Administrator (Root)
+          <div class="page-header editorial-page-header">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; width: 100%;">
+              <div>
+                <div class="header-eyebrow">A SECURE AND SCALABLE PLATFORM</div>
+                <h2 class="page-title editorial-title" id="admin-welcome-title">
+                  Hello <span id="admin-dash-name">Sirivalli</span>,<br>
+                  <span class="editorial-title-italic">Keep everything running smoothly.</span>
+                </h2>
+                <p class="page-subtitle editorial-subtitle">Manage users, monitor system activity, and ensure a seamless insurance experience.</p>
+              </div>
+              <div class="portal-identity-badge">
+                <span class="portal-identity-dot" style="background:#2A1810;"></span>
+                <span>Admin Portal · Manage. Monitor. Maintain.</span>
+              </div>
             </div>
           </div>
 

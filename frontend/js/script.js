@@ -8039,13 +8039,21 @@ function switchRole(role, targetPage = null) {
     ? authUser.name
     : (authUser && authUser.email ? authUser.email.split('@')[0] : (normalizedRole === 'admin' ? 'Administrator' : normalizedRole === 'underwriter' ? 'Underwriter' : normalizedRole === 'agent' ? 'Agent' : 'Customer'));
   const initials = currentUserName.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'US';
+  const firstName = currentUserName.split(' ')[0] || 'User';
+
+  if (avatar) avatar.textContent = initials;
+  if (name) name.textContent = currentUserName;
+
+  const custNameEl = document.getElementById('cust-dash-name');
+  if (custNameEl) custNameEl.textContent = firstName;
+  const agentNameEl = document.getElementById('agent-dash-name');
+  if (agentNameEl) agentNameEl.textContent = firstName;
+  const uwNameEl = document.getElementById('uw-dash-name');
+  if (uwNameEl) uwNameEl.textContent = firstName;
+  const adminNameEl = document.getElementById('admin-dash-name');
+  if (adminNameEl) adminNameEl.textContent = firstName;
 
   if (normalizedRole === 'admin') {
-    if (avatar) {
-      avatar.textContent = initials;
-      avatar.className = 'user-avatar admin-avatar';
-    }
-    if (name) name.textContent = currentUserName;
     if (roleLabel) roleLabel.textContent = 'Administrator · Full Access';
     if (sidebarRole) sidebarRole.textContent = 'Platform Governance';
     if (portalName) portalName.textContent = 'System Administration Active';
@@ -8062,11 +8070,6 @@ function switchRole(role, targetPage = null) {
     fetchNotifications();
     navigateTo(pageToOpen);
   } else if (normalizedRole === 'underwriter') {
-    if (avatar) {
-      avatar.textContent = initials;
-      avatar.className = 'user-avatar underwriter-avatar';
-    }
-    if (name) name.textContent = currentUserName;
     if (roleLabel) roleLabel.textContent = 'Senior Underwriter';
     if (sidebarRole) sidebarRole.textContent = 'Underwriter Decision Portal';
     if (portalName) portalName.textContent = 'Underwriter Portal Active';
@@ -8081,11 +8084,6 @@ function switchRole(role, targetPage = null) {
     fetchNotifications();
     navigateTo(pageToOpen);
   } else if (normalizedRole === 'agent') {
-    if (avatar) {
-      avatar.textContent = initials;
-      avatar.className = 'user-avatar agent-avatar';
-    }
-    if (name) name.textContent = currentUserName;
     if (roleLabel) roleLabel.textContent = 'Agent / Broker';
     if (sidebarRole) sidebarRole.textContent = 'Agent Workspace';
     if (portalName) portalName.textContent = 'Agent Workspace Active';
@@ -8103,11 +8101,6 @@ function switchRole(role, targetPage = null) {
     fetchNotifications();
     navigateTo(pageToOpen);
   } else {
-    if (avatar) {
-      avatar.textContent = initials;
-      avatar.className = 'user-avatar customer-avatar';
-    }
-    if (name) name.textContent = currentUserName;
     if (roleLabel) roleLabel.textContent = 'Policyholder';
     if (sidebarRole) sidebarRole.textContent = 'Customer Portal';
     if (portalName) portalName.textContent = 'Customer Portal Active';
@@ -9194,6 +9187,33 @@ function fnolRenderStep(step) {
   }
 }
 
+// Global Navigation Functions: Public Landing Page <-> Separate Login Screen
+function showLoginScreen() {
+  const landing = document.getElementById('landing-page');
+  const login = document.getElementById('login-screen');
+  const app = document.getElementById('app');
+  if (landing) landing.style.display = 'none';
+  if (login) login.style.display = 'flex';
+  if (app) app.classList.remove('active');
+  if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+window.showLoginScreen = showLoginScreen;
+
+function showLandingPage() {
+  const landing = document.getElementById('landing-page');
+  const login = document.getElementById('login-screen');
+  const app = document.getElementById('app');
+  if (login) login.style.display = 'none';
+  if (landing) landing.style.display = 'flex';
+  if (app) app.classList.remove('active');
+  if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+window.showLandingPage = showLandingPage;
+
 document.addEventListener('DOMContentLoaded', () => {
   // Admin Summary Card Direct Click Listeners (Always active)
   const adminUsersCard = document.getElementById('card-admin-users');
@@ -9272,6 +9292,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Hide login screen and display app shell
       document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').classList.add('active');
+
+      // Hide landing and login screens and display app shell
+      const landingScreen = document.getElementById('landing-page');
+      const loginScreen = document.getElementById('login-screen');
+      if (landingScreen) landingScreen.style.display = 'none';
+      if (loginScreen) loginScreen.style.display = 'none';
       document.getElementById('app').classList.add('active');
 
       // Populate tables and dynamic data for all roles
@@ -9390,7 +9417,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Logout Button
+  // Logout Button -> Returns to Landing Page
   document.getElementById('logout-btn').addEventListener('click', () => {
     sessionStorage.removeItem('auth_token');
     sessionStorage.removeItem('auth_user');
@@ -9406,7 +9433,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('app').classList.remove('active');
     document.getElementById('app').removeAttribute('data-active-role');
     document.body.removeAttribute('data-active-role');
-    document.getElementById('login-screen').style.display = 'flex';
+    
+    showLandingPage();
     closeSlidePanel();
     showToast('Logged out of InsureAssist.');
   });
@@ -10165,8 +10193,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const userObj = JSON.parse(storedUser);
       const userRole = (userObj.role || 'customer').toString().toLowerCase();
+      const landingScreen = document.getElementById('landing-page');
       const loginScreen = document.getElementById('login-screen');
       const appShell = document.getElementById('app');
+      if (landingScreen) landingScreen.style.display = 'none';
       if (loginScreen) loginScreen.style.display = 'none';
       if (appShell) appShell.classList.add('active');
       const savedPage = (typeof localStorage !== 'undefined' && localStorage.getItem('active_page')) || `${userRole}-dashboard`;
@@ -10174,6 +10204,34 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.error('Failed to restore session:', e);
     }
+  } else {
+    // Default to public landing page
+    showLandingPage();
+  }
+
+  // Explicit Landing Navigation Event Listeners
+  const heroSignInBtn = document.getElementById('landing-hero-signin-btn');
+  if (heroSignInBtn) {
+    heroSignInBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showLoginScreen();
+    });
+  }
+
+  const headerSignInBtn = document.getElementById('landing-header-signin-btn');
+  if (headerSignInBtn) {
+    headerSignInBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showLoginScreen();
+    });
+  }
+
+  const loginBackBtn = document.querySelector('.login-back-btn');
+  if (loginBackBtn) {
+    loginBackBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showLandingPage();
+    });
   }
 
   // Initial controllers & renderers
@@ -10202,6 +10260,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 // Global Window Exports for inline HTML handlers
+window.showLoginScreen = showLoginScreen;
+window.showLandingPage = showLandingPage;
 if (typeof getMockChatResponse === 'function') window.getMockChatResponse = getMockChatResponse;
 if (typeof openAIChatSlidePanel === 'function') window.openAIChatSlidePanel = openAIChatSlidePanel;
 if (typeof scrollChatToBottom === 'function') window.scrollChatToBottom = scrollChatToBottom;
