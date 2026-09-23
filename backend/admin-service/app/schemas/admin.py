@@ -8,7 +8,7 @@ class UserCreateRequest(BaseModel):
     role: str = Field(..., description="User role (Customer, Agent, Underwriter, Admin)")
     mobile: Optional[str] = Field(default="", description="Mobile number for customer")
     address: Optional[str] = Field(default="", description="Address for customer")
-    password: Optional[str] = Field(default="Welcome123!", description="Initial password")
+    password: Optional[str] = Field(default="Test@123", description="Ignored. New accounts always receive the bcrypt hash of Test@123.")
 
 
 class PasswordResetRequest(BaseModel):

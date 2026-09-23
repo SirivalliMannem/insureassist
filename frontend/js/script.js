@@ -4914,7 +4914,7 @@ async function handleCreateUserSubmit(e) {
         role: role,
         mobile: phone,
         address: dept || '124 Grand Avenue, Suite 400, Chicago, IL 60611',
-        password: 'password123'
+        password: 'Test@123'
       })
     });
 
@@ -4925,7 +4925,7 @@ async function handleCreateUserSubmit(e) {
     }
 
     const result = await response.json();
-    showToast(`User ${name} (${result.user_id}) created in PostgreSQL database!`);
+    showToast(`User ${name} (${result.user_id}) created. Sign-in password is Test@123.`);
 
     // Refresh admin data
     await fetchAdminUsers();

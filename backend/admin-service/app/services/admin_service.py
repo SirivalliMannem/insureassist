@@ -6,6 +6,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
+from app.core.security import DEFAULT_USER_PASSWORD, hash_password
 from app.models.models import User, Customer, Policy, RenewalRequest, Notification, CustomerAgentAssignment
 
 logger = logging.getLogger(__name__)
@@ -107,7 +108,6 @@ class AdminService:
         name = (data.get("name") or "").strip()
         email = (data.get("email") or "").strip()
         role = (data.get("role") or "Customer").strip()
-        password = data.get("password") or "Welcome123!"
 
         if not name or not email:
             return {"success": False, "message": "Name and email are required."}
@@ -122,7 +122,7 @@ class AdminService:
             user_id=user_id,
             name=name,
             email=email,
-            password_hash=None,
+            password_hash=hash_password(DEFAULT_USER_PASSWORD),
             role=role,
             created_at=datetime.datetime.utcnow(),
         )
@@ -162,7 +162,7 @@ class AdminService:
             "email": new_user.email,
             "role": new_user.role,
             "created_at": _format_date(new_user.created_at),
-            "message": f"User '{name}' created successfully.",
+            "message": f"User '{name}' created successfully. Initial password is {DEFAULT_USER_PASSWORD}.",
         }
 
     @staticmethod
