@@ -3,6 +3,8 @@ import datetime
 import logging
 from decimal import Decimal
 import openpyxl
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.database import engine, SessionLocal, Base
@@ -62,6 +64,85 @@ def parse_numeric(value, default=0.0):
     return default
 
 
+DEFAULT_PASSWORD = "Test@123"
+
+DEFAULT_USERS = [
+    {
+        "user_id": "USR-CUST-001",
+        "name": "Sarah Mitchell",
+        "email": "sarah.mitchell@email.com",
+        "role": "customer",
+    },
+    {
+        "user_id": "USR-AGT-001",
+        "name": "Alex Rivera",
+        "email": "alex.rivera@insureassist.com",
+        "role": "agent",
+    },
+    {
+        "user_id": "USR-UW-001",
+        "name": "Alex Vance",
+        "email": "alex.vance@insureassist.com",
+        "role": "underwriter",
+    },
+    {
+        "user_id": "USR-ADM-001",
+        "name": "Jordan Taylor",
+        "email": "admin@insureassist.com",
+        "role": "admin",
+    },
+]
+
+
+def _hash_default_password():
+    """Hash Test@123 with bcrypt when passlib is installed."""
+    try:
+        from passlib.context import CryptContext
+        return CryptContext(schemes=["bcrypt"], deprecated="auto").hash(DEFAULT_PASSWORD)
+    except Exception:
+        logger.warning("passlib is not available. Default users will be inserted without a password hash.")
+        return None
+
+
+def ensure_default_users(db: Session) -> None:
+    """
+    Insert the four demo accounts into users when they are missing.
+    Runs on every startup, including when the Excel import is skipped.
+    """
+    password_hash = _hash_default_password()
+    now = datetime.datetime.utcnow()
+
+    for spec in DEFAULT_USERS:
+        email = spec["email"].strip().lower()
+        existing = db.query(User).filter(func.lower(User.email) == email).first()
+        if existing:
+            if password_hash and not existing.password_hash:
+                existing.password_hash = password_hash
+            continue
+
+        if db.query(User).filter(User.user_id == spec["user_id"]).first():
+            logger.warning(
+                "Skipping default user %s because user_id %s is already used.",
+                email,
+                spec["user_id"],
+            )
+            continue
+
+        try:
+            with db.begin_nested():
+                db.add(User(
+                    user_id=spec["user_id"],
+                    name=spec["name"],
+                    email=spec["email"],
+                    password_hash=password_hash,
+                    role=spec["role"],
+                    created_at=now,
+                ))
+                db.flush()
+        except IntegrityError:
+            logger.info("Default user %s already exists. Skipping.", email)
+
+
 def seed_database(excel_path: str = None, force_reseed: bool = False):
     """
     Imports real dataset from pc_insurance_large_dataset.xlsx into PostgreSQL.
@@ -89,6 +170,10 @@ def seed_database(excel_path: str = None, force_reseed: bool = False):
 
     db: Session = SessionLocal()
     try:
+        ensure_default_users(db)
+        db.commit()
+        logger.info("Default demo users are present in the users table.")
+
         cust_count = db.query(Customer).count()
         if cust_count > 0 and not force_reseed:
             logger.info(f"Database already seeded with {cust_count} customers. Skipping Excel import.")

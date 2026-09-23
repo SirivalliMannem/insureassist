@@ -1,8 +1,30 @@
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.db.seed import seed_default_users
 from app.routes.auth import router as auth_router
 from app.schemas.auth import HealthResponse
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("auth_service")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Create tables and insert the default demo users into the users table.
+    """
+    logger.info("Seeding default InsureAssist users...")
+    try:
+        seed_default_users()
+    except Exception as e:
+        logger.error(f"Default user seed notice: {e}")
+    yield
+    logger.info("InsureAssist Auth Service shutdown complete.")
+
 
 # Initialize FastAPI application with Swagger metadata
 app = FastAPI(
@@ -11,7 +33,8 @@ app = FastAPI(
     description="InsureAssist Central Authentication Microservice. Handles user authentication, JWT issuance, password hashing, and role-based permissions (Customer, Agent, Underwriter, Admin).",
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
 # Configure Cross-Origin Resource Sharing (CORS) for frontend clients
