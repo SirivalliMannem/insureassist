@@ -1,7 +1,11 @@
+import os
+import random
+import urllib.request
+import json
 import logging
 import datetime
-from typing import List, Optional, Dict
-from fastapi import HTTPException
+from typing import List, Optional, Dict, Any, Tuple
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -15,7 +19,9 @@ from app.models.agent import (
     RenewalRequest,
     Notification,
     CustomerAgentAssignment,
-    Application
+    Application,
+    ChatConversation,
+    ChatMessage
 )
 from app.schemas.agent import (
     AgentProfileResponse,
@@ -36,9 +42,20 @@ from app.schemas.agent import (
     AgentApplicationResponse,
     AgentApplicationsListResponse,
     ForwardApplicationRequest,
-    RequestMoreInfoRequest
+    RequestMoreInfoRequest,
+    ChatConversationItem,
+    ChatMessageItem,
+    CreateConversationRequest,
+    SendMessageRequest,
+    AgentChatResponse
 )
-import json
+from app.services.agent_context_service import AgentContextService
+from app.services.pdf_service import (
+    SimplePDFBuilder,
+    build_agent_application_summary_pdf,
+    build_agent_policy_summary_pdf,
+    build_agent_claim_summary_pdf
+)
 
 logger = logging.getLogger(__name__)
 
@@ -965,5 +982,347 @@ class AgentService:
                 "assigned_agent": None,
                 "assignment_status": "Unassigned"
             }
+
+    @staticmethod
+    def _call_agent_ai_service(message: str, agent_id: str, conversation_id: str, history: List[dict], context: Optional[dict] = None) -> str:
+        """
+        Dispatches prompt + bounded history + authorized agent context to the AI Service (:8006).
+        """
+        ai_service_url = os.environ.get("AI_SERVICE_URL", "http://insureassist-ai-container:8006")
+        endpoint = f"{ai_service_url}/api/v1/ai/agent/chat"
+        payload = {
+            "message": message,
+            "agent_id": agent_id,
+            "conversation_id": conversation_id,
+            "history": history,
+            "context": context or {}
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            endpoint,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=45) as resp:
+                res_data = json.loads(resp.read().decode("utf-8"))
+                return res_data.get("response", "No response received.")
+        except Exception as e:
+            logger.error(f"Failed to reach AI service at {endpoint}: {e}")
+            return "I apologize, but I am temporarily unable to reach the AI intelligence service. Please check back in a moment or manage your applications and policies directly from the workspace tabs."
+
+    @staticmethod
+    def list_chat_conversations(agent_user: User, db: Session) -> List[ChatConversationItem]:
+        """
+        Retrieves all persistent chat conversations for the authenticated Agent.
+        """
+        agent_id_str = str(agent_user.user_id)
+        conversations = db.query(ChatConversation).filter(
+            ChatConversation.customer_id == agent_id_str,
+            ChatConversation.role == "agent"
+        ).order_by(ChatConversation.updated_at.desc()).all()
+
+        results = []
+        for conv in conversations:
+            last_msg = db.query(ChatMessage).filter(
+                ChatMessage.conversation_id == conv.conversation_id
+            ).order_by(ChatMessage.created_at.desc()).first()
+
+            msg_count = db.query(ChatMessage).filter(
+                ChatMessage.conversation_id == conv.conversation_id
+            ).count()
+
+            snippet = last_msg.message[:60] + "..." if (last_msg and len(last_msg.message) > 60) else (last_msg.message if last_msg else None)
+
+            c_at = (conv.created_at.isoformat() + "Z") if conv.created_at else ""
+            u_at = (conv.updated_at.isoformat() + "Z") if conv.updated_at else ""
+
+            results.append(ChatConversationItem(
+                conversation_id=conv.conversation_id,
+                customer_id=conv.customer_id,
+                title=conv.title,
+                role=conv.role,
+                created_at=c_at,
+                updated_at=u_at,
+                last_message=snippet,
+                message_count=msg_count
+            ))
+        return results
+
+    @staticmethod
+    def create_chat_conversation(agent_user: User, req: CreateConversationRequest, db: Session) -> ChatConversationItem:
+        """
+        Creates a new persistent conversation session for the authenticated Agent.
+        """
+        now = datetime.datetime.utcnow()
+        agent_id_str = str(agent_user.user_id)
+        conv_id = f"conv-agt-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        title = req.title.strip() if (req.title and req.title.strip()) else "New Conversation"
+
+        conv = ChatConversation(
+            conversation_id=conv_id,
+            customer_id=agent_id_str,
+            title=title,
+            role="agent",
+            created_at=now,
+            updated_at=now
+        )
+        db.add(conv)
+        db.commit()
+        db.refresh(conv)
+
+        if req.initial_message and req.initial_message.strip():
+            AgentService.send_chat_message(
+                SendMessageRequest(message=req.initial_message, conversation_id=conv.conversation_id),
+                agent_user,
+                db
+            )
+            db.refresh(conv)
+
+        c_at = (conv.created_at.isoformat() + "Z") if conv.created_at else ""
+        u_at = (conv.updated_at.isoformat() + "Z") if conv.updated_at else ""
+
+        return ChatConversationItem(
+            conversation_id=conv.conversation_id,
+            customer_id=conv.customer_id,
+            title=conv.title,
+            role=conv.role,
+            created_at=c_at,
+            updated_at=u_at,
+            last_message=None,
+            message_count=db.query(ChatMessage).filter(ChatMessage.conversation_id == conv.conversation_id).count()
+        )
+
+    @staticmethod
+    def get_conversation_messages(conversation_id: str, agent_user: User, db: Session) -> List[ChatMessageItem]:
+        """
+        Retrieves all messages for an agent conversation in strict chronological order.
+        Strictly prevents cross-agent or customer conversation access.
+        """
+        agent_id_str = str(agent_user.user_id)
+        conv = db.query(ChatConversation).filter(
+            ChatConversation.conversation_id == conversation_id,
+            ChatConversation.customer_id == agent_id_str,
+            ChatConversation.role == "agent"
+        ).first()
+
+        if not conv:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Conversation '{conversation_id}' not found or access denied."
+            )
+
+        messages = db.query(ChatMessage).filter(
+            ChatMessage.conversation_id == conversation_id
+        ).order_by(ChatMessage.created_at.asc()).all()
+
+        return [
+            ChatMessageItem(
+                message_id=m.message_id,
+                conversation_id=m.conversation_id,
+                sender_type=m.sender_type,
+                message=m.message,
+                created_at=(m.created_at.isoformat() + "Z") if m.created_at else ""
+            )
+            for m in messages
+        ]
+
+    @staticmethod
+    def send_chat_message(req: SendMessageRequest, agent_user: User, db: Session) -> AgentChatResponse:
+        """
+        Handles persistent agent chat:
+        1. Validates or creates agent persistent conversation session.
+        2. Persists agent user message in PostgreSQL.
+        3. Retrieves bounded conversation history (last 8 messages).
+        4. Extracts real live agent-authorized business context from PostgreSQL.
+        5. Calls standalone AI Service (:8006).
+        6. Persists AI bot response message.
+        7. Returns structured response with conversation metadata.
+        """
+        now = datetime.datetime.utcnow()
+        agent_id_str = str(agent_user.user_id)
+        conv = None
+
+        if req.conversation_id:
+            conv = db.query(ChatConversation).filter(
+                ChatConversation.conversation_id == req.conversation_id,
+                ChatConversation.customer_id == agent_id_str,
+                ChatConversation.role == "agent"
+            ).first()
+
+        if not conv:
+            conv_id = req.conversation_id if (req.conversation_id and req.conversation_id.startswith("conv-")) else f"conv-agt-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+            initial_title = (req.message[:32] + "...") if len(req.message) > 32 else req.message
+            conv = ChatConversation(
+                conversation_id=conv_id,
+                customer_id=agent_id_str,
+                title=initial_title,
+                role="agent",
+                created_at=now,
+                updated_at=now
+            )
+            db.add(conv)
+            db.flush()
+
+        # 1. Persist User Message
+        user_msg_id = f"msg-au-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        user_msg = ChatMessage(
+            message_id=user_msg_id,
+            conversation_id=conv.conversation_id,
+            sender_type="user",
+            message=req.message,
+            created_at=now
+        )
+        db.add(user_msg)
+        db.commit()
+
+        # 2. Retrieve bounded history from PostgreSQL
+        prior_messages = db.query(ChatMessage).filter(
+            ChatMessage.conversation_id == conv.conversation_id,
+            ChatMessage.message_id != user_msg_id
+        ).order_by(ChatMessage.created_at.desc()).limit(8).all()
+        prior_messages.reverse()
+
+        history_payload = [
+            {"sender": m.sender_type, "message": m.message}
+            for m in prior_messages
+        ]
+
+        # 3. Extract Live Agent-Authorized Business Context
+        agent_context = AgentContextService.get_agent_authorized_context(agent_user, db, query_text=req.message)
+
+        # 4. Call AI Service (:8006)
+        bot_reply = AgentService._call_agent_ai_service(
+            message=req.message,
+            agent_id=agent_id_str,
+            conversation_id=conv.conversation_id,
+            history=history_payload,
+            context=agent_context
+        )
+
+        # 5. Persist AI Response Message
+        bot_time = datetime.datetime.utcnow()
+        bot_msg_id = f"msg-ab-{bot_time.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        bot_msg = ChatMessage(
+            message_id=bot_msg_id,
+            conversation_id=conv.conversation_id,
+            sender_type="bot",
+            message=bot_reply,
+            created_at=bot_time
+        )
+        db.add(bot_msg)
+
+        conv.updated_at = bot_time
+        if conv.title in ("New Conversation", "New Chat") or len(conv.title) <= 3:
+            conv.title = (req.message[:32] + "...") if len(req.message) > 32 else req.message
+
+        db.commit()
+
+        return AgentChatResponse(
+            conversation_id=conv.conversation_id,
+            title=conv.title,
+            response=bot_reply,
+            message_id=bot_msg_id,
+            created_at=bot_time.isoformat() + "Z"
+        )
+
+    @staticmethod
+    def delete_chat_conversation(conversation_id: str, agent_user: User, db: Session) -> dict:
+        """
+        Deletes an agent conversation and all its messages.
+        """
+        agent_id_str = str(agent_user.user_id)
+        conv = db.query(ChatConversation).filter(
+            ChatConversation.conversation_id == conversation_id,
+            ChatConversation.customer_id == agent_id_str,
+            ChatConversation.role == "agent"
+        ).first()
+
+        if not conv:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Conversation '{conversation_id}' not found or access denied."
+            )
+
+        db.delete(conv)
+        db.commit()
+        return {"success": True, "detail": "Conversation deleted successfully."}
+
+    @staticmethod
+    def download_application_summary(application_id: str, agent_user: User, db: Session) -> Tuple[bytes, str]:
+        """
+        Generates and returns an InsureAssist-generated Application Summary PDF.
+        """
+        app_record = db.query(Application).filter(Application.application_id == application_id).first()
+        if not app_record:
+            raise HTTPException(status_code=404, detail=f"Application '{application_id}' not found.")
+
+        customer = db.query(Customer).filter(Customer.customer_id == app_record.customer_id).first()
+        pdf_bytes = build_agent_application_summary_pdf(app_record, customer, agent_user)
+        filename = f"InsureAssist_Application_Summary_{application_id}.pdf"
+        return pdf_bytes, filename
+
+    @staticmethod
+    def download_policy_summary(policy_id: str, agent_user: User, db: Session) -> Tuple[bytes, str]:
+        """
+        Generates and returns an InsureAssist-generated Policy Summary PDF.
+        """
+        policy = db.query(Policy).filter(
+            (Policy.policy_id == policy_id) | (Policy.policy_number == policy_id)
+        ).first()
+        if not policy:
+            raise HTTPException(status_code=404, detail=f"Policy '{policy_id}' not found.")
+
+        customer = db.query(Customer).filter(Customer.customer_id == policy.customer_id).first()
+        coverages = db.query(Coverage).filter(Coverage.policy_id == policy.policy_id).all()
+        exclusions = db.query(Exclusion).filter(Exclusion.policy_id == policy.policy_id).all()
+
+        pdf_bytes = build_agent_policy_summary_pdf(policy, customer, coverages, exclusions, agent_user)
+        filename = f"InsureAssist_Policy_Summary_{policy.policy_number}.pdf"
+        return pdf_bytes, filename
+
+    @staticmethod
+    def download_claim_summary(claim_id: str, agent_user: User, db: Session) -> Tuple[bytes, str]:
+        """
+        Generates and returns an InsureAssist-generated Claim Summary PDF.
+        """
+        claim = db.query(Claim).filter(
+            (Claim.claim_id == claim_id) | (Claim.claim_number == claim_id)
+        ).first()
+        if not claim:
+            raise HTTPException(status_code=404, detail=f"Claim '{claim_id}' not found.")
+
+        customer = db.query(Customer).filter(Customer.customer_id == claim.customer_id).first()
+        policy = db.query(Policy).filter(Policy.policy_id == claim.policy_id).first()
+
+        pdf_bytes = build_agent_claim_summary_pdf(claim, customer, policy, agent_user)
+        num_str = claim.claim_number or claim.claim_id
+        filename = f"InsureAssist_Claim_Summary_{num_str}.pdf"
+        return pdf_bytes, filename
+
+    @staticmethod
+    def resolve_document_download(doc_type: str, ref_id: str, agent_user: User, db: Session) -> Tuple[bytes, str]:
+        """
+        Dispatches download request based on document type (Application, Policy, Claim).
+        """
+        dtype = (doc_type or "").lower()
+        if any(k in dtype for k in ["app", "submission"]):
+            return AgentService.download_application_summary(ref_id, agent_user, db)
+        elif any(k in dtype for k in ["pol", "binder"]):
+            return AgentService.download_policy_summary(ref_id, agent_user, db)
+        elif any(k in dtype for k in ["claim", "clm"]):
+            return AgentService.download_claim_summary(ref_id, agent_user, db)
+
+        # Try application first
+        if db.query(Application).filter(Application.application_id == ref_id).first():
+            return AgentService.download_application_summary(ref_id, agent_user, db)
+        # Try policy
+        if db.query(Policy).filter((Policy.policy_id == ref_id) | (Policy.policy_number == ref_id)).first():
+            return AgentService.download_policy_summary(ref_id, agent_user, db)
+        # Try claim
+        if db.query(Claim).filter((Claim.claim_id == ref_id) | (Claim.claim_number == ref_id)).first():
+            return AgentService.download_claim_summary(ref_id, agent_user, db)
+
+        raise HTTPException(status_code=404, detail=f"Document summary not found for '{ref_id}'.")
 
 

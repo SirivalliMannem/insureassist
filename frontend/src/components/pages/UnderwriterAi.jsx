@@ -3,12 +3,12 @@ export default function UnderwriterAi() {
 <section id="page-underwriter-ai" className="page">
   <div className="page-header">
     <div>
-      <h2 className="page-title">Underwriting Risk Assistant</h2>
-      <p className="page-subtitle">Intelligent decision guidance, hazard scoring models, loss run analysis, and guideline consultation.</p>
+      <h2 className="page-title">Underwriting Decision Support Assistant</h2>
+      <p className="page-subtitle">Review applications, risk information, policy coverage, claims, documents, and underwriting requirements.</p>
     </div>
     <div className="portal-tag" style={{background: '#FAF6F2', borderColor: '#EADBCE', color: '#3B241D'}}>
       <span className="portal-dot" style={{background: '#8C5343'}} />
-      Risk Decision AI Active
+      Underwriter Decision Support Active
     </div>
   </div>
   <div className="chat-layout">
@@ -23,7 +23,7 @@ export default function UnderwriterAi() {
         <input type="text" id="underwriter-chat-search-input" placeholder="Search conversations..." />
       </div>
       <div className="chat-history-action">
-        <button className="btn btn-primary btn-block btn-sm" id="underwriter-new-chat-btn">
+        <button className="btn btn-primary btn-block btn-sm" id="underwriter-new-chat-btn" onClick={(event) => window.__iaCall(event, "startNewRoleChat('underwriter')")}>
           New Conversation
         </button>
       </div>
@@ -33,22 +33,22 @@ export default function UnderwriterAi() {
     <div className="chat-main">
       <div className="chat-main-header">
         <div>
-          <div className="chat-main-title" id="underwriter-chat-current-title">Underwriting Risk Assistant</div>
-          <div className="chat-main-subtitle">Underwriting guidelines &amp; risk analysis</div>
+          <div className="chat-main-title" id="underwriter-chat-current-title">Underwriting AI Assistant</div>
+          <div className="chat-main-subtitle">Decision support, risk assessment, and queue review</div>
         </div>
       </div>
       <div className="chat-messages" id="underwriter-chat-messages-container">
       </div>
       <div className="chat-suggestions">
-        <button className="chat-suggestion-chip" onClick={(event) => window.__iaCall(event, "handleRoleChatPrompt('underwriter', 'What are the Tier 3 property exposure guidelines?')")}>What are the Tier 3 property exposure guidelines?</button>
-        <button className="chat-suggestion-chip" onClick={(event) => window.__iaCall(event, "handleRoleChatPrompt('underwriter', 'Review risk score factors for APP-8802')")}>Review risk score factors for APP-8802</button>
-        <button className="chat-suggestion-chip" onClick={(event) => window.__iaCall(event, "handleRoleChatPrompt('underwriter', 'Explain deductible requirements for coastal properties')")}>Explain deductible requirements for coastal properties</button>
-        <button className="chat-suggestion-chip" onClick={(event) => window.__iaCall(event, "handleRoleChatPrompt('underwriter', 'Summarize pending queue high-risk applications')")}>Summarize pending queue high-risk applications</button>
-        <button className="chat-suggestion-chip" onClick={(event) => window.__iaCall(event, "handleRoleChatPrompt('underwriter', 'What is the loss ratio threshold for commercial auto?')")}>What is the loss ratio threshold for commercial auto?</button>
+        <button className="chat-suggestion-chip" onClick={(event) => window.__iaCall(event, "handleRoleChatPrompt('underwriter', 'Show applications awaiting my review')")}>Show applications awaiting my review</button>
+        <button className="chat-suggestion-chip" onClick={(event) => window.__iaCall(event, "handleRoleChatPrompt('underwriter', 'Summarize my pending applications')")}>Summarize my pending applications</button>
+        <button className="chat-suggestion-chip" onClick={(event) => window.__iaCall(event, "handleRoleChatPrompt('underwriter', 'What information is missing?')")}>What information is missing?</button>
+        <button className="chat-suggestion-chip" onClick={(event) => window.__iaCall(event, "handleRoleChatPrompt('underwriter', 'Review this application')")}>Review this application</button>
+        <button className="chat-suggestion-chip" onClick={(event) => window.__iaCall(event, "handleRoleChatPrompt('underwriter', 'Show relevant claims')")}>Show relevant claims</button>
       </div>
       <div className="chat-input-area">
-        <input type="text" id="underwriter-page-chat-input" placeholder="Ask anything about underwriting guidelines or queue cases..." />
-        <button className="btn btn-primary" id="underwriter-page-chat-send-btn">
+        <input type="text" id="underwriter-page-chat-input" placeholder="Ask anything about applications, risk factors, or queue requirements..." />
+        <button className="btn btn-primary" id="underwriter-page-chat-send-btn" onClick={(event) => window.__iaCall(event, "sendRoleChatMessage('underwriter')")}>
           <span>Send</span>
           <svg width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{marginLeft: 4}}><line x1={22} y1={2} x2={11} y2={13} /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
         </button>

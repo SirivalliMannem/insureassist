@@ -5,6 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routes.customer_ai import router as customer_ai_router
+from app.routes.agent_ai import router as agent_ai_router
+from app.routes.underwriter_ai import router as underwriter_ai_router
+from app.routes.admin_ai import router as admin_ai_router
 from app.schemas.customer_ai import HealthResponse
 
 # Configure logging
@@ -49,6 +52,9 @@ app.add_middleware(
 
 # Register route modules
 app.include_router(customer_ai_router)
+app.include_router(agent_ai_router)
+app.include_router(underwriter_ai_router)
+app.include_router(admin_ai_router)
 
 
 @app.get(

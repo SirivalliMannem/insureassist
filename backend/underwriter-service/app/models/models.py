@@ -144,3 +144,59 @@ class Application(Base):
 
     # Relationships
     customer = relationship("Customer", foreign_keys=[customer_id])
+
+
+class Claim(Base):
+    __tablename__ = "claims"
+
+    claim_id = Column(String(64), primary_key=True, index=True)
+    customer_id = Column(String(64), ForeignKey("customers.customer_id"), nullable=False, index=True)
+    policy_id = Column(String(64), ForeignKey("policies.policy_id"), nullable=False, index=True)
+    claim_number = Column(String(100), unique=True, index=True, nullable=False)
+    incident_date = Column(Date, nullable=False)
+    incident_type = Column(String(100), nullable=True)
+    incident_description = Column(Text, nullable=False)
+    location = Column(String(255), nullable=True)
+    claim_status = Column(String(50), default="Under Review", nullable=False)
+    claim_amount = Column(Numeric(12, 2), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
+
+    customer = relationship("Customer")
+    policy = relationship("Policy")
+
+
+class CustomerAgentAssignment(Base):
+    __tablename__ = "customer_agent_assignments"
+
+    assignment_id = Column(String(64), primary_key=True, index=True)
+    agent_id = Column(String(64), ForeignKey("users.user_id"), nullable=False, index=True)
+    customer_id = Column(String(64), ForeignKey("customers.customer_id"), nullable=False, index=True)
+    status = Column(String(50), default="Active", nullable=False)
+    assigned_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+
+class ChatConversation(Base):
+    __tablename__ = "chat_conversations"
+
+    conversation_id = Column(String(64), primary_key=True, index=True)
+    customer_id = Column(String(64), nullable=False, index=True)  # Stores underwriter_user_id when role="underwriter"
+    title = Column(String(255), nullable=False, default="New Conversation")
+    role = Column(String(50), default="underwriter", nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False, index=True)
+
+    messages = relationship("ChatMessage", back_populates="conversation", cascade="all, delete-orphan", order_by="ChatMessage.created_at.asc()")
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    message_id = Column(String(64), primary_key=True, index=True)
+    conversation_id = Column(String(64), ForeignKey("chat_conversations.conversation_id"), nullable=False, index=True)
+    sender_type = Column(String(20), nullable=False)  # 'user' or 'bot'
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+
+    conversation = relationship("ChatConversation", back_populates="messages")
+

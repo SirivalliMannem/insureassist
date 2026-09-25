@@ -1,6 +1,6 @@
 import logging
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Query
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_agent_user
@@ -16,7 +16,12 @@ from app.schemas.agent import (
     AgentApplicationResponse,
     AgentApplicationsListResponse,
     ForwardApplicationRequest,
-    RequestMoreInfoRequest
+    RequestMoreInfoRequest,
+    ChatConversationItem,
+    ChatMessageItem,
+    CreateConversationRequest,
+    SendMessageRequest,
+    AgentChatResponse
 )
 from app.services.agent_service import AgentService
 
@@ -261,4 +266,213 @@ async def get_customer_assigned_agent_info(
     Get customer assigned agent from customer_agent_assignments.
     """
     return AgentService.get_customer_assigned_agent(customer_id, db)
+
+
+# =========================================================================
+# Persistent Agent AI Assistant Endpoints
+# =========================================================================
+
+@router.get(
+    "/chat/conversations",
+    response_model=List[ChatConversationItem],
+    summary="List Agent Chat Conversations",
+    description="Retrieves all persistent chat conversations for the authenticated Agent ordered by most recent activity."
+)
+async def list_agent_conversations(
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    List all chat conversations belonging to the authenticated agent.
+    """
+    return AgentService.list_chat_conversations(current_agent, db)
+
+
+@router.post(
+    "/chat/conversations",
+    response_model=ChatConversationItem,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create New Agent Chat Conversation",
+    description="Initializes a new persistent chat session for the authenticated Agent."
+)
+async def create_agent_conversation(
+    req: CreateConversationRequest,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new conversation session for the authenticated agent.
+    """
+    return AgentService.create_chat_conversation(current_agent, req, db)
+
+
+@router.get(
+    "/chat/conversations/{conversation_id}/messages",
+    response_model=List[ChatMessageItem],
+    summary="Get Conversation Messages",
+    description="Retrieves full chronological message history for an Agent conversation session."
+)
+async def get_agent_conversation_messages(
+    conversation_id: str,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all messages for a specific agent conversation session.
+    """
+    return AgentService.get_conversation_messages(conversation_id, current_agent, db)
+
+
+@router.post(
+    "/chat/messages",
+    response_model=AgentChatResponse,
+    summary="Send Agent Chat Message",
+    description="Sends a message to the Agent AI Assistant. Automatically retrieves agent-authorized business context and returns Groq-grounded response."
+)
+async def send_agent_message(
+    req: SendMessageRequest,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Send prompt to Agent AI assistant with persistent conversation history and authorized portfolio context.
+    """
+    return AgentService.send_chat_message(req, current_agent, db)
+
+
+@router.post(
+    "/chat/conversations/{conversation_id}/messages",
+    response_model=AgentChatResponse,
+    summary="Send Message in Specific Agent Conversation",
+    description="Sends a message to a specific existing conversation."
+)
+async def send_agent_message_in_conv(
+    conversation_id: str,
+    req: SendMessageRequest,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Send message to a specific conversation session.
+    """
+    req.conversation_id = conversation_id
+    return AgentService.send_chat_message(req, current_agent, db)
+
+
+@router.delete(
+    "/chat/conversations/{conversation_id}",
+    summary="Delete Agent Chat Conversation",
+    description="Permanently deletes an agent conversation and all associated messages."
+)
+async def delete_agent_conversation(
+    conversation_id: str,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete an agent chat conversation.
+    """
+    return AgentService.delete_chat_conversation(conversation_id, current_agent, db)
+
+
+# =========================================================================
+# Agent PDF Summary Downloads
+# =========================================================================
+
+@router.get(
+    "/applications/{application_id}/summary/download",
+    summary="Download Application Summary PDF",
+    description="Generates and streams an InsureAssist-generated Application Summary PDF for agent review."
+)
+async def download_application_summary_pdf(
+    application_id: str,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Download InsureAssist Application Summary PDF.
+    """
+    pdf_bytes, filename = AgentService.download_application_summary(application_id, current_agent, db)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache"
+        }
+    )
+
+
+@router.get(
+    "/policies/{policy_id}/summary/download",
+    summary="Download Policy Summary PDF",
+    description="Generates and streams an InsureAssist-generated Policy Summary PDF."
+)
+async def download_policy_summary_pdf(
+    policy_id: str,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Download InsureAssist Policy Summary PDF.
+    """
+    pdf_bytes, filename = AgentService.download_policy_summary(policy_id, current_agent, db)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache"
+        }
+    )
+
+
+@router.get(
+    "/claims/{claim_id}/summary/download",
+    summary="Download Claim Summary PDF",
+    description="Generates and streams an InsureAssist-generated Claim Summary PDF."
+)
+async def download_claim_summary_pdf(
+    claim_id: str,
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Download InsureAssist Claim Summary PDF.
+    """
+    pdf_bytes, filename = AgentService.download_claim_summary(claim_id, current_agent, db)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache"
+        }
+    )
+
+
+@router.get(
+    "/documents/download",
+    summary="Download Document Summary PDF",
+    description="Resolves and downloads an InsureAssist-generated summary PDF for applications, policies, or claims."
+)
+async def download_document_summary_pdf(
+    doc_type: str = Query(..., description="Document type: application, policy, or claim"),
+    ref_id: str = Query(..., description="Reference ID or Number"),
+    current_agent: User = Depends(get_current_agent_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Download document summary PDF by type and reference ID.
+    """
+    pdf_bytes, filename = AgentService.resolve_document_download(doc_type, ref_id, current_agent, db)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache"
+        }
+    )
+
 

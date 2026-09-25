@@ -126,3 +126,29 @@ class CustomerAgentAssignment(Base):
     agent = relationship("User", foreign_keys=[agent_id])
     customer = relationship("Customer", foreign_keys=[customer_id])
 
+
+class ChatConversation(Base):
+    __tablename__ = "chat_conversations"
+
+    conversation_id = Column(String(64), primary_key=True, index=True)
+    customer_id = Column(String(64), nullable=False, index=True)  # Stores admin_user_id when role="admin"
+    title = Column(String(255), nullable=False, default="New Conversation")
+    role = Column(String(50), default="admin", nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False, index=True)
+
+    messages = relationship("ChatMessage", back_populates="conversation", cascade="all, delete-orphan", order_by="ChatMessage.created_at.asc()")
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    message_id = Column(String(64), primary_key=True, index=True)
+    conversation_id = Column(String(64), ForeignKey("chat_conversations.conversation_id"), nullable=False, index=True)
+    sender_type = Column(String(20), nullable=False)  # 'user' or 'bot'
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+
+    conversation = relationship("ChatConversation", back_populates="messages")
+
+

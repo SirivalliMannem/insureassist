@@ -1,12 +1,17 @@
 import logging
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.core.auth import get_current_admin
+from app.core.auth import get_current_admin, get_current_admin_user
+from app.models.models import User
 from app.services.admin_service import AdminService
-from app.schemas.admin import UserCreateRequest, PasswordResetRequest, ConfirmAccessRequest
+from app.schemas.admin import (
+    UserCreateRequest, PasswordResetRequest, ConfirmAccessRequest,
+    CreateConversationRequest, SendMessageRequest,
+    ChatMessageItem, ChatConversationItem, AdminChatResponse
+)
 
 logger = logging.getLogger(__name__)
 
@@ -178,4 +183,112 @@ def confirm_user_access(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to confirm user access: {str(e)}"
         )
+
+
+# =========================================================================
+# Admin AI Persistent Chat Endpoints
+# =========================================================================
+
+@router.get(
+    "/chat/conversations",
+    response_model=List[ChatConversationItem],
+    summary="Get All Admin Chat Conversations",
+    description="Retrieves all persistent chat conversation sessions for the authenticated Admin."
+)
+async def get_admin_conversations(
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all chat conversations for the authenticated admin.
+    """
+    return AdminService.list_chat_conversations(current_admin, db)
+
+
+@router.post(
+    "/chat/conversations",
+    response_model=ChatConversationItem,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create New Admin Chat Conversation",
+    description="Initializes a new persistent chat session for the authenticated Admin."
+)
+async def create_admin_conversation(
+    req: CreateConversationRequest,
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new conversation session for the authenticated admin.
+    """
+    return AdminService.create_chat_conversation(current_admin, req, db)
+
+
+@router.get(
+    "/chat/conversations/{conversation_id}/messages",
+    response_model=List[ChatMessageItem],
+    summary="Get Admin Conversation Messages",
+    description="Retrieves full chronological message history for an Admin conversation session."
+)
+async def get_admin_conversation_messages(
+    conversation_id: str,
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all messages for a specific admin conversation session.
+    """
+    return AdminService.get_conversation_messages(conversation_id, current_admin, db)
+
+
+@router.post(
+    "/chat/messages",
+    response_model=AdminChatResponse,
+    summary="Send Admin Chat Message",
+    description="Sends a prompt to the Admin AI Assistant with PostgreSQL-grounded context and Groq LLM."
+)
+async def send_admin_message(
+    req: SendMessageRequest,
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Send prompt to Admin AI assistant with persistent conversation history and authorized governance context.
+    """
+    return AdminService.send_chat_message(req, current_admin, db)
+
+
+@router.post(
+    "/chat/conversations/{conversation_id}/messages",
+    response_model=AdminChatResponse,
+    summary="Send Message in Specific Admin Conversation",
+    description="Sends a message in a specific existing admin conversation session."
+)
+async def send_admin_message_in_conv(
+    conversation_id: str,
+    req: SendMessageRequest,
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Send message to a specific conversation session.
+    """
+    req.conversation_id = conversation_id
+    return AdminService.send_chat_message(req, current_admin, db)
+
+
+@router.delete(
+    "/chat/conversations/{conversation_id}",
+    summary="Delete Admin Chat Conversation",
+    description="Permanently deletes an admin conversation and its messages."
+)
+async def delete_admin_conversation(
+    conversation_id: str,
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete an admin chat conversation.
+    """
+    return AdminService.delete_chat_conversation(conversation_id, current_admin, db)
+
 

@@ -27,3 +27,47 @@ class HealthResponse(BaseModel):
     service: str
     version: str
     port: int
+
+
+class CreateConversationRequest(BaseModel):
+    title: Optional[str] = Field(default="New Conversation", description="Session title")
+    initial_message: Optional[str] = Field(default=None, description="Optional first user message")
+
+
+class SendMessageRequest(BaseModel):
+    message: str = Field(..., min_length=1, description="Message text from Admin")
+    conversation_id: Optional[str] = Field(default=None, description="Target conversation ID")
+
+
+class ChatMessageItem(BaseModel):
+    message_id: str
+    conversation_id: str
+    sender_type: str
+    message: str
+    created_at: str
+
+    class Config:
+        orm_mode = True
+
+
+class ChatConversationItem(BaseModel):
+    conversation_id: str
+    customer_id: str
+    title: str
+    role: str
+    created_at: str
+    updated_at: str
+    last_message: Optional[str] = None
+    message_count: int = 0
+
+    class Config:
+        orm_mode = True
+
+
+class AdminChatResponse(BaseModel):
+    conversation_id: str
+    title: str
+    response: str
+    message_id: str
+    created_at: str
+

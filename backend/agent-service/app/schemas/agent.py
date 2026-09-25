@@ -299,3 +299,63 @@ class AgentApplicationsListResponse(BaseModel):
     applications: List[AgentApplicationResponse]
 
 
+# =========================================================================
+# Agent AI Assistant & Persistent Chat Schemas
+# =========================================================================
+
+class ChatConversationItem(BaseModel):
+    """
+    Schema for an agent chat conversation metadata item.
+    """
+    conversation_id: str
+    agent_id: str = Field(..., alias="customer_id")
+    title: str
+    role: str = "agent"
+    created_at: str
+    updated_at: str
+    last_message: Optional[str] = None
+    message_count: int = 0
+
+    class Config:
+        populate_by_name = True
+
+
+class ChatMessageItem(BaseModel):
+    """
+    Schema for an individual message in a chat conversation.
+    """
+    message_id: str
+    conversation_id: str
+    sender_type: str  # 'user' or 'bot'
+    message: str
+    created_at: str
+
+
+class CreateConversationRequest(BaseModel):
+    """
+    Schema for creating a new agent chat conversation session.
+    """
+    title: Optional[str] = Field("New Conversation", description="Initial conversation title")
+    initial_message: Optional[str] = Field(None, description="Optional first message to execute immediately")
+
+
+class SendMessageRequest(BaseModel):
+    """
+    Schema for sending a message in a conversation.
+    """
+    message: str = Field(..., description="User prompt text")
+    conversation_id: Optional[str] = Field(None, description="Target conversation session ID")
+
+
+class AgentChatResponse(BaseModel):
+    """
+    Schema for Agent AI chat endpoint responses.
+    """
+    conversation_id: str
+    title: Optional[str] = None
+    response: str
+    message_id: str
+    created_at: str
+
+
+

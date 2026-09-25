@@ -168,11 +168,13 @@ services:
   # ==============================================================================
   ai-service:
     build:
-      context: ./backend/ai-service
+      context: ./ai-service
       dockerfile: Dockerfile
     image: insureassist-ai
     container_name: insureassist-ai-container
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "8006:8006"
     environment:

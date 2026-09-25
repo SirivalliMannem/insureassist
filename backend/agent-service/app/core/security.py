@@ -1,6 +1,7 @@
+from typing import Optional
 import logging
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -13,19 +14,39 @@ logger = logging.getLogger(__name__)
 security = HTTPBearer(auto_error=False)
 
 
-def get_token_payload(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+def get_token_payload(
+    request: Request,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
+) -> dict:
     """
     Extracts and validates the JWT Bearer token from the request Authorization header.
+    Robustly handles direct headers, query tokens, and double 'Bearer' prefixes (from Swagger UI).
     Returns the decoded token claims dictionary.
     """
-    if not credentials or not credentials.credentials:
+    token = None
+    if credentials and credentials.credentials:
+        token = str(credentials.credentials).strip()
+    
+    if not token:
+        auth_header = request.headers.get("Authorization") or request.headers.get("authorization")
+        if auth_header:
+            token = auth_header.strip()
+
+    if not token:
+        # Check query parameter fallback (e.g. for PDF downloads or iframe links)
+        token = request.query_params.get("token") or request.query_params.get("access_token")
+
+    if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication token is missing. Please log in.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = credentials.credentials
+    # Sanitize and strip any 'Bearer ' / 'bearer ' prefixes (handles Swagger double-prefixing)
+    while token.lower().startswith("bearer "):
+        token = token[7:].strip()
+
     try:
         payload = jwt.decode(
             token,

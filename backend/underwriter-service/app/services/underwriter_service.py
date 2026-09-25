@@ -1,14 +1,43 @@
 import datetime
 import json
 import logging
+import os
+import random
+import urllib.request
 import uuid
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Tuple
 
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
+from fastapi import HTTPException, status
 
-from app.models.models import Policy, RenewalRequest, Customer, Notification, Application, User
+from app.models.models import (
+    Policy,
+    RenewalRequest,
+    Customer,
+    Notification,
+    Application,
+    User,
+    Coverage,
+    Exclusion,
+    Claim,
+    ChatConversation,
+    ChatMessage
+)
+from app.schemas.underwriter import (
+    CreateConversationRequest,
+    SendMessageRequest,
+    ChatConversationItem,
+    ChatMessageItem,
+    UnderwriterChatResponse
+)
+from app.services.underwriter_context_service import UnderwriterContextService
+from app.services.underwriter_pdf_service import (
+    build_underwriter_application_summary_pdf,
+    build_underwriter_policy_summary_pdf,
+    build_underwriter_claim_summary_pdf
+)
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +152,7 @@ class UnderwriterService:
                 'customer_id': app.customer_id,
                 'customer': customer.name if customer else 'Customer',
                 'customer_email': customer.email if customer else '',
-                'customer_phone': (customer.mobile or customer.phone) if customer else '',
+                'customer_phone': (customer.mobile or customer.address) if customer else '',
                 'product': app.product_name,
                 'coverage_tier': app.coverage_tier or 'Standard',
                 'coverage_limit': cov_limit_val,
@@ -404,6 +433,14 @@ class UnderwriterService:
             )
         ).first()
 
+        # Check if item is a Renewal Request
+        renewal = db.query(RenewalRequest).filter(
+            or_(
+                RenewalRequest.renewal_id == item_id,
+                RenewalRequest.policy_id == item_id
+            )
+        ).first()
+
         if app_record:
             target_type = 'policy_application'
             app_record.status = decision
@@ -590,3 +627,353 @@ class UnderwriterService:
             })
 
         return {'total': total, 'policies': items}
+
+    # =========================================================================
+    # Persistent Chat & Underwriter AI Methods
+    # =========================================================================
+
+    @staticmethod
+    def _call_underwriter_ai_service(message: str, underwriter_id: str, conversation_id: str, history: List[dict], context: Optional[dict] = None) -> str:
+        """
+        Dispatches prompt + bounded history + authorized underwriter context to AI Service (:8006).
+        """
+        ai_service_url = os.environ.get("AI_SERVICE_URL", "http://insureassist-ai-container:8006")
+        endpoint = f"{ai_service_url}/api/v1/ai/underwriter/chat"
+        payload = {
+            "message": message,
+            "underwriter_id": underwriter_id,
+            "conversation_id": conversation_id,
+            "history": history,
+            "context": context or {}
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            endpoint,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=45) as resp:
+                res_data = json.loads(resp.read().decode("utf-8"))
+                return res_data.get("response", "No response received from AI service.")
+        except Exception as e:
+            logger.error(f"Failed to reach AI service at {endpoint}: {e}")
+            return "I apologize, but I am temporarily unable to reach the AI intelligence service. Please review queue applications and underwriting cases directly in the workspace."
+
+    @staticmethod
+    def list_chat_conversations(underwriter_user: User, db: Session) -> List[ChatConversationItem]:
+        """
+        Retrieves all persistent chat conversations for the authenticated Underwriter.
+        """
+        uw_id_str = str(underwriter_user.user_id)
+        conversations = db.query(ChatConversation).filter(
+            ChatConversation.customer_id == uw_id_str,
+            ChatConversation.role == "underwriter"
+        ).order_by(ChatConversation.updated_at.desc()).all()
+
+        results = []
+        for conv in conversations:
+            last_msg = db.query(ChatMessage).filter(
+                ChatMessage.conversation_id == conv.conversation_id
+            ).order_by(ChatMessage.created_at.desc()).first()
+
+            msg_count = db.query(ChatMessage).filter(
+                ChatMessage.conversation_id == conv.conversation_id
+            ).count()
+
+            snippet = (last_msg.message[:60] + "...") if (last_msg and len(last_msg.message) > 60) else (last_msg.message if last_msg else None)
+
+            c_at = (conv.created_at.isoformat() + "Z") if conv.created_at else ""
+            u_at = (conv.updated_at.isoformat() + "Z") if conv.updated_at else ""
+
+            results.append(ChatConversationItem(
+                conversation_id=conv.conversation_id,
+                customer_id=conv.customer_id,
+                title=conv.title,
+                role=conv.role,
+                created_at=c_at,
+                updated_at=u_at,
+                last_message=snippet,
+                message_count=msg_count
+            ))
+        return results
+
+    @staticmethod
+    def create_chat_conversation(underwriter_user: User, req: CreateConversationRequest, db: Session) -> ChatConversationItem:
+        """
+        Creates a new persistent conversation session for the authenticated Underwriter.
+        """
+        now = datetime.datetime.utcnow()
+        uw_id_str = str(underwriter_user.user_id)
+        conv_id = f"conv-uw-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        title = req.title.strip() if (req.title and req.title.strip()) else "New Conversation"
+
+        conv = ChatConversation(
+            conversation_id=conv_id,
+            customer_id=uw_id_str,
+            title=title,
+            role="underwriter",
+            created_at=now,
+            updated_at=now
+        )
+        db.add(conv)
+        db.commit()
+        db.refresh(conv)
+
+        if req.initial_message and req.initial_message.strip():
+            UnderwriterService.send_chat_message(
+                SendMessageRequest(message=req.initial_message, conversation_id=conv.conversation_id),
+                underwriter_user,
+                db
+            )
+            db.refresh(conv)
+
+        c_at = (conv.created_at.isoformat() + "Z") if conv.created_at else ""
+        u_at = (conv.updated_at.isoformat() + "Z") if conv.updated_at else ""
+
+        return ChatConversationItem(
+            conversation_id=conv.conversation_id,
+            customer_id=conv.customer_id,
+            title=conv.title,
+            role=conv.role,
+            created_at=c_at,
+            updated_at=u_at,
+            last_message=None,
+            message_count=db.query(ChatMessage).filter(ChatMessage.conversation_id == conv.conversation_id).count()
+        )
+
+    @staticmethod
+    def get_conversation_messages(conversation_id: str, underwriter_user: User, db: Session) -> List[ChatMessageItem]:
+        """
+        Retrieves all messages for an underwriter conversation in strict chronological order.
+        Strictly prevents cross-underwriter conversation access.
+        """
+        uw_id_str = str(underwriter_user.user_id)
+        conv = db.query(ChatConversation).filter(
+            ChatConversation.conversation_id == conversation_id,
+            ChatConversation.customer_id == uw_id_str,
+            ChatConversation.role == "underwriter"
+        ).first()
+
+        if not conv:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Conversation '{conversation_id}' not found or access denied."
+            )
+
+        messages = db.query(ChatMessage).filter(
+            ChatMessage.conversation_id == conversation_id
+        ).order_by(ChatMessage.created_at.asc()).all()
+
+        return [
+            ChatMessageItem(
+                message_id=m.message_id,
+                conversation_id=m.conversation_id,
+                sender_type=m.sender_type,
+                message=m.message,
+                created_at=(m.created_at.isoformat() + "Z") if m.created_at else ""
+            )
+            for m in messages
+        ]
+
+    @staticmethod
+    def send_chat_message(req: SendMessageRequest, underwriter_user: User, db: Session) -> UnderwriterChatResponse:
+        """
+        Handles persistent underwriter chat:
+        1. Validates or creates underwriter persistent conversation session.
+        2. Persists underwriter user message in PostgreSQL.
+        3. Retrieves bounded conversation history (last 8 messages).
+        4. Extracts real live underwriter-authorized business context from PostgreSQL.
+        5. Calls standalone AI Service (:8006).
+        6. Persists AI bot response message.
+        7. Returns structured response with conversation metadata.
+        """
+        now = datetime.datetime.utcnow()
+        uw_id_str = str(underwriter_user.user_id)
+        conv = None
+
+        if req.conversation_id:
+            conv = db.query(ChatConversation).filter(
+                ChatConversation.conversation_id == req.conversation_id,
+                ChatConversation.customer_id == uw_id_str,
+                ChatConversation.role == "underwriter"
+            ).first()
+
+        if not conv:
+            conv_id = req.conversation_id if (req.conversation_id and req.conversation_id.startswith("conv-")) else f"conv-uw-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+            initial_title = (req.message[:32] + "...") if len(req.message) > 32 else req.message
+            conv = ChatConversation(
+                conversation_id=conv_id,
+                customer_id=uw_id_str,
+                title=initial_title,
+                role="underwriter",
+                created_at=now,
+                updated_at=now
+            )
+            db.add(conv)
+            db.flush()
+
+        # 1. Persist User Message
+        user_msg_id = f"msg-uu-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        user_msg = ChatMessage(
+            message_id=user_msg_id,
+            conversation_id=conv.conversation_id,
+            sender_type="user",
+            message=req.message,
+            created_at=now
+        )
+        db.add(user_msg)
+        db.commit()
+
+        # 2. Retrieve bounded history from PostgreSQL
+        prior_messages = db.query(ChatMessage).filter(
+            ChatMessage.conversation_id == conv.conversation_id,
+            ChatMessage.message_id != user_msg_id
+        ).order_by(ChatMessage.created_at.desc()).limit(8).all()
+        prior_messages.reverse()
+
+        history_payload = [
+            {"sender": m.sender_type, "message": m.message}
+            for m in prior_messages
+        ]
+
+        # 3. Extract Live Underwriter-Authorized Context
+        uw_context = UnderwriterContextService.get_underwriter_authorized_context(underwriter_user, db, query_text=req.message)
+
+        # 4. Call AI Service (:8006)
+        bot_reply = UnderwriterService._call_underwriter_ai_service(
+            message=req.message,
+            underwriter_id=uw_id_str,
+            conversation_id=conv.conversation_id,
+            history=history_payload,
+            context=uw_context
+        )
+
+        # 5. Persist AI Response Message
+        bot_time = datetime.datetime.utcnow()
+        bot_msg_id = f"msg-ub-{bot_time.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        bot_msg = ChatMessage(
+            message_id=bot_msg_id,
+            conversation_id=conv.conversation_id,
+            sender_type="bot",
+            message=bot_reply,
+            created_at=bot_time
+        )
+        db.add(bot_msg)
+
+        conv.updated_at = bot_time
+        if conv.title in ("New Conversation", "New Chat") or len(conv.title) <= 3:
+            conv.title = (req.message[:32] + "...") if len(req.message) > 32 else req.message
+
+        db.commit()
+
+        return UnderwriterChatResponse(
+            conversation_id=conv.conversation_id,
+            title=conv.title,
+            response=bot_reply,
+            message_id=bot_msg_id,
+            created_at=bot_time.isoformat() + "Z"
+        )
+
+    @staticmethod
+    def delete_chat_conversation(conversation_id: str, underwriter_user: User, db: Session) -> dict:
+        """
+        Deletes an underwriter conversation and all associated messages.
+        """
+        uw_id_str = str(underwriter_user.user_id)
+        conv = db.query(ChatConversation).filter(
+            ChatConversation.conversation_id == conversation_id,
+            ChatConversation.customer_id == uw_id_str,
+            ChatConversation.role == "underwriter"
+        ).first()
+
+        if not conv:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Conversation '{conversation_id}' not found or access denied."
+            )
+
+        db.delete(conv)
+        db.commit()
+        return {"success": True, "detail": "Conversation deleted successfully."}
+
+    # =========================================================================
+    # PDF Summary Downloads
+    # =========================================================================
+
+    @staticmethod
+    def download_application_summary(application_id: str, underwriter_user: User, db: Session) -> Tuple[bytes, str]:
+        """
+        Generates and returns an InsureAssist-generated Application Summary PDF.
+        """
+        app_record = db.query(Application).filter(Application.application_id == application_id).first()
+        if not app_record:
+            raise HTTPException(status_code=404, detail=f"Application '{application_id}' not found.")
+
+        customer = db.query(Customer).filter(Customer.customer_id == app_record.customer_id).first()
+        pdf_bytes = build_underwriter_application_summary_pdf(app_record, customer, underwriter_user)
+        filename = f"InsureAssist_Underwriting_Application_Summary_{application_id}.pdf"
+        return pdf_bytes, filename
+
+    @staticmethod
+    def download_policy_summary(policy_id: str, underwriter_user: User, db: Session) -> Tuple[bytes, str]:
+        """
+        Generates and returns an InsureAssist-generated Policy Summary PDF.
+        """
+        policy = db.query(Policy).filter(
+            or_(Policy.policy_id == policy_id, Policy.policy_number == policy_id)
+        ).first()
+        if not policy:
+            raise HTTPException(status_code=404, detail=f"Policy '{policy_id}' not found.")
+
+        customer = db.query(Customer).filter(Customer.customer_id == policy.customer_id).first()
+        coverages = db.query(Coverage).filter(Coverage.policy_id == policy.policy_id).all()
+        exclusions = db.query(Exclusion).filter(Exclusion.policy_id == policy.policy_id).all()
+
+        pdf_bytes = build_underwriter_policy_summary_pdf(policy, customer, coverages, exclusions, underwriter_user)
+        filename = f"InsureAssist_Policy_Summary_{policy.policy_number}.pdf"
+        return pdf_bytes, filename
+
+    @staticmethod
+    def download_claim_summary(claim_id: str, underwriter_user: User, db: Session) -> Tuple[bytes, str]:
+        """
+        Generates and returns an InsureAssist-generated Claim Summary PDF.
+        """
+        claim = db.query(Claim).filter(
+            or_(Claim.claim_id == claim_id, Claim.claim_number == claim_id)
+        ).first()
+        if not claim:
+            raise HTTPException(status_code=404, detail=f"Claim '{claim_id}' not found.")
+
+        customer = db.query(Customer).filter(Customer.customer_id == claim.customer_id).first()
+        policy = db.query(Policy).filter(Policy.policy_id == claim.policy_id).first()
+
+        pdf_bytes = build_underwriter_claim_summary_pdf(claim, customer, policy, underwriter_user)
+        num_str = claim.claim_number or claim.claim_id
+        filename = f"InsureAssist_Claim_Summary_{num_str}.pdf"
+        return pdf_bytes, filename
+
+    @staticmethod
+    def resolve_document_download(doc_type: str, ref_id: str, underwriter_user: User, db: Session) -> Tuple[bytes, str]:
+        """
+        Dispatches download request based on document type.
+        """
+        dtype = (doc_type or "").lower()
+        if any(k in dtype for k in ["app", "submission"]):
+            return UnderwriterService.download_application_summary(ref_id, underwriter_user, db)
+        elif any(k in dtype for k in ["pol", "binder"]):
+            return UnderwriterService.download_policy_summary(ref_id, underwriter_user, db)
+        elif any(k in dtype for k in ["claim", "clm"]):
+            return UnderwriterService.download_claim_summary(ref_id, underwriter_user, db)
+
+        # Try application first
+        if db.query(Application).filter(Application.application_id == ref_id).first():
+            return UnderwriterService.download_application_summary(ref_id, underwriter_user, db)
+        # Try policy
+        if db.query(Policy).filter(or_(Policy.policy_id == ref_id, Policy.policy_number == ref_id)).first():
+            return UnderwriterService.download_policy_summary(ref_id, underwriter_user, db)
+        # Try claim
+        if db.query(Claim).filter(or_(Claim.claim_id == ref_id, Claim.claim_number == ref_id)).first():
+            return UnderwriterService.download_claim_summary(ref_id, underwriter_user, db)
+
+        raise HTTPException(status_code=404, detail=f"Document summary not found for '{ref_id}'.")

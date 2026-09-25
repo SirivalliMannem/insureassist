@@ -1,13 +1,26 @@
 import datetime
+import json
 import logging
+import os
+import random
+import urllib.request
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
 from app.core.security import DEFAULT_USER_PASSWORD, hash_password
-from app.models.models import User, Customer, Policy, RenewalRequest, Notification, CustomerAgentAssignment
+from app.models.models import (
+    User, Customer, Policy, RenewalRequest, Notification,
+    CustomerAgentAssignment, ChatConversation, ChatMessage
+)
+from app.schemas.admin import (
+    CreateConversationRequest, SendMessageRequest,
+    ChatMessageItem, ChatConversationItem, AdminChatResponse
+)
+from app.services.admin_context_service import AdminContextService
 
 logger = logging.getLogger(__name__)
 
@@ -343,3 +356,279 @@ class AdminService:
             "role": norm_role,
             "message": f"{norm_role} access confirmed successfully.",
         }
+
+    # =========================================================================
+    # Admin AI Persistent Chat Methods
+    # =========================================================================
+
+    @staticmethod
+    def _call_admin_ai_service(
+        message: str,
+        admin_id: str,
+        conversation_id: str,
+        history: List[Dict[str, Any]],
+        context: Dict[str, Any]
+    ) -> str:
+        """
+        Dispatches request to standalone AI Service (:8006).
+        """
+        ai_base = os.getenv("AI_SERVICE_URL", "http://insureassist-ai-container:8006")
+        endpoint = f"{ai_base}/api/v1/ai/admin/chat"
+        payload = {
+            "message": message,
+            "admin_id": admin_id,
+            "conversation_id": conversation_id,
+            "history": history,
+            "context": context
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            endpoint,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=45) as resp:
+                res_data = json.loads(resp.read().decode("utf-8"))
+                return res_data.get("response", "No response received from AI service.")
+        except Exception as e:
+            logger.error(f"Failed to reach AI service at {endpoint}: {e}")
+            return "I apologize, but I am temporarily unable to reach the AI intelligence service. Please review enterprise users, policies, and audit logs directly in the workspace."
+
+    @staticmethod
+    def list_chat_conversations(admin_user: User, db: Session) -> List[ChatConversationItem]:
+        """
+        Retrieves all persistent chat conversations for the authenticated Admin.
+        """
+        adm_id_str = str(admin_user.user_id)
+        conversations = db.query(ChatConversation).filter(
+            ChatConversation.customer_id == adm_id_str,
+            ChatConversation.role == "admin"
+        ).order_by(ChatConversation.updated_at.desc()).all()
+
+        results = []
+        for conv in conversations:
+            last_msg = db.query(ChatMessage).filter(
+                ChatMessage.conversation_id == conv.conversation_id
+            ).order_by(ChatMessage.created_at.desc()).first()
+
+            msg_count = db.query(ChatMessage).filter(
+                ChatMessage.conversation_id == conv.conversation_id
+            ).count()
+
+            snippet = (last_msg.message[:60] + "...") if (last_msg and len(last_msg.message) > 60) else (last_msg.message if last_msg else None)
+
+            c_at = (conv.created_at.isoformat() + "Z") if conv.created_at else ""
+            u_at = (conv.updated_at.isoformat() + "Z") if conv.updated_at else ""
+
+            results.append(ChatConversationItem(
+                conversation_id=conv.conversation_id,
+                customer_id=conv.customer_id,
+                title=conv.title,
+                role=conv.role,
+                created_at=c_at,
+                updated_at=u_at,
+                last_message=snippet,
+                message_count=msg_count
+            ))
+        return results
+
+    @staticmethod
+    def create_chat_conversation(admin_user: User, req: CreateConversationRequest, db: Session) -> ChatConversationItem:
+        """
+        Creates a new persistent conversation session for the authenticated Admin.
+        """
+        now = datetime.datetime.utcnow()
+        adm_id_str = str(admin_user.user_id)
+        conv_id = f"conv-adm-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        title = req.title.strip() if (req.title and req.title.strip()) else "New Conversation"
+
+        conv = ChatConversation(
+            conversation_id=conv_id,
+            customer_id=adm_id_str,
+            title=title,
+            role="admin",
+            created_at=now,
+            updated_at=now
+        )
+        db.add(conv)
+        db.commit()
+        db.refresh(conv)
+
+        if req.initial_message and req.initial_message.strip():
+            AdminService.send_chat_message(
+                SendMessageRequest(message=req.initial_message, conversation_id=conv.conversation_id),
+                admin_user,
+                db
+            )
+            db.refresh(conv)
+
+        c_at = (conv.created_at.isoformat() + "Z") if conv.created_at else ""
+        u_at = (conv.updated_at.isoformat() + "Z") if conv.updated_at else ""
+
+        return ChatConversationItem(
+            conversation_id=conv.conversation_id,
+            customer_id=conv.customer_id,
+            title=conv.title,
+            role=conv.role,
+            created_at=c_at,
+            updated_at=u_at,
+            last_message=None,
+            message_count=db.query(ChatMessage).filter(ChatMessage.conversation_id == conv.conversation_id).count()
+        )
+
+    @staticmethod
+    def get_conversation_messages(conversation_id: str, admin_user: User, db: Session) -> List[ChatMessageItem]:
+        """
+        Retrieves all messages for an admin conversation in strict chronological order.
+        Strictly prevents cross-admin conversation access.
+        """
+        adm_id_str = str(admin_user.user_id)
+        conv = db.query(ChatConversation).filter(
+            ChatConversation.conversation_id == conversation_id,
+            ChatConversation.customer_id == adm_id_str,
+            ChatConversation.role == "admin"
+        ).first()
+
+        if not conv:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Conversation '{conversation_id}' not found or access denied."
+            )
+
+        messages = db.query(ChatMessage).filter(
+            ChatMessage.conversation_id == conversation_id
+        ).order_by(ChatMessage.created_at.asc()).all()
+
+        return [
+            ChatMessageItem(
+                message_id=m.message_id,
+                conversation_id=m.conversation_id,
+                sender_type=m.sender_type,
+                message=m.message,
+                created_at=(m.created_at.isoformat() + "Z") if m.created_at else ""
+            )
+            for m in messages
+        ]
+
+    @staticmethod
+    def send_chat_message(req: SendMessageRequest, admin_user: User, db: Session) -> AdminChatResponse:
+        """
+        Handles persistent admin chat:
+        1. Validates or creates admin persistent conversation session.
+        2. Persists admin user message in PostgreSQL.
+        3. Retrieves bounded conversation history (last 8 messages).
+        4. Extracts real live admin-authorized platform context from PostgreSQL.
+        5. Calls standalone AI Service (:8006).
+        6. Persists AI bot response message.
+        7. Returns structured response with conversation metadata.
+        """
+        now = datetime.datetime.utcnow()
+        adm_id_str = str(admin_user.user_id)
+        conv = None
+
+        if req.conversation_id:
+            conv = db.query(ChatConversation).filter(
+                ChatConversation.conversation_id == req.conversation_id,
+                ChatConversation.customer_id == adm_id_str,
+                ChatConversation.role == "admin"
+            ).first()
+
+        if not conv:
+            conv_id = req.conversation_id if (req.conversation_id and req.conversation_id.startswith("conv-")) else f"conv-adm-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+            initial_title = (req.message[:32] + "...") if len(req.message) > 32 else req.message
+            conv = ChatConversation(
+                conversation_id=conv_id,
+                customer_id=adm_id_str,
+                title=initial_title,
+                role="admin",
+                created_at=now,
+                updated_at=now
+            )
+            db.add(conv)
+            db.flush()
+
+        # 1. Persist User Message
+        user_msg_id = f"msg-au-{now.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        user_msg = ChatMessage(
+            message_id=user_msg_id,
+            conversation_id=conv.conversation_id,
+            sender_type="user",
+            message=req.message,
+            created_at=now
+        )
+        db.add(user_msg)
+        db.commit()
+
+        # 2. Retrieve bounded history from PostgreSQL
+        prior_messages = db.query(ChatMessage).filter(
+            ChatMessage.conversation_id == conv.conversation_id,
+            ChatMessage.message_id != user_msg_id
+        ).order_by(ChatMessage.created_at.desc()).limit(8).all()
+        prior_messages.reverse()
+
+        history_payload = [
+            {"sender": m.sender_type, "message": m.message}
+            for m in prior_messages
+        ]
+
+        # 3. Extract Live Admin Platform Context
+        adm_context = AdminContextService.get_admin_authorized_context(admin_user, db, query_text=req.message)
+
+        # 4. Call AI Service (:8006)
+        bot_reply = AdminService._call_admin_ai_service(
+            message=req.message,
+            admin_id=adm_id_str,
+            conversation_id=conv.conversation_id,
+            history=history_payload,
+            context=adm_context
+        )
+
+        # 5. Persist AI Response Message
+        bot_time = datetime.datetime.utcnow()
+        bot_msg_id = f"msg-ab-{bot_time.strftime('%Y%m%d%H%M%S')}-{random.randint(1000, 9999)}"
+        bot_msg = ChatMessage(
+            message_id=bot_msg_id,
+            conversation_id=conv.conversation_id,
+            sender_type="bot",
+            message=bot_reply,
+            created_at=bot_time
+        )
+        db.add(bot_msg)
+
+        conv.updated_at = bot_time
+        if conv.title in ("New Conversation", "New Chat") or len(conv.title) <= 3:
+            conv.title = (req.message[:32] + "...") if len(req.message) > 32 else req.message
+
+        db.commit()
+
+        return AdminChatResponse(
+            conversation_id=conv.conversation_id,
+            title=conv.title,
+            response=bot_reply,
+            message_id=bot_msg_id,
+            created_at=bot_time.isoformat() + "Z"
+        )
+
+    @staticmethod
+    def delete_chat_conversation(conversation_id: str, admin_user: User, db: Session) -> dict:
+        """
+        Permanently deletes an admin chat conversation and its associated messages.
+        """
+        adm_id_str = str(admin_user.user_id)
+        conv = db.query(ChatConversation).filter(
+            ChatConversation.conversation_id == conversation_id,
+            ChatConversation.customer_id == adm_id_str,
+            ChatConversation.role == "admin"
+        ).first()
+
+        if not conv:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Conversation '{conversation_id}' not found or access denied."
+            )
+
+        db.delete(conv)
+        db.commit()
+        return {"success": True, "message": f"Conversation '{conversation_id}' deleted successfully."}
+

@@ -233,3 +233,43 @@ class Application(Base):
 
     def __repr__(self):
         return f"<Application(application_id='{self.application_id}', policy_type='{self.policy_type}', status='{self.status}')>"
+
+
+class ChatConversation(Base):
+    """
+    SQLAlchemy model representing a persistent conversation session.
+    """
+    __tablename__ = "chat_conversations"
+
+    conversation_id = Column(String(64), primary_key=True, index=True)
+    customer_id = Column(String(64), nullable=False, index=True)  # Stores agent_user_id when role="agent"
+    title = Column(String(255), nullable=False, default="New Conversation")
+    role = Column(String(50), default="agent", nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False, index=True)
+
+    # Relationships
+    messages = relationship("ChatMessage", back_populates="conversation", cascade="all, delete-orphan", order_by="ChatMessage.created_at.asc()")
+
+    def __repr__(self):
+        return f"<ChatConversation(id='{self.conversation_id}', agent_id='{self.customer_id}', title='{self.title}')>"
+
+
+class ChatMessage(Base):
+    """
+    SQLAlchemy model representing individual messages within a persistent chat conversation.
+    """
+    __tablename__ = "chat_messages"
+
+    message_id = Column(String(64), primary_key=True, index=True)
+    conversation_id = Column(String(64), ForeignKey("chat_conversations.conversation_id"), nullable=False, index=True)
+    sender_type = Column(String(20), nullable=False)  # 'user' or 'bot'
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+
+    # Relationships
+    conversation = relationship("ChatConversation", back_populates="messages")
+
+    def __repr__(self):
+        return f"<ChatMessage(id='{self.message_id}', conv_id='{self.conversation_id}', sender='{self.sender_type}')>"
+
