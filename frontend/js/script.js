@@ -1,3 +1,232 @@
+
+/**
+ * InsureAssist Universal SVG Donut Chart Engine
+ * Renders an interactive circular chart with center label and interactive legend.
+ */
+function renderInsureAssistDonutChart(container, options) {
+  if (!container) return;
+  const items = options.items || [];
+  const totalVal = options.totalVal || items.reduce((sum, it) => sum + (it.value || 0), 0);
+  const centerValue = options.centerValue || (Number.isInteger(totalVal) ? totalVal.toLocaleString() : totalVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  const centerLabel = options.centerLabel || 'Total';
+  const radius = 38;
+  const circumference = 2 * Math.PI * radius; // ~238.761
+
+  if (items.length === 0 || totalVal === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:2rem 1rem;color:var(--gray-500);font-size:0.875rem;">${options.emptyMessage || 'No data available'}</div>`;
+    return;
+  }
+
+  // Calculate segment stroke dashes
+  let currentOffset = 0;
+  const segments = items.map((it, idx) => {
+    const pct = totalVal > 0 ? (it.value / totalVal) * 100 : 0;
+    const roundedPct = Math.round(pct * 10) / 10;
+    const segmentLength = (pct / 100) * circumference;
+    const dashArray = `${Math.max(0, segmentLength - 1.5)} ${circumference - Math.max(0, segmentLength - 1.5)}`;
+    const dashOffset = -currentOffset;
+    currentOffset += segmentLength;
+
+    return {
+      ...it,
+      idx,
+      pct: roundedPct,
+      dashArray,
+      dashOffset
+    };
+  });
+
+  const chartId = 'donut-' + Math.random().toString(36).substring(2, 9);
+
+  let svgSegmentsHtml = segments.map(s => `
+    <circle class="donut-segment" id="${chartId}-seg-${s.idx}" cx="50" cy="50" r="${radius}"
+      stroke="${s.color}" stroke-width="15" fill="none"
+      stroke-dasharray="${s.dashArray}" stroke-dashoffset="${s.dashOffset}"
+      data-tooltip="${s.tooltip || (s.label + ': ' + (s.formattedVal || s.value) + ' (' + s.pct + '%)')}"
+      data-idx="${s.idx}"
+      ${s.onClick ? `onclick="${s.onClick}"` : ''}
+    />
+  `).join('');
+
+  let legendHtml = segments.map(s => `
+    <div class="donut-legend-item" id="${chartId}-leg-${s.idx}" data-idx="${s.idx}"
+      data-tooltip="${s.tooltip || (s.label + ': ' + (s.formattedVal || s.value) + ' (' + s.pct + '%)')}"
+      ${s.onClick ? `onclick="${s.onClick}"` : ''}>
+      <div class="donut-legend-left">
+        <span class="donut-legend-dot" style="background:${s.color};"></span>
+        ${s.iconSvg ? `<span style="display:inline-flex;color:${s.color}">${s.iconSvg}</span>` : ''}
+        <span class="donut-legend-name">${s.label}</span>
+      </div>
+      <div class="donut-legend-right">
+        <span class="donut-legend-val">${s.formattedVal || s.value}</span>
+        <span class="donut-legend-pct">${s.pct}%</span>
+      </div>
+    </div>
+  `).join('');
+
+  container.innerHTML = `
+    <div class="donut-chart-wrapper" id="${chartId}-wrapper">
+      <div class="donut-svg-container">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="${radius}" stroke="rgba(42, 24, 16, 0.06)" stroke-width="15" fill="none" />
+          ${svgSegmentsHtml}
+        </svg>
+        <div class="donut-center-label">
+          <div class="donut-center-val" id="${chartId}-center-val">${centerValue}</div>
+          <div class="donut-center-sub" id="${chartId}-center-sub">${centerLabel}</div>
+        </div>
+      </div>
+      <div class="donut-legend-list">
+        ${legendHtml}
+      </div>
+    </div>
+  `;
+
+  // Attach interactive hover events linking segments & legend
+  const wrapper = document.getElementById(`${chartId}-wrapper`);
+  const centerValEl = document.getElementById(`${chartId}-center-val`);
+  const centerSubEl = document.getElementById(`${chartId}-center-sub`);
+
+  if (wrapper && centerValEl && centerSubEl) {
+    segments.forEach(s => {
+      const segEl = document.getElementById(`${chartId}-seg-${s.idx}`);
+      const legEl = document.getElementById(`${chartId}-leg-${s.idx}`);
+
+      const onEnter = () => {
+        wrapper.querySelectorAll('.donut-segment').forEach(el => {
+          if (el.id !== `${chartId}-seg-${s.idx}`) el.style.opacity = '0.35';
+        });
+        if (segEl) segEl.classList.add('is-hovered');
+        if (legEl) legEl.classList.add('is-hovered');
+        centerValEl.textContent = s.formattedVal || s.value;
+        centerSubEl.textContent = s.label.toUpperCase();
+      };
+
+      const onLeave = () => {
+        wrapper.querySelectorAll('.donut-segment').forEach(el => {
+          el.style.opacity = '1';
+        });
+        if (segEl) segEl.classList.remove('is-hovered');
+        if (legEl) legEl.classList.remove('is-hovered');
+        centerValEl.textContent = centerValue;
+        centerSubEl.textContent = centerLabel;
+      };
+
+      if (segEl) {
+        segEl.addEventListener('mouseenter', onEnter);
+        segEl.addEventListener('mouseleave', onLeave);
+      }
+      if (legEl) {
+        legEl.addEventListener('mouseenter', onEnter);
+        legEl.addEventListener('mouseleave', onLeave);
+      }
+    });
+  }
+}
+
+/**
+ * Admin Dashboard Donut Charts Engine
+ */
+function renderAdminDashboardCharts() {
+  const usersContainer = document.getElementById('admin-users-by-role-chart');
+  if (usersContainer) {
+    const userItems = [
+      {
+        label: 'Customers',
+        value: 180,
+        formattedVal: '180',
+        color: '#C85A32',
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+        tooltip: '180 registered retail policyholders (73% of user base)',
+        onClick: "openAdminCustomersSlidePanel(event)"
+      },
+      {
+        label: 'Agents',
+        value: 32,
+        formattedVal: '32',
+        color: '#D97736',
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+        tooltip: '32 licensed brokerage advisors (13% of user base)',
+        onClick: "openAdminAgentsSlidePanel(event)"
+      },
+      {
+        label: 'Underwriters',
+        value: 24,
+        formattedVal: '24',
+        color: '#5C3A2E',
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+        tooltip: '24 senior risk decision officers (10% of user base)',
+        onClick: "openAdminUnderwritersSlidePanel(event)"
+      },
+      {
+        label: 'Administrators',
+        value: 12,
+        formattedVal: '12',
+        color: '#2A1810',
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+        tooltip: '12 platform root administration accounts (5% of user base)',
+        onClick: "openAdminUsersSlidePanel(event)"
+      }
+    ];
+
+    renderInsureAssistDonutChart(usersContainer, {
+      items: userItems,
+      totalVal: 248,
+      centerValue: '248',
+      centerLabel: 'TOTAL USERS'
+    });
+  }
+
+  const polContainer = document.getElementById('admin-policy-status-chart');
+  if (polContainer) {
+    const polItems = [
+      {
+        label: 'Active In-Force',
+        value: 378,
+        formattedVal: '378',
+        color: '#2F9E78',
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>',
+        tooltip: '378 active in-force policies (89% active rate)',
+        onClick: "openAdminActivePoliciesSlidePanel(event)"
+      },
+      {
+        label: 'Pending Review',
+        value: 24,
+        formattedVal: '24',
+        color: '#C98245',
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+        tooltip: '24 policies currently awaiting review or binding approval (6%)',
+        onClick: "openAdminPoliciesSlidePanel(event)"
+      },
+      {
+        label: 'Term Expired',
+        value: 14,
+        formattedVal: '14',
+        color: '#9A6B55',
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+        tooltip: '14 policies past term expiration date (3%)',
+        onClick: "openAdminPoliciesSlidePanel(event)"
+      },
+      {
+        label: 'Cancelled / Void',
+        value: 10,
+        formattedVal: '10',
+        color: '#D65A5A',
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        tooltip: '10 policies terminated or voided (2%)',
+        onClick: "openAdminPoliciesSlidePanel(event)"
+      }
+    ];
+
+    renderInsureAssistDonutChart(polContainer, {
+      items: polItems,
+      totalVal: 426,
+      centerValue: '426',
+      centerLabel: 'ALL POLICIES'
+    });
+  }
+}
+
 console.log("INSUREASSIST AGENT AI LIVE SCRIPT v2");
 
 const AUTH_SERVICE_URL = 'http://127.0.0.1:8001';
@@ -2941,28 +3170,23 @@ function renderAgentDashboard() {
       }).sort((a, b) => b.total_premium - a.total_premium);
     }
 
-    const accents = ['accent-1', 'accent-2', 'accent-3', 'accent-4', 'accent-5'];
-    chartBarsContainer.innerHTML = premiumByType.map((item, idx) => {
-      const accent = accents[idx % accents.length];
-      const iconSvg = getPolicyCardIcon(item.category || item.policy_type, item.policy_type);
-      const pctValue = (typeof item.percentage === 'number') ? item.percentage : parseFloat(item.percentage) || 0;
-      return `
-        <div class="chart-row" data-tooltip="${item.policy_type}: ${item.formatted_premium} (${pctValue}%)">
-          <div class="chart-row-label">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              ${iconSvg}
-            </svg>
-            ${item.policy_type}
-          </div>
-          <div class="chart-row-track">
-            <div class="chart-row-fill ${accent}" style="width: ${pctValue}%;">
-              <span class="chart-row-pct">${pctValue}%</span>
-            </div>
-          </div>
-          <div class="chart-row-val">${item.formatted_premium}</div>
-        </div>
-      `;
-    }).join('');
+    const warmPalette = ['#C85A32', '#D97736', '#3B241D', '#E59866', '#2F9E78', '#7A4A3A', '#8C5343'];
+    const totalBookVal = premiumByType.reduce((sum, it) => sum + (it.total_premium || 0), 0);
+    const agentDonutItems = premiumByType.map((item, idx) => ({
+      label: item.policy_type,
+      value: item.total_premium || 0,
+      formattedVal: item.formatted_premium || `$${Number(item.total_premium || 0).toLocaleString()}`,
+      color: warmPalette[idx % warmPalette.length],
+      iconSvg: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${getPolicyCardIcon(item.category || item.policy_type, item.policy_type)}</svg>`,
+      tooltip: `${item.policy_type}: ${item.formatted_premium} (${item.percentage}%)`
+    }));
+
+    renderInsureAssistDonutChart(chartBarsContainer, {
+      items: agentDonutItems,
+      totalVal: totalBookVal,
+      centerValue: formattedPrem || `$${Number(totalBookVal).toLocaleString()}`,
+      centerLabel: 'PORTFOLIO BOOK'
+    });
   }
 
   // 4. Renewals Header
@@ -4840,6 +5064,8 @@ async function confirmUnderwritingDecision() {
  * RENDERERS FOR ADMIN PORTAL (USER GOVERNANCE, RBAC, POLICIES, AUDIT)
  */
 function renderAdminDashboardUsersTable() {
+  renderAdminDashboardCharts();
+
   const tbody = document.getElementById('admin-dashboard-users-tbody');
   if (!tbody) return;
 
@@ -6760,17 +6986,20 @@ async function fetchUnderwriterStats() {
         // Sort ascending: smallest percentage at top -> largest percentage at bottom
         distItems.sort((a, b) => a.pct - b.pct);
 
-        distContainer.innerHTML = distItems.map(item => `
-          <div data-tooltip="${item.tooltip}">
-            <div style="display:flex;justify-content:space-between;font-size:0.875rem;margin-bottom:5px;">
-              <span style="font-weight:600;color:var(--blue-900)">${item.label}</span>
-              <span style="color:${item.color};font-weight:700">${item.count} (${item.pct}%)</span>
-            </div>
-            <div style="background:#F4EDE4;height:8px;border-radius:4px;overflow:hidden;">
-              <div style="background:${item.color};width:${Math.min(item.pct, 100)}%;height:100%;border-radius:4px;"></div>
-            </div>
-          </div>
-        `).join('');
+        const uwDonutItems = distItems.map(it => ({
+          label: it.label,
+          value: it.count,
+          formattedVal: `${it.count}`,
+          color: it.color,
+          tooltip: it.tooltip
+        }));
+
+        renderInsureAssistDonutChart(distContainer, {
+          items: uwDonutItems,
+          totalVal: totalPol,
+          centerValue: `${totalPol}`,
+          centerLabel: 'TOTAL CASES'
+        });
       }
 
       // Performance Indicators
@@ -7769,29 +7998,27 @@ function renderCustomerDashboard(policies) {
         return '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
       }
 
-      chartContainer.innerHTML = groupList.map((g, idx) => {
-        const pct = totalPrem > 0 ? Math.round((g.total / totalPrem) * 1000) / 10 : 0;
-        const displayPct = (groupList.length === 1 && totalPrem > 0) ? 100 : pct;
-        const accent = accents[idx % accents.length];
-        const iconSvg = getCategoryIcon(g.name);
+      const warmPalette = ['#C85A32', '#D97736', '#3B241D', '#E59866', '#2F9E78', '#7A4A3A', '#8C5343'];
+      const donutItems = groupList.map((g, idx) => {
         const policyTarget = g.policies[0] ? (g.policies[0].code || g.policies[0].id) : '';
-        const formattedVal = Number.isInteger(g.total) ? g.total.toLocaleString() : g.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const formattedVal = Number.isInteger(g.total) ? '$' + g.total.toLocaleString() : '$' + g.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return {
+          label: g.name,
+          value: g.total,
+          formattedVal: formattedVal,
+          color: warmPalette[idx % warmPalette.length],
+          iconSvg: getCategoryIcon(g.name),
+          tooltip: `${g.name}: ${formattedVal}/yr (${totalPrem > 0 ? Math.round((g.total / totalPrem) * 100) : 0}%)`,
+          onClick: policyTarget ? `openPolicyDetailsPanel('${policyTarget}', '${custName}')` : ''
+        };
+      });
 
-        return `
-              <div class="chart-row" data-policy="${policyTarget}" data-tooltip="${g.name}: $${formattedVal}/yr (${displayPct}%)" style="cursor:pointer;" onclick="openPolicyDetailsPanel('${policyTarget}', '${custName}')">
-                <div class="chart-row-label">
-                  ${iconSvg}
-                  ${g.name}
-                </div>
-                <div class="chart-row-track">
-                  <div class="chart-row-fill ${accent}" style="width: ${displayPct}%;">
-                    <span class="chart-row-pct">${displayPct}%</span>
-                  </div>
-                </div>
-                <div class="chart-row-val">$${formattedVal}</div>
-              </div>
-            `;
-      }).join('');
+      renderInsureAssistDonutChart(chartContainer, {
+        items: donutItems,
+        totalVal: totalPrem,
+        centerValue: totalPrem > 0 ? (Number.isInteger(totalPrem) ? '$' + totalPrem.toLocaleString() : '$' + totalPrem.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })) : '$0',
+        centerLabel: 'ANNUAL PREM'
+      });
     }
   }
 
