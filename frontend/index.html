@@ -337,6 +337,26 @@
             AI Assistant
           </button>
 <button class="nav-item" data-page="underwriter-profile" data-role="underwriter" data-tooltip="Underwriter credentials and settings">
+</div>
+<!-- ADJUSTER ROLE SECTION -->
+<div class="nav-role-section" data-role="adjuster">
+<div class="nav-section-title">
+<span>Adjuster</span>
+<span style="font-size:0.65rem;color:rgba(255,255,255,0.4)">Claims Assessment</span>
+</div>
+<button class="nav-item" data-page="adjuster-dashboard" data-role="adjuster" data-tooltip="Review and manage customer claims">
+<svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="18"><rect height="7" width="7" x="3" y="3"></rect><rect height="7" width="7" x="14" y="3"></rect><rect height="7" width="7" x="14" y="14"></rect><rect height="7" width="7" x="3" y="14"></rect></svg>
+            Dashboard
+          </button>
+<button class="nav-item" data-page="adjuster-claims" data-role="adjuster" data-tooltip="Shared customer claims queue">
+<svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Claims Queue
+          </button>
+<button class="nav-item" data-page="adjuster-ai" data-role="adjuster" data-tooltip="Adjuster AI for claims decision support" id="sidebar-adjuster-ai-btn">
+<svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="18"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            AI Assistant
+          </button>
+<button class="nav-item" data-page="adjuster-profile" data-role="adjuster" data-tooltip="Adjuster credentials and settings">
 <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="18"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             Profile &amp; Settings
           </button>
@@ -362,6 +382,10 @@
 <button class="nav-item" data-page="admin-policies" data-role="admin" data-tooltip="System-wide insurance policy ledger">
 <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
             Policy Management
+          </button>
+<button class="nav-item" data-page="admin-policy-module" data-role="admin" data-tooltip="Create policies and assign to customers & agents">
+<svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="18"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect height="4" width="8" x="8" y="2" rx="1" ry="1"></rect><path d="M9 12h6"></path><path d="M9 16h6"></path></svg>
+            Policy Module
           </button>
 <button class="nav-item" data-page="admin-audit" data-role="admin" data-tooltip="Audit logs and system activity monitoring">
 <svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="18"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -3197,6 +3221,336 @@
 </div>
 </section>
 <!-- ==========================================================================
+             ADJUSTER CLAIMS MANAGEMENT PAGES
+             ========================================================================== -->
+<!-- Adjuster Page 1: Dashboard -->
+<section class="page" id="page-adjuster-dashboard">
+<div class="page-header editorial-page-header">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; width: 100%;">
+<div>
+<div class="header-eyebrow">CLAIMS ASSESSMENT &amp; RESOLUTION</div>
+<h2 class="page-title editorial-title" id="adjuster-dashboard-greeting">
+                  Claims Adjuster<br/>
+<span class="editorial-title-italic">Review and manage customer claims</span>
+</h2>
+<p class="page-subtitle editorial-subtitle">Review claims, evaluate policy coverages, assess exclusions, and record final claim determinations.</p>
+</div>
+<div class="portal-identity-badge">
+<span class="portal-identity-dot" style="background:#C85A32;"></span>
+<span>Adjuster Portal · Independent Claims Resolution</span>
+</div>
+</div>
+</div>
+<!-- 4 Adjuster Summary Metric Cards with Large Subtle Decorative Illustrations -->
+<div class="grid grid-4 adjuster-metrics-row" style="margin-bottom: 1.5rem;">
+<!-- Card 1: Total Claims -->
+<div class="card stat-card adjuster-metric-card" data-tooltip="Total claims available in the shared Adjuster queue" id="card-adj-total" onclick="filterAdjusterFromDashboard('all')">
+<svg aria-hidden="true" class="stat-card-watermark" fill="none" viewbox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<radialgradient cx="65%" cy="40%" id="grad-adjt-bg" r="65%">
+<stop offset="0%" stop-color="#FDEFE7" stop-opacity="0.95"></stop>
+<stop offset="60%" stop-color="#FCE4D6" stop-opacity="0.6"></stop>
+<stop offset="100%" stop-color="#FCE4D6" stop-opacity="0"></stop>
+</radialgradient>
+</defs>
+<circle cx="75" cy="48" fill="url(#grad-adjt-bg)" r="42"></circle>
+<rect fill="#FCE4D6" height="54" rx="7" stroke="#F5BAA0" stroke-width="1.5" width="50" x="26" y="36"></rect>
+<path d="M26 43H48L54 49H76V90H26V43Z" fill="#FAD2C0" stroke="#F5BAA0" stroke-width="1.5"></path>
+<rect fill="#FFFFFF" fill-opacity="0.95" height="58" rx="8" stroke="#E88C68" stroke-width="1.8" width="54" x="42" y="22"></rect>
+<rect fill="#F5B296" height="12" rx="5" width="54" x="42" y="22"></rect>
+<line stroke="#E88C68" stroke-linecap="round" stroke-width="2" x1="52" x2="84" y1="44" y2="44"></line>
+<line stroke="#F5BAA0" stroke-linecap="round" stroke-width="1.8" x1="52" x2="78" y1="52" y2="52"></line>
+<line stroke="#F5BAA0" stroke-linecap="round" stroke-width="1.8" x1="52" x2="70" y1="60" y2="60"></line>
+<circle cx="82" cy="66" fill="#C85A32" r="10"></circle>
+<path d="M78 66L81 69L87 63" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<div class="stat-card-top">
+<div class="stat-icon blue">
+<svg fill="none" height="22" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+</div>
+<span class="stat-card-click-hint">Queue →</span>
+</div>
+<div class="stat-value" id="adj-stat-total-val">--</div>
+<div class="stat-label">Total Claims</div>
+<div class="stat-subtext">Total claims available in shared queue</div>
+</div>
+<!-- Card 2: Pending Review -->
+<div class="card stat-card adjuster-metric-card" data-tooltip="Claims waiting for Adjuster review" id="card-adj-pending" onclick="filterAdjusterFromDashboard('Pending Review')">
+<svg aria-hidden="true" class="stat-card-watermark" fill="none" viewbox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<radialgradient cx="65%" cy="40%" id="grad-adjp-bg" r="65%">
+<stop offset="0%" stop-color="#FDEFE7" stop-opacity="0.95"></stop>
+<stop offset="60%" stop-color="#FCE4D6" stop-opacity="0.6"></stop>
+<stop offset="100%" stop-color="#FCE4D6" stop-opacity="0"></stop>
+</radialgradient>
+</defs>
+<circle cx="75" cy="48" fill="url(#grad-adjp-bg)" r="42"></circle>
+<rect fill="#FFFFFF" fill-opacity="0.92" height="64" rx="8" stroke="#F5BAA0" stroke-width="1.5" width="52" x="28" y="22"></rect>
+<line stroke="#E88C68" stroke-linecap="round" stroke-width="2" x1="38" x2="62" y1="36" y2="36"></line>
+<line stroke="#F5BAA0" stroke-linecap="round" stroke-width="1.8" x1="38" x2="58" y1="44" y2="44"></line>
+<line stroke="#F5BAA0" stroke-linecap="round" stroke-width="1.8" x1="38" x2="52" y1="52" y2="52"></line>
+<circle cx="74" cy="58" fill="#FAD2C0" r="18" stroke="#E88C68" stroke-width="2.2"></circle>
+<circle cx="74" cy="58" fill="#FFFFFF" fill-opacity="0.8" r="13"></circle>
+<line stroke="#C85A32" stroke-linecap="round" stroke-width="3" x1="87" x2="98" y1="71" y2="82"></line>
+<polyline points="70 58 73 61 79 55" stroke="#C85A32" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></polyline>
+</svg>
+<div class="stat-card-top">
+<div class="stat-icon amber">
+<svg fill="none" height="22" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="22"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+</div>
+<span class="stat-card-click-hint">Review →</span>
+</div>
+<div class="stat-value" id="adj-stat-pending-val">--</div>
+<div class="stat-label">Pending Review</div>
+<div class="stat-subtext">Claims awaiting active Adjuster review</div>
+</div>
+<!-- Card 3: More Information -->
+<div class="card stat-card adjuster-metric-card" data-tooltip="Claims where additional information/documents are required" id="card-adj-info" onclick="filterAdjusterFromDashboard('More Information Required')">
+<svg aria-hidden="true" class="stat-card-watermark" fill="none" viewbox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<radialgradient cx="65%" cy="40%" id="grad-adji-bg" r="65%">
+<stop offset="0%" stop-color="#FDEFE7" stop-opacity="0.95"></stop>
+<stop offset="60%" stop-color="#FCE4D6" stop-opacity="0.6"></stop>
+<stop offset="100%" stop-color="#FCE4D6" stop-opacity="0"></stop>
+</radialgradient>
+</defs>
+<circle cx="75" cy="48" fill="url(#grad-adji-bg)" r="42"></circle>
+<rect fill="#FFFFFF" fill-opacity="0.92" height="64" rx="8" stroke="#F5BAA0" stroke-width="1.5" width="52" x="30" y="24"></rect>
+<path d="M42 24V16C42 13.8 43.8 12 46 12H58C60.2 12 62 13.8 62 16V24" fill="none" stroke="#E88C68" stroke-width="1.8"></path>
+<line stroke="#E88C68" stroke-linecap="round" stroke-width="2" x1="40" x2="68" y1="40" y2="40"></line>
+<line stroke="#F5BAA0" stroke-linecap="round" stroke-width="1.8" x1="40" x2="62" y1="48" y2="48"></line>
+<circle cx="76" cy="62" fill="#FAD2C0" r="16" stroke="#E88C68" stroke-width="2"></circle>
+<circle cx="76" cy="62" fill="#FFFFFF" r="12"></circle>
+<text fill="#C85A32" font-family="'Inter', sans-serif" font-size="14" font-weight="bold" text-anchor="middle" x="76" y="67">?</text>
+</svg>
+<div class="stat-card-top">
+<div class="stat-icon blue">
+<svg fill="none" height="22" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="22"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg>
+</div>
+<span class="stat-card-click-hint">Filter →</span>
+</div>
+<div class="stat-value" id="adj-stat-info-val">--</div>
+<div class="stat-label">More Information</div>
+<div class="stat-subtext">Claims awaiting customer documentation</div>
+</div>
+<!-- Card 4: Resolved Claims -->
+<div class="card stat-card adjuster-metric-card" data-tooltip="Claims with final status Approved or Rejected" id="card-adj-resolved" onclick="filterAdjusterFromDashboard('Resolved')">
+<svg aria-hidden="true" class="stat-card-watermark" fill="none" viewbox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<radialgradient cx="65%" cy="40%" id="grad-adjr-bg" r="65%">
+<stop offset="0%" stop-color="#FDEFE7" stop-opacity="0.95"></stop>
+<stop offset="60%" stop-color="#FCE4D6" stop-opacity="0.6"></stop>
+<stop offset="100%" stop-color="#FCE4D6" stop-opacity="0"></stop>
+</radialgradient>
+</defs>
+<circle cx="75" cy="48" fill="url(#grad-adjr-bg)" r="42"></circle>
+<path d="M60 68L50 90L68 82L86 90L76 68" fill="#FAD2C0" stroke="#E88C68" stroke-linejoin="round" stroke-width="1.5"></path>
+<circle cx="68" cy="48" fill="#FCE4D6" r="28" stroke="#F5BAA0" stroke-width="1.5"></circle>
+<circle cx="68" cy="48" fill="#F5B296" r="22" stroke="#E88C68" stroke-width="1.8"></circle>
+<circle cx="68" cy="48" fill="#FFFFFF" r="16"></circle>
+<polyline points="58 48 65 55 79 39" stroke="#C85A32" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8"></polyline>
+</svg>
+<div class="stat-card-top">
+<div class="stat-icon green">
+<svg fill="none" height="22" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="22"><polyline points="20 6 9 17 4 12"></polyline></svg>
+</div>
+<span class="stat-card-click-hint">Resolved →</span>
+</div>
+<div class="stat-value" id="adj-stat-resolved-val">--</div>
+<div class="stat-label">Resolved Claims</div>
+<div class="stat-subtext">Claims finalized as Approved or Rejected</div>
+</div>
+</div>
+<!-- Priority Queue Preview Table Card -->
+<div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);margin-bottom:1.5rem;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+<div>
+<h3 class="card-title" style="margin:0;font-size:1.15rem;color:var(--cust-brown-900);">Priority Claims Awaiting Review</h3>
+<div class="card-subtitle" style="margin-top:2px;font-size:0.8rem;color:var(--gray-600);">Shared Adjuster queue items requiring active assessment</div>
+</div>
+<button class="btn btn-outline btn-sm" onclick="navigateTo('adjuster-claims')">Open Full Queue →</button>
+</div>
+<div class="data-table-container compact-table-scroll table-wrapper">
+<table class="data-table">
+<thead>
+<tr>
+<th>Claim ID</th>
+<th>Customer</th>
+<th>Policy</th>
+<th>Claim Type</th>
+<th>Reported Date</th>
+<th>Claimed Amount</th>
+<th class="th-status">Status</th>
+<th class="th-action" style="text-align:right">Action</th>
+</tr>
+</thead>
+<tbody id="adjuster-dashboard-queue-tbody">
+<!-- Dynamically populated via renderAdjusterDashboardQueue() -->
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- Adjuster Page 2: Full Claims Queue -->
+<section class="page" id="page-adjuster-claims">
+<div class="page-header">
+<div>
+<h2 class="page-title">Adjuster Claims Queue</h2>
+<p class="page-subtitle">Shared repository of customer claims for assessment, coverage evaluation, and final resolution.</p>
+</div>
+</div>
+<div class="card" style="border:1px solid var(--cust-cream-border);background:var(--white);border-radius:12px;padding:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+<!-- Filter & Search Toolbar -->
+<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:1.25rem;">
+<div id="adjuster-claim-filter-pills" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+<button class="btn btn-sm adjuster-filter-pill active" onclick="filterAdjusterClaims('all', this)" style="border-radius:20px;padding:6px 14px;font-size:0.8rem;font-weight:600;background:var(--cust-brown-700);color:#fff;border:none;cursor:pointer;" type="button">All</button>
+<button class="btn btn-outline btn-sm adjuster-filter-pill" onclick="filterAdjusterClaims('Pending Review', this)" style="border-radius:20px;padding:6px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;" type="button">Pending Review</button>
+<button class="btn btn-outline btn-sm adjuster-filter-pill" onclick="filterAdjusterClaims('More Information Required', this)" style="border-radius:20px;padding:6px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;" type="button">More Information Required</button>
+<button class="btn btn-outline btn-sm adjuster-filter-pill" onclick="filterAdjusterClaims('Approved', this)" style="border-radius:20px;padding:6px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;" type="button">Approved</button>
+<button class="btn btn-outline btn-sm adjuster-filter-pill" onclick="filterAdjusterClaims('Rejected', this)" style="border-radius:20px;padding:6px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;" type="button">Rejected</button>
+</div>
+<div style="position:relative;flex:1;max-width:340px;min-width:240px;">
+<input class="form-control" id="adjuster-claim-search-input" oninput="handleAdjusterClaimSearch(this.value)" placeholder="Search by Claim ID, Customer, Policy, or Type..." style="padding:8px 12px;font-size:0.825rem;border-radius:8px;border:1px solid var(--cust-cream-border);background:var(--white);width:100%;box-sizing:border-box;color:var(--cust-brown-900);" type="text"/>
+</div>
+</div>
+<!-- Full Claims Table -->
+<div class="data-table-container compact-table-scroll table-wrapper">
+<table class="data-table">
+<thead>
+<tr>
+<th>Claim ID</th>
+<th>Customer</th>
+<th>Policy</th>
+<th>Claim Type</th>
+<th>Reported Date</th>
+<th>Claimed Amount</th>
+<th class="th-status">Status</th>
+<th class="th-action" style="text-align:right">Action</th>
+</tr>
+</thead>
+<tbody id="adjuster-claims-tbody">
+<!-- Injected dynamically via renderAdjusterClaimsTable() -->
+</tbody>
+</table>
+</div>
+<div class="agent-apps-pagination-bar" id="adjuster-claims-pagination-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0.25rem 0.25rem; border-top: 1px solid var(--cust-cream-border); margin-top: 1rem; flex-wrap: wrap; gap: 10px;">
+<div id="adjuster-claims-count-info" style="font-size: 0.825rem; color: var(--gray-600); font-weight: 500;">
+              Showing all claims in queue
+            </div>
+</div>
+</div>
+</section>
+
+<!-- Adjuster Page 3: AI Assistant (Decision Support) -->
+<section class="page" id="page-adjuster-ai">
+<div class="page-header">
+<div>
+<h2 class="page-title">Adjuster AI Decision Support</h2>
+<p class="page-subtitle">Grounded claims analysis, policy coverage verification, and exclusion guidance for claims adjusters.</p>
+</div>
+<div class="portal-tag" style="background:#FAF6F2;border-color:#EADBCE;color:#3B241D;">
+<span class="portal-dot" style="background:#C85A32;"></span>
+              Decision Support AI Active
+            </div>
+</div>
+<div class="chat-layout">
+<!-- Left: Quick Topic Panel -->
+<div class="chat-history-panel">
+<div class="chat-history-header">
+<h4>
+<svg fill="none" height="17" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="17"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Assessment Topics
+              </h4>
+</div>
+<div class="chat-history-list" id="adjuster-chat-topics-list" style="padding:10px;">
+<div style="font-size:0.775rem;color:var(--gray-600);line-height:1.4;padding:8px;background:#FAF6F2;border-radius:8px;border:1px solid #EADBCE;margin-bottom:8px;">
+<strong>Note:</strong> The AI provides objective decision support only. The final claim determination belongs exclusively to the Adjuster.
+              </div>
+<button class="btn btn-outline btn-block btn-sm" onclick="handleRoleChatPrompt('adjuster', 'Summarize pending claims requiring Adjuster review')" style="margin-bottom:6px;text-align:left;font-size:0.78rem;">Pending Claims Overview</button>
+<button class="btn btn-outline btn-block btn-sm" onclick="handleRoleChatPrompt('adjuster', 'What policy exclusions should I verify for water damage claims?')" style="margin-bottom:6px;text-align:left;font-size:0.78rem;">Water Damage Exclusions</button>
+<button class="btn btn-outline btn-block btn-sm" onclick="handleRoleChatPrompt('adjuster', 'What documentation is typically required for vehicle collision claims?')" style="margin-bottom:6px;text-align:left;font-size:0.78rem;">Collision Evidence Checklist</button>
+<button class="btn btn-outline btn-block btn-sm" onclick="handleRoleChatPrompt('adjuster', 'Explain the difference between comprehensive and collision deductibles.')" style="margin-bottom:6px;text-align:left;font-size:0.78rem;">Deductible Application</button>
+</div>
+</div>
+<!-- Right: Main Chat Area -->
+<div class="chat-main">
+<div class="chat-main-header">
+<div>
+<div class="chat-main-title" id="adjuster-chat-current-title">Adjuster AI Decision Support Assistant</div>
+<div class="chat-main-subtitle">Grounded claim analysis and coverage verification</div>
+</div>
+</div>
+<div class="chat-messages" id="adjuster-chat-messages-container">
+<!-- Dynamically rendered via JS -->
+</div>
+<div class="chat-suggestions">
+<button class="chat-suggestion-chip" onclick="handleRoleChatPrompt('adjuster', 'Summarize pending claims requiring Adjuster review')">Summarize pending claims</button>
+<button class="chat-suggestion-chip" onclick="handleRoleChatPrompt('adjuster', 'What policy exclusions should I verify for water damage claims?')">Water damage exclusions</button>
+<button class="chat-suggestion-chip" onclick="handleRoleChatPrompt('adjuster', 'What documentation is required for property claims?')">Property documentation</button>
+</div>
+<div class="chat-input-area">
+<input id="adjuster-page-chat-input" placeholder="Ask about claim assessment, coverage terms, or exclusions..." type="text"/>
+<button class="btn btn-primary" id="adjuster-page-chat-send-btn" onclick="sendAdjusterPageChatMessage()">
+<span>Send</span>
+<svg fill="none" height="16" stroke="currentColor" stroke-width="2" style="margin-left:4px;" viewbox="0 0 24 24" width="16"><line x1="22" x2="11" y1="2" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+</button>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Adjuster Page 4: Profile & Settings -->
+<section class="page" id="page-adjuster-profile">
+<div class="page-header">
+<div>
+<h2 class="page-title">Profile &amp; Settings</h2>
+<p class="page-subtitle">Manage your Adjuster profile, credentials, and assessment preferences.</p>
+</div>
+</div>
+<div class="profile-header card" style="margin-bottom: 1.5rem;">
+<div class="profile-avatar-large" id="adjuster-profile-avatar" style="background:#C85A32;color:#fff;">AD</div>
+<div style="flex: 1;">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+<div>
+<h3 id="adjuster-profile-name" style="font-size: 1.45rem; color: var(--cust-brown-900); font-weight: 700;">Claims Adjuster</h3>
+<p id="adjuster-profile-id-meta" style="color: var(--gray-500); font-size: 0.9rem; margin-top: 2px;">Role: <strong id="adjuster-profile-role-sub">Adjuster</strong> · Authority: <strong>Independent Claims Adjudication</strong></p>
+<p style="font-size: 0.8rem; color: var(--gray-600); margin-top: 4px;">Department: Claims Operations &amp; Settlement · Shared Queue Access</p>
+</div>
+<span class="badge badge-active" style="background:#f0fdfa;border-color:#99f6e4;color:#0f766e;font-size:0.8rem;padding:0.4rem 0.85rem;">Active Claims Adjuster</span>
+</div>
+</div>
+</div>
+<div class="grid grid-2" style="margin-bottom: 1.5rem;">
+<div class="card">
+<div class="card-header">
+<div>
+<h3 class="card-title">Adjuster Credentials</h3>
+<div class="card-subtitle">Verified claims authorization and operational unit</div>
+</div>
+</div>
+<div class="detail-row"><span class="detail-label">Full Name</span><span class="detail-value" id="adjuster-profile-fullname">Adjuster</span></div>
+<div class="detail-row"><span class="detail-label">Email Address</span><span class="detail-value" id="adjuster-profile-email">adjuster@insureassist.com</span></div>
+<div class="detail-row"><span class="detail-label">Department</span><span class="detail-value">Claims Assessment &amp; Resolution</span></div>
+<div class="detail-row"><span class="detail-label">Role</span><span class="detail-value" id="adjuster-profile-role">Adjuster</span></div>
+<div class="detail-row"><span class="detail-label">Queue Model</span><span class="badge badge-active">Shared Claims Queue</span></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div>
+<h3 class="card-title">Operational Authority</h3>
+<div class="card-subtitle">Claim settlement guidelines &amp; binding limits</div>
+</div>
+</div>
+<div class="detail-row"><span class="detail-label">Assessment Scope</span><span class="detail-value">Property, Vehicle, Casualty Claims</span></div>
+<div class="detail-row"><span class="detail-label">Underwriting Separation</span><span class="badge badge-active" style="background:#f0fdfa;color:#0f766e;">Independent from Underwriting</span></div>
+<div class="detail-row"><span class="detail-label">Decisions Supported</span><span class="detail-value">Approve, Reject, Request More Info</span></div>
+<div class="detail-row"><span class="detail-label">Notifications</span><span class="detail-value">Customer &amp; Agent Workflow Dispatches</span></div>
+</div>
+</div>
+</section>
+
+<!-- ==========================================================================
              4. ADMIN PAGES (SYSTEM GOVERNANCE)
              ========================================================================== -->
 <!-- Admin Page 1: Dashboard (Req 4, 5, 12) -->
@@ -3478,16 +3832,17 @@
 </div>
 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
 <select class="form-control" id="admin-user-role-filter" style="width: auto; padding: 7px 12px; font-size: 0.85rem; border: 1px solid var(--gray-300); border-radius: 6px;">
-<option value="all">All Roles (4)</option>
+<option value="all">All Roles (5)</option>
 <option value="Customer">Customer</option>
 <option value="Agent">Agent</option>
 <option value="Underwriter">Underwriter</option>
 <option value="Admin">Admin</option>
+<option value="Adjuster">Adjuster</option>
 </select>
 <select class="form-control" id="admin-user-status-filter" style="width: auto; padding: 7px 12px; font-size: 0.85rem; border: 1px solid var(--gray-300); border-radius: 6px;">
 <option value="all">All Statuses</option>
 <option value="Active">Active</option>
-<option value="Pending">Pending</option>
+<option value="Invited">Invited</option>
 <option value="Inactive">Inactive</option>
 </select>
 <button class="btn btn-outline btn-sm" id="admin-user-reset-btn">Reset</button>
@@ -3585,6 +3940,102 @@
 </tr>
 </thead>
 <tbody id="admin-policies-tbody">
+<!-- Populated via JS -->
+</tbody>
+</table>
+</div>
+<button aria-expanded="false" class="btn-show-more-toggle" onclick="toggleCardShowMore(this)">
+<span>Show more</span>
+<svg fill="none" height="13" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="13"><polyline points="6 9 12 15 18 9"></polyline></svg>
+</button>
+</div>
+</section>
+<!-- Admin Page: Policy Module -->
+<section class="page" id="page-admin-policy-module">
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+<div>
+<h2 class="page-title">Policy Module</h2>
+<p class="page-subtitle">Create independent insurance policies and assign policies to customers and agents</p>
+</div>
+<div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+<button class="btn btn-outline" id="btn-admin-module-assign-policy" onclick="openAssignPolicyModuleModal()" style="font-weight: 600; padding: 0.6rem 1.25rem;">
+Assign Policy
+</button>
+<button class="btn btn-primary" id="btn-admin-module-create-policy" onclick="openCreatePolicyModuleModal()" style="font-weight: 600; padding: 0.6rem 1.25rem;">
+Create Policy
+</button>
+</div>
+</div>
+
+<!-- Policy Module Top Metric Cards -->
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+  <!-- Card 1: Policy Portfolio -->
+  <div class="admin-stat-item stat-card" style="padding: 1.25rem; background: var(--white); border: 1px solid var(--gray-200); border-radius: 12px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;">
+    <div style="font-size: 0.85rem; font-weight: 600; color: var(--gray-600); margin-bottom: 6px;">Policy Portfolio</div>
+    <div id="admin-module-stat-total-policies-val" style="font-size: 2rem; font-weight: 700; color:#3B241D; line-height: 1.1; margin-bottom: 4px;">--</div>
+    <div style="font-size: 0.775rem; color: var(--gray-500); font-weight: 500;">All platform policies</div>
+  </div>
+
+  <!-- Card 2: Awaiting Customer -->
+  <div class="admin-stat-item stat-card" style="padding: 1.25rem; background: var(--white); border: 1px solid var(--gray-200); border-radius: 12px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;">
+    <div style="font-size: 0.85rem; font-weight: 600; color: var(--gray-600); margin-bottom: 6px;">Awaiting Customer</div>
+    <div id="admin-module-stat-unassigned-cust-val" style="font-size: 2rem; font-weight: 700; color:#C97963; line-height: 1.1; margin-bottom: 4px;">--</div>
+    <div style="font-size: 0.775rem; color: var(--gray-500); font-weight: 500;">Customer unassigned</div>
+  </div>
+
+  <!-- Card 3: Awaiting Agent -->
+  <div class="admin-stat-item stat-card" style="padding: 1.25rem; background: var(--white); border: 1px solid var(--gray-200); border-radius: 12px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;">
+    <div style="font-size: 0.85rem; font-weight: 600; color: var(--gray-600); margin-bottom: 6px;">Awaiting Agent</div>
+    <div id="admin-module-stat-cust-no-agent-val" style="font-size: 2rem; font-weight: 700; color:#B45309; line-height: 1.1; margin-bottom: 4px;">--</div>
+    <div style="font-size: 0.775rem; color: var(--gray-500); font-weight: 500;">Needs advisory agent</div>
+  </div>
+
+  <!-- Card 4: Recently Created -->
+  <div class="admin-stat-item stat-card" style="padding: 1.25rem; background: var(--white); border: 1px solid var(--gray-200); border-radius: 12px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;">
+    <div style="font-size: 0.85rem; font-weight: 600; color: var(--gray-600); margin-bottom: 6px;">Recently Created</div>
+    <div id="admin-module-stat-recent-policies-val" style="font-size: 2rem; font-weight: 700; color:#1E40AF; line-height: 1.1; margin-bottom: 4px;">--</div>
+    <div style="font-size: 0.775rem; color: var(--gray-500); font-weight: 500;">Created in last 7 days</div>
+  </div>
+</div>
+
+<div class="card">
+<!-- Search & Filters -->
+<div class="queue-filter-bar" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+<div class="search-input-wrapper" style="flex: 1; min-width: 240px; margin-bottom: 0;">
+<svg fill="none" height="18" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="18"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
+<input id="admin-module-policy-search-input" placeholder="Search policies by ID, type, or status..." type="text"/>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+<select class="form-control" id="admin-module-policy-type-filter" style="width: auto; padding: 7px 12px; font-size: 0.85rem; border: 1px solid var(--gray-300); border-radius: 6px;">
+<option value="all">All Lines</option>
+<option value="Auto">Auto</option>
+<option value="Home">Homeowners</option>
+<option value="Commercial">Commercial</option>
+<option value="Umbrella">Umbrella</option>
+<option value="Specialty">Specialty</option>
+</select>
+<select class="form-control" id="admin-module-policy-status-filter" style="width: auto; padding: 7px 12px; font-size: 0.85rem; border: 1px solid var(--gray-300); border-radius: 6px;">
+<option value="all">All Statuses</option>
+<option value="Active">Active</option>
+<option value="Pending">Pending</option>
+<option value="Expired">Expired</option>
+</select>
+<button class="btn btn-outline btn-sm" id="admin-module-policy-reset-btn">Reset</button>
+</div>
+</div>
+<!-- Policy Module Policy Table (ONLY 5 Columns) -->
+<div class="table-responsive compact-table-scroll">
+<table class="data-table">
+<thead>
+<tr>
+<th>Policy ID</th>
+<th>Type</th>
+<th>Status</th>
+<th>Annual Premium</th>
+<th style="text-align:right">Action</th>
+</tr>
+</thead>
+<tbody id="admin-module-policies-tbody">
 <!-- Populated via JS -->
 </tbody>
 </table>
@@ -4096,8 +4547,30 @@
 <div class="uw-modal-footer" style="border-top:1px solid var(--cust-cream-border); padding-top:1rem; display:flex; justify-content:flex-end; gap:10px;">
 <button class="btn btn-outline btn-sm" onclick="closeModalById('modal-customer-provide-info')">Cancel</button>
 <button class="btn btn-primary btn-sm" id="btn-submit-cust-provide-info" onclick="submitCustomerProvideInfo()" style="font-weight:700;">
-          Upload &amp; Return to Agent Review
-        </button>
+  Upload &amp; Return to Agent Review
+</button>
+</div>
+</div>
+</div>
+<!-- 8. Adjuster Claim Details & Decision Modal -->
+<div class="uw-modal-backdrop" id="modal-adjuster-claim-details" onclick="closePolicyAppModal(event, 'modal-adjuster-claim-details')">
+<div class="uw-modal-box" onclick="event.stopPropagation()" style="max-width:880px; max-height:90vh; overflow-y:auto;">
+<div class="uw-modal-header" style="border-bottom:1px solid var(--cust-cream-border); padding-bottom:1rem; display:flex; justify-content:space-between; align-items:flex-start;">
+<div>
+<div style="display:flex; align-items:center; gap:10px;">
+<h3 class="card-title" id="adj-modal-claim-id" style="margin:0; font-size:1.3rem; font-family:monospace; color:var(--cust-brown-900);">CLM-2024-8831</h3>
+<span class="badge" id="adj-modal-status-badge" style="font-size:0.8rem;">Pending Review</span>
+</div>
+<div class="card-subtitle" id="adj-modal-header-sub" style="margin-top:4px; font-size:0.85rem; color:var(--gray-600);">Homeowners Premier Protection · Sarah Mitchell</div>
+</div>
+<button aria-label="Close modal" class="panel-close-btn" onclick="closeModalById('modal-adjuster-claim-details')">✕</button>
+</div>
+<div class="uw-modal-body" id="adj-modal-body" style="padding:1.25rem 0;">
+<!-- Injected dynamically via renderAdjusterClaimDetailModal() -->
+</div>
+<div class="uw-modal-footer" id="adj-modal-footer" style="border-top:1px solid var(--cust-cream-border); padding-top:1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+<button class="btn btn-outline btn-sm" onclick="closeModalById('modal-adjuster-claim-details')">Close Review</button>
+<div style="font-size:0.75rem; color:var(--gray-500); font-style:italic;">All claim decisions are immediately persisted and dispatch official workflow notifications.</div>
 </div>
 </div>
 </div>

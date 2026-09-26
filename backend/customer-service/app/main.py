@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.db.database import engine, Base
 from app.db.seed import seed_database
 from app.routes.customer import router as customer_router, agent_router, notification_router
+from app.routes.adjuster import router as adjuster_router
 from app.schemas.customer import HealthResponse
 
 logging.basicConfig(level=logging.INFO)
@@ -33,7 +34,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
-    description="InsureAssist Customer Microservice. Handles Customer Profile, Policy Portfolio, Coverage, Claims/FNOL Management, Renewal Approvals, and Notifications with PostgreSQL persistence.",
+    description="InsureAssist Customer Microservice. Handles Customer Profile, Policy Portfolio, Coverage, Claims/FNOL Management, Renewal Approvals, Notifications, and Adjuster Claims Assessment with PostgreSQL persistence.",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
@@ -54,6 +55,7 @@ app.add_middleware(
 app.include_router(customer_router)
 app.include_router(agent_router)
 app.include_router(notification_router)
+app.include_router(adjuster_router)
 
 
 

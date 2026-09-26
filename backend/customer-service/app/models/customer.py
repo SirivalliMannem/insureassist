@@ -128,8 +128,14 @@ class Claim(Base):
     incident_type = Column(String(100), nullable=True)
     incident_description = Column(Text, nullable=False)
     location = Column(String(255), nullable=True)
-    claim_status = Column(String(50), default="Under Review", nullable=False)
+    claim_status = Column(String(50), default="Pending Review", nullable=False)
     claim_amount = Column(Numeric(12, 2), nullable=True)
+    approved_amount = Column(Numeric(12, 2), nullable=True)
+    rejection_reason = Column(Text, nullable=True)
+    decision_notes = Column(Text, nullable=True)
+    requested_info = Column(Text, nullable=True)
+    decision_date = Column(DateTime, nullable=True)
+    decision_by = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
 
@@ -178,6 +184,7 @@ class Notification(Base):
     recipient_id = Column(String(64), nullable=True, index=True)      # customer_id or user_id or None
     title = Column(String(255), nullable=False)
     message = Column(Text, nullable=False)
+    claim_id = Column(String(64), nullable=True, index=True)
     policy_id = Column(String(64), nullable=True)
     policy_number = Column(String(100), nullable=True)
     policy_type = Column(String(100), nullable=True)

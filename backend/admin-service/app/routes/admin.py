@@ -8,6 +8,7 @@ from app.core.auth import get_current_admin, get_current_admin_user
 from app.models.models import User
 from app.services.admin_service import AdminService
 from app.schemas.admin import (
+    PolicyCreateRequest, PolicyAssignRequest,
     UserCreateRequest, PasswordResetRequest, ConfirmAccessRequest,
     CreateConversationRequest, SendMessageRequest,
     ChatMessageItem, ChatConversationItem, AdminChatResponse
@@ -42,8 +43,9 @@ def get_admin_stats(
 @router.get("/users", summary="List All Users")
 def get_admin_users(
     role: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(1000, ge=1, le=5000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_admin)
@@ -52,7 +54,7 @@ def get_admin_users(
     Returns real user accounts from the database.
     """
     try:
-        return AdminService.get_users(db, role, search, limit, offset)
+        return AdminService.get_users(db, role, status, search, limit, offset)
     except Exception as e:
         logger.error(f"Error fetching admin users: {e}", exc_info=True)
         raise HTTPException(
@@ -93,7 +95,7 @@ def get_admin_policies(
     status_filter: Optional[str] = Query(None, alias="status"),
     policy_type: Optional[str] = Query(None, alias="type"),
     search: Optional[str] = Query(None),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(1000, ge=1, le=5000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_admin)
@@ -292,3 +294,102 @@ async def delete_admin_conversation(
     return AdminService.delete_chat_conversation(conversation_id, current_admin, db)
 
 
+
+
+# ==============================================================================
+# POLICY MODULE ENDPOINTS (ADMIN ONLY)
+# ==============================================================================
+
+@router.get("/policy-module/policies", summary="List Policies for Policy Module Table")
+def get_policy_module_policies(
+    status: Optional[str] = Query(None),
+    type: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(1000, ge=1, le=5000),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_admin)
+):
+    """
+    Fetches policies for the Admin Policy Module table (Policy ID, Type, Status, Annual Premium, Action).
+    """
+    try:
+        return AdminService.get_policy_module_policies(db, status_filter=status, policy_type=type, search=search, limit=limit, offset=offset)
+    except Exception as e:
+        logger.error(f"Error fetching policy module policies: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch policies: {str(e)}"
+        )
+
+
+@router.post("/policy-module/policies", summary="Create Policy in Policy Module")
+def create_policy_module_policy(
+    payload: PolicyCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_admin)
+):
+    """
+    Creates a new insurance policy independently in PostgreSQL. Customer and Agent assignment are optional.
+    """
+    try:
+        res = AdminService.create_policy(payload.dict(), db)
+        if not res.get("success"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=res.get("message", "Policy creation failed.")
+            )
+        return res
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating policy: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create policy: {str(e)}"
+        )
+
+
+@router.post("/policy-module/assign", summary="Assign Policy to Customer and/or Agent")
+def assign_policy_module(
+    payload: PolicyAssignRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_admin)
+):
+    """
+    Assigns an existing policy to a Customer and/or Agent, updating database records and assignments.
+    """
+    try:
+        res = AdminService.assign_policy(payload.dict(), db)
+        if not res.get("success"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=res.get("message", "Policy assignment failed.")
+            )
+        return res
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error assigning policy: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to assign policy: {str(e)}"
+        )
+
+
+@router.get("/policy-module/form-data", summary="Get Policy Module Form Options")
+def get_policy_module_form_data(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_admin)
+):
+    """
+    Returns options for the Assign Policy and Create Policy workflows (Customers, Agents, Policies).
+    """
+    try:
+        return AdminService.get_policy_module_form_data(db)
+    except Exception as e:
+        logger.error(f"Error fetching policy module form data: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch form options: {str(e)}"
+        )

@@ -11,20 +11,21 @@ class UserRole(str, Enum):
     AGENT = "agent"
     UNDERWRITER = "underwriter"
     ADMIN = "admin"
+    ADJUSTER = "adjuster"
     QA = "qa"
 
 
-def parse_user_role(role_val: str) -> UserRole:
+def parse_user_role(role_val: str) -> str:
     """
-    Safely normalize and parse role string to UserRole enum.
+    Safely normalize and parse role string to UserRole value or preserve custom role.
     """
     if not role_val:
-        return UserRole.CUSTOMER
+        return UserRole.CUSTOMER.value
     normalized = str(role_val).strip().lower()
     for role in UserRole:
         if role.value == normalized:
-            return role
-    return UserRole.CUSTOMER
+            return role.value
+    return str(role_val).strip()
 
 
 class UserInDB(BaseModel):
@@ -35,7 +36,7 @@ class UserInDB(BaseModel):
     name: str
     email: str
     hashed_password: str
-    role: UserRole
+    role: str
     is_active: bool = True
     phone: Optional[str] = None
     title: Optional[str] = None

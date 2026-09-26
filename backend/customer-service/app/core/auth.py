@@ -143,3 +143,21 @@ def get_current_admin(
         )
     return payload
 
+
+def get_current_adjuster(
+    payload: dict = Depends(get_token_payload)
+) -> dict:
+    """
+    Dependency that strictly requires the Adjuster role.
+    Admins are also permitted for system administration/oversight.
+    Underwriter or other non-adjuster roles are strictly rejected with HTTP 403.
+    """
+    role = (payload.get("role") or "").strip().lower()
+    allowed_roles = ["adjuster", "claims adjuster", "claims_adjuster", "admin"]
+    if role not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access forbidden: User role '{payload.get('role')}' is not authorized for Adjuster claims operations."
+        )
+    return payload
+

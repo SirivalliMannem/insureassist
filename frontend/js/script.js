@@ -12,7 +12,7 @@ function renderInsureAssistDonutChart(container, options) {
   const radius = 38;
   const circumference = 2 * Math.PI * radius; // ~238.761
 
-  if (items.length === 0 || totalVal === 0) {
+  if (items.length === 0) {
     container.innerHTML = `<div style="text-align:center;padding:2rem 1rem;color:var(--gray-500);font-size:0.875rem;">${options.emptyMessage || 'No data available'}</div>`;
     return;
   }
@@ -22,7 +22,7 @@ function renderInsureAssistDonutChart(container, options) {
   const segments = items.map((it, idx) => {
     const pct = totalVal > 0 ? (it.value / totalVal) * 100 : 0;
     const roundedPct = Math.round(pct * 10) / 10;
-    const segmentLength = (pct / 100) * circumference;
+    const segmentLength = totalVal > 0 ? (pct / 100) * circumference : 0;
     const dashArray = `${Math.max(0, segmentLength - 1.5)} ${circumference - Math.max(0, segmentLength - 1.5)}`;
     const dashOffset = -currentOffset;
     currentOffset += segmentLength;
@@ -125,54 +125,139 @@ function renderInsureAssistDonutChart(container, options) {
 }
 
 /**
+ * Filter Admin Users Directory by Role
+ */
+function filterAdminUsersByRole(roleName) {
+  const filter = document.getElementById('admin-user-role-filter');
+  if (filter) {
+    let found = false;
+    for (let i = 0; i < filter.options.length; i++) {
+      if (filter.options[i].value.toLowerCase() === (roleName || '').toLowerCase()) {
+        filter.selectedIndex = i;
+        found = true;
+        break;
+      }
+    }
+    if (!found && roleName) {
+      const opt = document.createElement('option');
+      opt.value = roleName;
+      opt.textContent = roleName;
+      filter.appendChild(opt);
+      filter.value = roleName;
+    }
+  }
+  if (typeof fetchAdminUsers === 'function') {
+    fetchAdminUsers(roleName, 'all', '');
+  }
+}
+window.filterAdminUsersByRole = filterAdminUsersByRole;
+
+/**
  * Admin Dashboard Donut Charts Engine
+ * Fully dynamic: fetches active roles from Role Management (getActiveSystemRoles() / MOCK_DB.roles)
+ * and calculates live user distributions from backend (window.adminUsersData.users / window.adminStatsData.users_by_role).
  */
 function renderAdminDashboardCharts() {
   const usersContainer = document.getElementById('admin-users-by-role-chart');
   if (usersContainer) {
-    const userItems = [
+    // Exactly the 4 Supported InsureAssist Application Business Roles
+    const SUPPORTED_APP_ROLES = [
       {
-        label: 'Customers',
-        value: 180,
-        formattedVal: '180',
+        name: 'Customer',
         color: '#C85A32',
-        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-        tooltip: '180 registered retail policyholders (73% of user base)',
-        onClick: "openAdminCustomersSlidePanel(event)"
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
       },
       {
-        label: 'Agents',
-        value: 32,
-        formattedVal: '32',
+        name: 'Agent',
         color: '#D97736',
-        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
-        tooltip: '32 licensed brokerage advisors (13% of user base)',
-        onClick: "openAdminAgentsSlidePanel(event)"
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>'
       },
       {
-        label: 'Underwriters',
-        value: 24,
-        formattedVal: '24',
+        name: 'Underwriter',
         color: '#5C3A2E',
-        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-        tooltip: '24 senior risk decision officers (10% of user base)',
-        onClick: "openAdminUnderwritersSlidePanel(event)"
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
       },
       {
-        label: 'Administrators',
-        value: 12,
-        formattedVal: '12',
-        color: '#2A1810',
-        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-        tooltip: '12 platform root administration accounts (5% of user base)',
-        onClick: "openAdminUsersSlidePanel(event)"
+        name: 'Adjuster',
+        color: '#6B21A8',
+        iconSvg: '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>'
       }
     ];
 
+    // Live counts aggregation strictly for supported roles
+    const roleCountMap = { customer: 0, agent: 0, underwriter: 0, adjuster: 0 };
+
+    if (window.adminUsersData && Array.isArray(window.adminUsersData.users) && window.adminUsersData.users.length > 0) {
+      window.adminUsersData.users.forEach(u => {
+        const lower = (u.role || '').toLowerCase().trim();
+        if (lower.startsWith('cust')) roleCountMap.customer += 1;
+        else if (lower.startsWith('agent') || lower.startsWith('broker')) roleCountMap.agent += 1;
+        else if (lower.startsWith('underwrit')) roleCountMap.underwriter += 1;
+        else if (lower.startsWith('adjust')) roleCountMap.adjuster += 1;
+      });
+    } else if (window.adminStatsData) {
+      const stats = window.adminStatsData;
+      if (stats.users_by_role && Object.keys(stats.users_by_role).length > 0) {
+        Object.entries(stats.users_by_role).forEach(([rName, count]) => {
+          const lower = rName.toLowerCase().trim();
+          if (lower.startsWith('cust')) roleCountMap.customer += count;
+          else if (lower.startsWith('agent') || lower.startsWith('broker')) roleCountMap.agent += count;
+          else if (lower.startsWith('underwrit')) roleCountMap.underwriter += count;
+          else if (lower.startsWith('adjust')) roleCountMap.adjuster += count;
+        });
+      } else {
+        roleCountMap.customer = stats.total_customers != null ? stats.total_customers : (stats.customer_user_count || 325);
+        roleCountMap.agent = stats.agent_count != null ? stats.agent_count : 82;
+        roleCountMap.underwriter = stats.underwriter_count != null ? stats.underwriter_count : 46;
+        roleCountMap.adjuster = 3;
+      }
+    } else {
+      roleCountMap.customer = 325;
+      roleCountMap.agent = 82;
+      roleCountMap.underwriter = 46;
+      roleCountMap.adjuster = 3;
+    }
+
+    // Build exactly the 4 supported role items
+    const roleItems = SUPPORTED_APP_ROLES.map(roleDef => {
+      const lower = roleDef.name.toLowerCase();
+      const count = roleCountMap[lower] || 0;
+      return {
+        name: roleDef.name,
+        count: count,
+        color: roleDef.color,
+        iconSvg: roleDef.iconSvg
+      };
+    });
+
+    // Total users across these 4 supported business roles
+    const totalUsers = roleItems.reduce((sum, item) => sum + (item.count || 0), 0);
+
+    // Update card subtitle if available
+    const subTitleEl = usersContainer.closest('.card')?.querySelector('.card-subtitle');
+    if (subTitleEl) {
+      subTitleEl.textContent = `Distribution across ${totalUsers} enterprise accounts`;
+    }
+
+    // Dynamic donut items & percentage
+    const userItems = roleItems.map((item, idx) => {
+      const pct = totalUsers > 0 ? ((item.count / totalUsers) * 100).toFixed(1) : "0.0";
+      const pctDisplay = pct.endsWith('.0') ? parseInt(pct, 10) + '%' : pct + '%';
+      return {
+        label: item.name,
+        value: item.count || 0,
+        formattedVal: String(item.count || 0),
+        color: item.color,
+        iconSvg: item.iconSvg,
+        tooltip: `${item.name}: ${item.count} users (${pctDisplay} of platform accounts)`,
+        onClick: `navigateTo('admin-users'); if (typeof filterAdminUsersByRole === 'function') filterAdminUsersByRole('${item.name}');`
+      };
+    });
+
     renderInsureAssistDonutChart(usersContainer, {
       items: userItems,
-      totalVal: 248,
-      centerValue: '248',
+      totalVal: totalUsers,
+      centerValue: String(totalUsers),
       centerLabel: 'TOTAL USERS'
     });
   }
@@ -766,6 +851,8 @@ const MOCK_DB = {
       id: 'customer',
       name: 'Customer',
       subtitle: 'Policyholder User',
+      status: 'Active',
+      enabled: true,
       userCount: 180,
       badgeStyle: 'background:var(--blue-50);color:var(--blue-800);',
       iconBg: 'background:var(--blue-50);color:var(--blue-600);',
@@ -783,6 +870,8 @@ const MOCK_DB = {
       id: 'agent',
       name: 'Agent',
       subtitle: 'Client Advisory Broker',
+      status: 'Active',
+      enabled: true,
       userCount: 32,
       badgeStyle: 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;',
       iconBg: 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;',
@@ -802,6 +891,8 @@ const MOCK_DB = {
       id: 'underwriter',
       name: 'Underwriter',
       subtitle: 'Risk Assessment Officer',
+      status: 'Active',
+      enabled: true,
       userCount: 24,
       badgeStyle: 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;',
       iconBg: 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;',
@@ -821,6 +912,8 @@ const MOCK_DB = {
       id: 'admin',
       name: 'Admin',
       subtitle: 'System Governance & Security',
+      status: 'Active',
+      enabled: true,
       userCount: 12,
       badgeStyle: 'background:#0f172a;color:#ffffff;',
       iconBg: 'background:#0f172a;color:#ffffff;',
@@ -835,6 +928,25 @@ const MOCK_DB = {
         'Access System Audit Trail & Logs',
         'Configure Role RBAC & Permissions',
         'Manage Authentication & Security Toggles'
+      ]
+    },
+    {
+      id: 'adjuster',
+      name: 'Adjuster',
+      subtitle: 'Claims Assessment & Resolution',
+      status: 'Active',
+      enabled: true,
+      userCount: 8,
+      badgeStyle: 'background:#FAF6F2;color:#6B21A8;border:1px solid #EADBCE;',
+      iconBg: 'background:#FAF6F2;color:#6B21A8;border:1px solid #EADBCE;',
+      iconSvg: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+      description: 'Reviews and investigates assigned insurance claims, evaluates policy coverage and supporting documents, and makes final claim decisions including approval, rejection, or requests for additional information.',
+      permissions: [
+        'View Platform Enterprise System Overview',
+        'View Application Intake Queue',
+        'Evaluate Risk Factors & Loss Ratios',
+        'Download Digital Policy Documents',
+        'Access Advisory AI Assistant'
       ]
     }
   ]
@@ -4100,11 +4212,12 @@ function closeUwModalOnBackdrop(e, modalId) {
   }
 }
 
-// Global Escape listener for Underwriter modals
+// Global Escape listener for Underwriter and app modals
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    document.querySelectorAll('.uw-modal-backdrop.open').forEach(m => {
+    document.querySelectorAll('.uw-modal-backdrop.open, .uw-modal-backdrop').forEach(m => {
       m.classList.remove('open');
+      m.style.display = 'none';
       m.setAttribute('aria-hidden', 'true');
     });
   }
@@ -5078,9 +5191,9 @@ function renderAdminDashboardUsersTable() {
 
   tbody.innerHTML = users.slice(0, 10).map(u => {
     const role = u.role || 'Customer';
-    const roleBadge = role === 'Admin' ? 'background:#3B241D;color:#ffffff;' : role.startsWith('Underwriter') ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : role.startsWith('Agent') ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
+    const roleBadge = getRoleBadgeStyle(role);
     const status = u.status || 'Active';
-    const statusBadge = status === 'Active' ? 'badge-active' : 'badge-pending';
+    const statusBadge = status === 'Active' ? 'badge-active' : (status === 'Invited' ? 'badge-invited' : 'badge-pending');
     const userId = u.user_id || u.id;
     return `
           <tr onclick="openUserDetailsPanel('${userId}')" title="Click to view details for ${u.name}" data-tooltip="View full identity and privilege profile for ${u.name}">
@@ -5121,11 +5234,14 @@ function renderAdminUsersTable(roleFilter = 'all', statusFilter = 'all', searchT
     return;
   }
 
+  // Consistent A to Z name sorting
+  filtered.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
+
   tbody.innerHTML = filtered.map(u => {
     const role = u.role || 'Customer';
-    const roleBadge = role === 'Admin' ? 'background:#3B241D;color:#ffffff;' : role.startsWith('Underwriter') ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : role.startsWith('Agent') ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
+    const roleBadge = getRoleBadgeStyle(role);
     const status = u.status || 'Active';
-    const statusBadge = status === 'Active' ? 'badge-active' : 'badge-pending';
+    const statusBadge = status === 'Active' ? 'badge-active' : (status === 'Invited' ? 'badge-invited' : 'badge-pending');
     const userId = u.user_id || u.id;
     return `
           <tr onclick="openUserDetailsPanel('${userId}')" title="Click to view details for ${u.name}" data-tooltip="View full identity and privilege profile for ${u.name}">
@@ -5150,25 +5266,28 @@ function openUserDetailsPanel(userId) {
   if (!u) return;
 
   const rawRole = u.role || 'Customer';
-  let normRole = 'Customer';
+  let normRole = rawRole;
   if (rawRole.toLowerCase().includes('agent')) normRole = 'Agent';
   else if (rawRole.toLowerCase().includes('underwriter')) normRole = 'Underwriter';
   else if (rawRole.toLowerCase().includes('admin')) normRole = 'Admin';
   else if (rawRole.toLowerCase().includes('customer')) normRole = 'Customer';
-  else normRole = rawRole;
+  else if (rawRole.toLowerCase().includes('adjuster')) normRole = 'Adjuster';
 
-  const roleBadge = normRole === 'Admin' ? 'background:#3B241D;color:#ffffff;' : normRole === 'Underwriter' ? 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;' : normRole === 'Agent' ? 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;' : 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
+  const roleBadge = getRoleBadgeStyle(normRole);
   const idStr = u.user_id || u.id;
   const status = u.status || 'Active';
   const created = u.created_at || u.created || 'Database Record';
 
-  const assignedDesc = normRole === 'Customer'
-    ? `Retail Policyholder · Associated with ${u.policies_count || 0} active policies`
-    : normRole === 'Agent'
-      ? 'Licensed Insurance Broker · Portfolio Advisor'
-      : normRole === 'Underwriter'
-        ? 'Risk Decision Authority · Queue Reviewer'
-        : 'Enterprise Platform Superuser';
+  const assignedRoleObj = (MOCK_DB.roles && Array.isArray(MOCK_DB.roles)) ? MOCK_DB.roles.find(r => r.name.toLowerCase() === normRole.toLowerCase()) : null;
+  const assignedDesc = assignedRoleObj && assignedRoleObj.description
+    ? assignedRoleObj.description
+    : (normRole === 'Customer'
+      ? `Retail Policyholder · Associated with ${u.policies_count || 0} active policies`
+      : normRole === 'Agent'
+        ? 'Licensed Insurance Broker · Portfolio Advisor'
+        : normRole === 'Underwriter'
+          ? 'Risk Decision Authority · Queue Reviewer'
+          : 'Enterprise Platform Superuser');
 
   const contentHtml = `
         <div class="detail-section">
@@ -5177,7 +5296,7 @@ function openUserDetailsPanel(userId) {
           <div class="detail-row"><span class="detail-label">User ID</span><span class="detail-value" style="font-family:monospace;font-weight:700;">${idStr}</span></div>
           <div class="detail-row"><span class="detail-label">Email Address</span><span class="detail-value">${u.email}</span></div>
           <div class="detail-row"><span class="detail-label">Assigned Role</span><span class="badge" style="${roleBadge}">${normRole}</span></div>
-          <div class="detail-row"><span class="detail-label">Status</span><span class="badge ${status === 'Active' ? 'badge-active' : 'badge-pending'}">${status}</span></div>
+          <div class="detail-row"><span class="detail-label">Status</span><span class="badge ${status === 'Active' ? 'badge-active' : (status === 'Invited' ? 'badge-invited' : 'badge-pending')}">${status}</span></div>
           <div class="detail-row"><span class="detail-label">Created Date</span><span class="detail-value">${created}</span></div>
         </div>
 
@@ -5340,10 +5459,7 @@ function openCreateUserPanel(e) {
             <div class="form-group" style="margin-bottom:1rem;">
               <label for="new-user-role" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Role Assignment *</label>
               <select id="new-user-role" class="form-control" required style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;background:var(--white);">
-                <option value="Customer">Customer (Retail Policyholder)</option>
-                <option value="Agent">Agent (Advisory & Brokerage)</option>
-                <option value="Underwriter">Underwriter (Risk Assessment)</option>
-                <option value="Admin">Admin (Platform Governance)</option>
+                ${getActiveRoleOptionsHtml('Customer')}
               </select>
             </div>
 
@@ -5449,10 +5565,107 @@ async function handleCreateUserSubmit(e) {
 /**
  * ADMIN ROLE MANAGEMENT RENDERERS & RBAC CONTROLLERS
  */
+const ROLES_STORAGE_KEY = 'insureassist_system_roles';
+
+function initSystemRoles() {
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const saved = localStorage.getItem(ROLES_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsed.forEach(savedRole => {
+            const idx = MOCK_DB.roles.findIndex(r => r.name.toLowerCase() === savedRole.name.toLowerCase() || r.id === savedRole.id);
+            if (idx >= 0) {
+              MOCK_DB.roles[idx] = { ...MOCK_DB.roles[idx], ...savedRole };
+            } else {
+              MOCK_DB.roles.push(savedRole);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading custom roles from storage:', e);
+    }
+  }
+  populateAdminUserRoleFilter();
+  renderAdminDashboardCharts();
+}
+
+function saveSystemRoles() {
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(ROLES_STORAGE_KEY, JSON.stringify(MOCK_DB.roles));
+    } catch (e) {
+      console.warn('Error saving roles to storage:', e);
+    }
+  }
+}
+
+function getActiveSystemRoles() {
+  if (!MOCK_DB || !Array.isArray(MOCK_DB.roles)) return [];
+  return MOCK_DB.roles.filter(r => {
+    const isInactive = r.status && (r.status.toLowerCase() === 'disabled' || r.status.toLowerCase() === 'inactive');
+    const isExplicitlyDisabled = r.enabled === false || r.active === false;
+    return !isInactive && !isExplicitlyDisabled;
+  });
+}
+
+function getActiveRoleOptionsHtml(selectedRole = 'Customer') {
+  const activeRoles = getActiveSystemRoles();
+  if (activeRoles.length === 0) {
+    return `<option value="Customer">Customer (Policyholder User)</option>
+            <option value="Agent">Agent (Client Advisory Broker)</option>
+            <option value="Underwriter">Underwriter (Risk Assessment Officer)</option>
+            <option value="Admin">Admin (System Governance & Security)</option>
+            <option value="Adjuster">Adjuster (Claims Assessment & Resolution)</option>`;
+  }
+  return activeRoles.map(r => {
+    const isSelected = (r.name.toLowerCase() === (selectedRole || '').toLowerCase()) ? 'selected' : '';
+    const subtitle = r.subtitle ? ` (${r.subtitle})` : '';
+    return `<option value="${r.name}" ${isSelected}>${r.name}${subtitle}</option>`;
+  }).join('');
+}
+
+function populateAdminUserRoleFilter() {
+  const filter = document.getElementById('admin-user-role-filter');
+  if (!filter) return;
+  const currentVal = filter.value || 'all';
+  const activeRoles = getActiveSystemRoles();
+  filter.innerHTML = `<option value="all">All Roles (${activeRoles.length})</option>` +
+    activeRoles.map(r => `<option value="${r.name}">${r.name}</option>`).join('');
+  if (Array.from(filter.options).some(o => o.value === currentVal)) {
+    filter.value = currentVal;
+  } else {
+    filter.value = 'all';
+  }
+}
+
+function getRoleBadgeStyle(role) {
+  const r = (role || 'Customer').trim();
+  const lower = r.toLowerCase();
+  if (lower.includes('admin')) {
+    return 'background:#3B241D;color:#ffffff;';
+  } else if (lower.includes('underwriter')) {
+    return 'background:#FAF6F2;color:#5C3A30;border:1px solid #EADBCE;';
+  } else if (lower.includes('agent')) {
+    return 'background:#FAF6F2;color:#7A4A3A;border:1px solid #EADBCE;';
+  } else if (lower.includes('adjuster')) {
+    return 'background:#FAF6F2;color:#6B21A8;border:1px solid #EADBCE;';
+  } else {
+    const foundRole = MOCK_DB.roles && MOCK_DB.roles.find(item => item.name.toLowerCase() === lower);
+    if (foundRole && foundRole.badgeStyle) {
+      return foundRole.badgeStyle;
+    }
+    return 'background:#FAF6F2;color:#C97963;border:1px solid #EADBCE;';
+  }
+}
+
 function renderAdminRolesGrid() {
   const container = document.getElementById('admin-roles-grid-container');
   const countTag = document.getElementById('admin-roles-count-tag');
   if (countTag) countTag.textContent = `${MOCK_DB.roles.length} System Roles`;
+  populateAdminUserRoleFilter();
   if (!container) return;
 
   container.innerHTML = MOCK_DB.roles.map(r => `
@@ -5568,6 +5781,7 @@ function saveRolePermissions(roleId) {
   const selectedPerms = Array.from(checkedCbs).map(cb => cb.value);
 
   role.permissions = selectedPerms;
+  saveSystemRoles();
 
   // Add to audit log
   MOCK_DB.auditLogs.unshift({
@@ -5580,6 +5794,7 @@ function saveRolePermissions(roleId) {
 
   renderAdminRolesGrid();
   renderAdminAuditLogs();
+  renderAdminDashboardCharts();
 
   closeSlidePanel();
   showToast(`Permissions updated successfully for ${role.name} (${selectedPerms.length} active)!`);
@@ -5696,15 +5911,19 @@ function handleCreateRoleSubmit(e) {
     id: newId,
     name: name,
     subtitle: subtitle,
+    status: 'Active',
+    enabled: true,
     userCount: 0,
-    badgeStyle: 'background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;',
-    iconBg: 'background:#eff6ff;color:#2563eb;',
+    badgeStyle: 'background:#FAF6F2;color:#6B21A8;border:1px solid #EADBCE;',
+    iconBg: 'background:#FAF6F2;color:#6B21A8;border:1px solid #EADBCE;',
     iconSvg: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
     description: desc,
     permissions: selectedPerms
   };
 
   MOCK_DB.roles.push(newRole);
+  saveSystemRoles();
+  populateAdminUserRoleFilter();
 
   // Add to audit log
   MOCK_DB.auditLogs.unshift({
@@ -5717,6 +5936,7 @@ function handleCreateRoleSubmit(e) {
 
   renderAdminRolesGrid();
   renderAdminAuditLogs();
+  renderAdminDashboardCharts();
 
   closeSlidePanel();
   showToast(`Role "${name}" created successfully with ${selectedPerms.length} permissions!`);
@@ -5772,6 +5992,496 @@ function renderAdminPoliciesTable(typeFilter = 'all', statusFilter = 'all', sear
         </tr>
       `;
   }).join('');
+}
+
+// ==============================================================================
+// Admin Policy Module (Create Policy, Assign Policy, 5-Column Table)
+// ==============================================================================
+
+async function fetchAdminPolicyModulePolicies(typeFilter = 'all', statusFilter = 'all', search = '', limit = 1000, offset = 0) {
+  const tbody = document.getElementById('admin-module-policies-tbody');
+  if (tbody && (!window.adminPolicyModuleData || !window.adminPolicyModuleData.policies || window.adminPolicyModuleData.policies.length === 0)) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--gray-500);"><div class="spinner" style="margin:0 auto 8px;"></div>Loading policies...</td></tr>`;
+  }
+
+  try {
+    const token = getAuthToken();
+    if (!token) return { policies: [], total: 0 };
+    let url = `${ADMIN_SERVICE_URL}/admin/policy-module/policies?limit=${limit}&offset=${offset}`;
+    if (statusFilter && statusFilter !== 'all') url += `&status=${encodeURIComponent(statusFilter)}`;
+    if (typeFilter && typeFilter !== 'all') url += `&type=${encodeURIComponent(typeFilter)}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (response.ok) {
+      const data = await response.json();
+      window.adminPolicyModuleData = data;
+      updateAdminPolicyModuleMetrics(data);
+      renderAdminPolicyModuleTable(typeFilter, statusFilter, search);
+      return data;
+    } else {
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#ef4444;padding:2rem;">Failed to load policies (Status ${response.status}).</td></tr>`;
+      }
+      showToast('Failed to load policies.');
+    }
+  } catch (err) {
+    console.warn('Admin /admin/policy-module/policies fetch error:', err);
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#ef4444;padding:2rem;">Unable to connect to policy service.</td></tr>`;
+    }
+    showToast('Network error while loading policies.');
+  }
+  return { policies: [], total: 0 };
+}
+
+function updateAdminPolicyModuleMetrics(data) {
+  if (!data) return;
+  let totalCount = 0;
+  let unassignedCustCount = 0;
+  let custAssignedAgentUnassignedCount = 0;
+  let recentPoliciesCount = 0;
+
+  if (data.stats) {
+    totalCount = data.stats.total_policies || 0;
+    unassignedCustCount = data.stats.unassigned_customer_policies || 0;
+    custAssignedAgentUnassignedCount = data.stats.customer_assigned_agent_unassigned || 0;
+    recentPoliciesCount = data.stats.recently_created_policies || 0;
+  } else {
+    const policies = data.policies || [];
+    totalCount = data.total || policies.length;
+    unassignedCustCount = policies.filter(p => !p.customer_id || p.customer_id === 'Unassigned' || p.customer_name === 'Unassigned').length;
+    custAssignedAgentUnassignedCount = policies.filter(p => (p.customer_id && p.customer_id !== 'Unassigned') && (!p.assigned_agent || p.assigned_agent === 'Unassigned')).length;
+    recentPoliciesCount = policies.length;
+  }
+
+  const totalEl = document.getElementById('admin-module-stat-total-policies-val');
+  if (totalEl) totalEl.textContent = Number(totalCount).toLocaleString('en-US');
+
+  const unassignedEl = document.getElementById('admin-module-stat-unassigned-cust-val');
+  if (unassignedEl) unassignedEl.textContent = Number(unassignedCustCount).toLocaleString('en-US');
+
+  const custNoAgentEl = document.getElementById('admin-module-stat-cust-no-agent-val');
+  if (custNoAgentEl) custNoAgentEl.textContent = Number(custAssignedAgentUnassignedCount).toLocaleString('en-US');
+
+  const recentEl = document.getElementById('admin-module-stat-recent-policies-val');
+  if (recentEl) recentEl.textContent = Number(recentPoliciesCount).toLocaleString('en-US');
+
+  // Also update Admin Overview total count if element exists
+  const admOverviewTotal = document.getElementById('admin-stat-total-policies-val');
+  if (admOverviewTotal) admOverviewTotal.textContent = Number(totalCount).toLocaleString('en-US');
+}
+
+function renderAdminPolicyModuleTable(typeFilter = 'all', statusFilter = 'all', searchTerm = '') {
+  const tbody = document.getElementById('admin-module-policies-tbody');
+  if (!tbody) return;
+  const q = searchTerm.toLowerCase().trim();
+
+  const policies = (window.adminPolicyModuleData && window.adminPolicyModuleData.policies) ? window.adminPolicyModuleData.policies : [];
+
+  const filtered = policies.filter(p => {
+    const polType = (p.policy_type || p.type || '').toLowerCase();
+    const matchesType = typeFilter === 'all' || polType.includes(typeFilter.toLowerCase());
+    const polStatus = (p.status || '').toLowerCase();
+    const matchesStatus = statusFilter === 'all' || polStatus === statusFilter.toLowerCase();
+    const polNum = (p.policy_number || p.policy_id || p.id || '').toLowerCase();
+    const matchesSearch = !q || polNum.includes(q) || polType.includes(q) || polStatus.includes(q);
+    return matchesType && matchesStatus && matchesSearch;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:2rem;">No policies found. Create a new policy or adjust filters.</td></tr>`;
+    return;
+  }
+
+  // EXACTLY 5 columns: Policy ID | Type | Status | Annual Premium | Action (View button)
+  tbody.innerHTML = filtered.map(p => {
+    const polId = p.policy_id || p.id || '';
+    const polNum = p.policy_number || p.policy_id || p.id || '';
+    const polType = p.policy_type || p.type || 'Standard Policy';
+    const status = p.status || 'Active';
+    const premium = p.premium || 'N/A';
+    const custName = p.customer_name || p.customer || '';
+    const statusBadge = status.toLowerCase() === 'active' ? 'badge-active' : (status.toLowerCase() === 'expired' ? 'badge-risk-high' : 'badge-pending');
+
+    return `
+      <tr onclick="openPolicyDetailsPanel('${polId}', '${custName}')" title="Click to view details for policy ${polNum}" style="cursor:pointer;">
+        <td><code style="font-size:0.8125rem;font-weight:700;background:var(--blue-50);color:var(--blue-800);padding:2px 6px;border-radius:4px;white-space:nowrap;" title="${polNum}">${polNum}</code></td>
+        <td><span title="${polType}">${polType}</span></td>
+        <td><span class="badge ${statusBadge}">${status}</span></td>
+        <td style="font-weight:700;color:var(--blue-900);white-space:nowrap;">${premium}</td>
+        <td style="text-align:right">
+          <button class="btn btn-outline btn-sm table-action-btn" onclick="event.stopPropagation(); openPolicyDetailsPanel('${polId}', '${custName}')" title="View policy ${polNum}">View</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function openCreatePolicyModuleModal(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+
+  const randomNum = Math.floor(100000 + Math.random() * 900000);
+  const defaultPolNum = `POL-2026-${randomNum}`;
+  const today = new Date().toISOString().split('T')[0];
+  const nextYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  const contentHtml = `
+    <div class="detail-section" style="border-bottom:none;">
+      <p style="font-size:0.85rem;color:var(--gray-600);margin-bottom:1.25rem;">
+        Create a new policy ledger record. Customer and agent assignment can be completed immediately or at any time later.
+      </p>
+
+      <form id="admin-module-create-policy-form" onsubmit="handleCreatePolicyModuleSubmit(event)">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="create-mod-pol-number" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Policy ID / Number *</label>
+          <input type="text" id="create-mod-pol-number" class="form-control" value="${defaultPolNum}" required style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;font-family:monospace;font-weight:700;">
+        </div>
+
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="create-mod-pol-type" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Policy Type *</label>
+          <select id="create-mod-pol-type" class="form-control" required style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;background:var(--white);">
+            <option value="Auto">Auto Insurance</option>
+            <option value="Home">Homeowners Premier</option>
+            <option value="Commercial">Commercial Property & Casualty</option>
+            <option value="Umbrella">Personal Umbrella Excess Liability</option>
+            <option value="Specialty">Specialty & Cyber Liability</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="create-mod-pol-premium" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Annual Premium ($) *</label>
+          <input type="number" step="0.01" min="0" id="create-mod-pol-premium" class="form-control" placeholder="1250.00" value="1450.00" required style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="create-mod-pol-status" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Initial Status</label>
+          <select id="create-mod-pol-status" class="form-control" style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;background:var(--white);">
+            <option value="Active">Active</option>
+            <option value="Pending">Pending</option>
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem;">
+          <div class="form-group">
+            <label for="create-mod-pol-start" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Effective Date</label>
+            <input type="date" id="create-mod-pol-start" class="form-control" value="${today}" style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;">
+          </div>
+          <div class="form-group">
+            <label for="create-mod-pol-end" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Expiration Date</label>
+            <input type="date" id="create-mod-pol-end" class="form-control" value="${nextYear}" style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem;">
+          <div class="form-group">
+            <label for="create-mod-pol-deductible" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Deductible ($)</label>
+            <input type="number" step="100" min="0" id="create-mod-pol-deductible" class="form-control" value="500" style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;">
+          </div>
+          <div class="form-group">
+            <label for="create-mod-pol-limit" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Coverage Limit ($)</label>
+            <input type="number" step="1000" min="0" id="create-mod-pol-limit" class="form-control" value="300000" style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--gray-200);">
+          <button type="button" class="btn btn-outline btn-block" onclick="closeSlidePanel()">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-block" id="btn-admin-submit-create-pol">Create Policy</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  openOrUpdateSlidePanel('Create Policy', 'New Insurance Policy Ledger Record', contentHtml);
+}
+
+async function handleCreatePolicyModuleSubmit(e) {
+  e.preventDefault();
+  const numInput = document.getElementById('create-mod-pol-number');
+  const typeInput = document.getElementById('create-mod-pol-type');
+  const premInput = document.getElementById('create-mod-pol-premium');
+  const statusInput = document.getElementById('create-mod-pol-status');
+  const startInput = document.getElementById('create-mod-pol-start');
+  const endInput = document.getElementById('create-mod-pol-end');
+  const dedInput = document.getElementById('create-mod-pol-deductible');
+  const limitInput = document.getElementById('create-mod-pol-limit');
+
+  const polNumber = numInput ? numInput.value.trim() : '';
+  const polType = typeInput ? typeInput.value : 'Auto';
+  const premium = premInput ? parseFloat(premInput.value) : 0;
+  const polStatus = statusInput ? statusInput.value : 'Active';
+  const startDate = startInput ? startInput.value : '';
+  const endDate = endInput ? endInput.value : '';
+  const deductible = dedInput ? parseFloat(dedInput.value) : 500;
+  const coverageLimit = limitInput ? parseFloat(limitInput.value) : 300000;
+
+  if (!polNumber) {
+    showToast('Please enter a policy number/ID.');
+    return;
+  }
+
+  const submitBtn = document.getElementById('btn-admin-submit-create-pol');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+  }
+
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${ADMIN_SERVICE_URL}/admin/policy-module/policies`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        policy_number: polNumber,
+        policy_type: polType,
+        premium: premium,
+        status: polStatus,
+        start_date: startDate || null,
+        end_date: endDate || null,
+        deductible: deductible,
+        coverage_limit: coverageLimit
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      showToast(`Creation failed: ${err.detail || 'Could not create policy'}`);
+      return;
+    }
+
+    const resData = await response.json();
+    showToast(`Policy ${polNumber} created successfully in ledger!`);
+    closeSlidePanel();
+
+    // Refresh Policy Module (table & metrics) and Policy Management tables immediately
+    fetchAdminPolicyModulePolicies();
+    fetchAdminPolicies();
+  } catch (err) {
+    console.error('Error creating policy:', err);
+    showToast('Network error while creating policy.');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Policy';
+    }
+  }
+}
+
+async function openAssignPolicyModuleModal(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+
+  openOrUpdateSlidePanel('Assign Policy', 'Select Policy, Customer, and Agent', `
+    <div style="text-align:center;padding:2rem;color:var(--gray-500);">
+      <div class="spinner" style="margin:0 auto 8px;"></div>
+      Loading policies, customers, and agents...
+    </div>
+  `);
+
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${ADMIN_SERVICE_URL}/admin/policy-module/form-data`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      showToast('Failed to load assignment options.');
+      return;
+    }
+
+    const formData = await response.json();
+    window.adminPolicyFormData = formData;
+
+    const policies = formData.policies || [];
+    const customers = (formData.customers || []).slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
+    const agents = (formData.agents || []).slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
+
+    // Clean policy option label: only Policy ID/Number · Type (No customer/agent appended)
+    const policyOptions = policies.map(p => {
+      return `<option value="${p.policy_id}">${p.policy_number} · ${p.policy_type}</option>`;
+    }).join('');
+
+    const customerOptions = customers.map(c => {
+      return `<option value="${c.customer_id}">${c.name} (${c.email || c.customer_id})</option>`;
+    }).join('');
+
+    const agentOptions = agents.map(a => {
+      return `<option value="${a.user_id}">${a.name} (${a.email})</option>`;
+    }).join('');
+
+    const contentHtml = `
+      <div class="detail-section" style="border-bottom:none; min-height:480px; padding-bottom:8rem;">
+        <p style="font-size:0.85rem;color:var(--gray-600);margin-bottom:1.25rem;">
+          Assign or reassign an insurance policy to a retail customer and a licensed advisory agent.
+        </p>
+
+        <form id="admin-module-assign-policy-form" onsubmit="handleAssignPolicyModuleSubmit(event)">
+          <div class="form-group" style="margin-bottom:1.25rem;">
+            <label for="assign-mod-policy-select" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Select Policy *</label>
+            <select id="assign-mod-policy-select" class="form-control" onchange="handleAssignPolicyModuleSelectionChange(this.value)" required style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;background:var(--white);">
+              <option value="" disabled selected>-- Select Policy --</option>
+              ${policyOptions}
+            </select>
+          </div>
+
+          <!-- Dynamic Customer Section -->
+          <div id="assign-mod-customer-container" style="margin-bottom:1.25rem;">
+            <div class="form-group">
+              <label for="assign-mod-customer-select" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Assign Customer *</label>
+              <select id="assign-mod-customer-select" class="form-control" required style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;background:var(--white);">
+                <option value="" disabled selected>-- Select Customer Record --</option>
+                ${customerOptions}
+              </select>
+            </div>
+          </div>
+
+          <!-- Agent Selector (Role=Agent only, sorted A-Z) -->
+          <div class="form-group" style="margin-bottom:1.25rem;">
+            <label for="assign-mod-agent-select" style="display:block;font-weight:600;font-size:0.85rem;color:var(--gray-700);margin-bottom:4px;">Assign Agent (Licensed Broker) *</label>
+            <select id="assign-mod-agent-select" class="form-control" required style="width:100%;padding:10px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:0.875rem;background:var(--white);">
+              <option value="" disabled selected>-- Select Advisory Agent (${agents.length} available) --</option>
+              ${agentOptions}
+            </select>
+            <small style="color:var(--gray-500);font-size:0.75rem;margin-top:4px;display:block;">Only platform users with the Agent role are eligible for assignment.</small>
+          </div>
+
+          <div id="assign-mod-notice-container" style="display:none;padding:10px 12px;background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;font-size:0.8rem;color:#92400E;margin-bottom:1.25rem;">
+            <div id="assign-mod-notice-text"></div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--gray-200);">
+            <button type="button" class="btn btn-outline btn-block" onclick="closeSlidePanel()">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-block" id="btn-admin-submit-assign-pol">Assign Policy</button>
+          </div>
+        </form>
+      </div>
+    `;
+
+    openOrUpdateSlidePanel('Assign Policy', 'Link Policy with Customer and Agent', contentHtml);
+  } catch (err) {
+    console.error('Error opening assign modal:', err);
+    showToast('Failed to open assign policy form.');
+  }
+}
+
+function handleAssignPolicyModuleSelectionChange(policyId) {
+  const formData = window.adminPolicyFormData || {};
+  const policies = formData.policies || [];
+  const p = policies.find(item => item.policy_id === policyId);
+  if (!p) return;
+
+  const custSelect = document.getElementById('assign-mod-customer-select');
+  const agentSelect = document.getElementById('assign-mod-agent-select');
+  const noticeContainer = document.getElementById('assign-mod-notice-container');
+  const noticeText = document.getElementById('assign-mod-notice-text');
+
+  // Preselect customer in dropdown if policy already has an assigned customer
+  if (custSelect) {
+    custSelect.value = p.customer_id || '';
+  }
+
+  // Preselect agent in dropdown if policy already has an assigned agent
+  if (agentSelect) {
+    if (p.agent_id) {
+      agentSelect.value = p.agent_id;
+    } else if (p.assigned_agent && p.assigned_agent !== 'Unassigned') {
+      const agents = formData.agents || [];
+      const matchedAgent = agents.find(a => a.name === p.assigned_agent);
+      if (matchedAgent) {
+        agentSelect.value = matchedAgent.user_id;
+      } else {
+        agentSelect.value = '';
+      }
+    } else {
+      agentSelect.value = '';
+    }
+  }
+
+  if (noticeContainer && noticeText) {
+    if (p.customer_id && p.customer_name && p.customer_name !== 'Unassigned') {
+      noticeText.innerHTML = `<strong>Current Assignment:</strong> This policy is currently assigned to <strong>${p.customer_name}</strong> and managed by <strong>${p.assigned_agent || 'Unassigned'}</strong>. You may choose another customer to reassign this policy, or change the advisory agent.`;
+      noticeContainer.style.display = 'block';
+    } else {
+      noticeText.innerHTML = `<strong>Unassigned Policy:</strong> This policy is currently unassigned. Please select a customer and agent to link.`;
+      noticeContainer.style.display = 'block';
+    }
+  }
+}
+
+async function handleAssignPolicyModuleSubmit(e) {
+  e.preventDefault();
+  const polSelect = document.getElementById('assign-mod-policy-select');
+  const custSelect = document.getElementById('assign-mod-customer-select');
+  const agentSelect = document.getElementById('assign-mod-agent-select');
+
+  const policyId = polSelect ? polSelect.value : '';
+  const customerId = custSelect ? custSelect.value : '';
+  const agentId = agentSelect ? agentSelect.value : '';
+
+  if (!policyId) {
+    showToast('Please select a policy.');
+    return;
+  }
+  if (!customerId) {
+    showToast('Please select a customer for this policy.');
+    return;
+  }
+  if (!agentId) {
+    showToast('Please select an advisory agent.');
+    return;
+  }
+
+  const submitBtn = document.getElementById('btn-admin-submit-assign-pol');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Assigning...';
+  }
+
+  try {
+    const token = getAuthToken();
+    const response = await fetch(`${ADMIN_SERVICE_URL}/admin/policy-module/assign`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        policy_id: policyId,
+        customer_id: customerId,
+        agent_id: agentId
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      showToast(err.detail || err.message || 'Could not assign policy');
+      return;
+    }
+
+    const resData = await response.json();
+    showToast(resData.message || 'Policy assigned successfully!');
+    closeSlidePanel();
+
+    // Refresh both tables
+    fetchAdminPolicyModulePolicies();
+    fetchAdminPolicies();
+  } catch (err) {
+    console.error('Error assigning policy:', err);
+    showToast('Network error while assigning policy.');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Assign Policy';
+    }
+  }
 }
 
 // Render Audit Logs (Real Database Activity)
@@ -7156,6 +7866,7 @@ async function fetchAdminStats() {
       const elActive = document.getElementById('admin-stat-active-policies-val');
       if (elActive) elActive.textContent = stats.active_policies != null ? stats.active_policies : 357;
 
+      renderAdminDashboardCharts();
       return stats;
     }
   } catch (err) {
@@ -7164,12 +7875,13 @@ async function fetchAdminStats() {
   return null;
 }
 
-async function fetchAdminUsers(role = 'all', search = '', limit = 100, offset = 0) {
+async function fetchAdminUsers(role = 'all', status = 'all', search = '', limit = 1000, offset = 0) {
   try {
     const token = getAuthToken();
     if (!token) return { users: [], total: 0 };
     let url = `${ADMIN_SERVICE_URL}/admin/users?limit=${limit}&offset=${offset}`;
     if (role && role !== 'all') url += `&role=${encodeURIComponent(role)}`;
+    if (status && status !== 'all') url += `&status=${encodeURIComponent(status)}`;
     if (search) url += `&search=${encodeURIComponent(search)}`;
 
     const response = await fetch(url, {
@@ -7180,7 +7892,7 @@ async function fetchAdminUsers(role = 'all', search = '', limit = 100, offset = 
       const data = await response.json();
       window.adminUsersData = data;
       renderAdminDashboardUsersTable();
-      renderAdminUsersTable(role, 'all', search);
+      renderAdminUsersTable(role, status, search);
       return data;
     }
   } catch (err) {
@@ -8807,6 +9519,21 @@ function switchRole(role, targetPage = null) {
     fetchNotifications();
     loadAgentChatHistoryFromBackend();
     navigateTo(pageToOpen);
+  } else if (normalizedRole === 'adjuster') {
+    if (roleLabel) roleLabel.textContent = 'Claims Adjuster';
+    if (sidebarRole) sidebarRole.textContent = 'Claims Assessment';
+    if (portalName) portalName.textContent = 'Adjuster Portal Active';
+    if (portalTag) {
+      portalTag.style.background = '#FAF6F2';
+      portalTag.style.borderColor = '#EADBCE';
+      portalTag.style.color = '#3B241D';
+    }
+    if (portalDot) portalDot.style.background = '#C85A32';
+    fetchAdjusterStats();
+    fetchAdjusterClaims();
+    fetchNotifications();
+    loadAdjusterChatHistoryFromBackend();
+    navigateTo(pageToOpen);
   } else {
     if (roleLabel) roleLabel.textContent = 'Policyholder';
     if (sidebarRole) sidebarRole.textContent = 'Customer Portal';
@@ -8835,6 +9562,7 @@ function navigateTo(pageId) {
   // Restrict navigation strictly to pages belonging to current role
   if (pageId.startsWith('admin-') && currentRole !== 'admin') return;
   if (pageId.startsWith('underwriter-') && currentRole !== 'underwriter') return;
+  if (pageId.startsWith('adjuster-') && currentRole !== 'adjuster') return;
   if (pageId.startsWith('agent-') && currentRole !== 'agent') return;
   if (pageId.startsWith('customer-') && currentRole !== 'customer') return;
 
@@ -8867,6 +9595,8 @@ function navigateTo(pageId) {
     fetchAdminUsers();
   } else if (pageId === 'admin-policies') {
     fetchAdminPolicies();
+  } else if (pageId === 'admin-policy-module') {
+    fetchAdminPolicyModulePolicies();
   } else if (pageId === 'admin-audit') {
     renderAdminAuditLogs();
   } else if (pageId === 'agent-customers') {
@@ -8880,7 +9610,16 @@ function navigateTo(pageId) {
     if (typeof fetchAgentCustomers === 'function') fetchAgentCustomers();
     if (typeof fetchAgentPolicies === 'function') fetchAgentPolicies('all');
     fetchAgentRenewals();
+  } else if (pageId === 'adjuster-dashboard') {
+    fetchAdjusterStats();
+    fetchAdjusterClaims();
     fetchNotifications();
+  } else if (pageId === 'adjuster-claims') {
+    fetchAdjusterClaims();
+  } else if (pageId === 'adjuster-ai') {
+    loadAdjusterChatHistoryFromBackend();
+  } else if (pageId === 'adjuster-profile') {
+    renderAdjusterProfile();
   } else if (pageId === 'customer-claims') {
     fetchCustomerClaims();
     if (typeof renderCustomerClaimsList === 'function') renderCustomerClaimsList();
@@ -8924,6 +9663,8 @@ function navigateTo(pageId) {
     renderAdminUsersTable();
   } else if (pageId === 'admin-policies') {
     renderAdminPoliciesTable();
+  } else if (pageId === 'admin-policy-module') {
+    renderAdminPolicyModuleTable();
   } else if (pageId === 'admin-audit') {
     renderAdminAuditLogs();
   } else if (pageId.endsWith('-ai')) {
@@ -10066,22 +10807,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminUserStatusFilter = document.getElementById('admin-user-status-filter');
   const adminUserResetBtn = document.getElementById('admin-user-reset-btn');
 
-  const triggerAdminUserFilter = () => {
-    const search = adminUserSearch ? adminUserSearch.value : '';
+  let adminUserDebounceTimer = null;
+  const triggerAdminUserFilter = (fetchRemote = false) => {
+    const search = adminUserSearch ? adminUserSearch.value.trim() : '';
     const role = adminUserRoleFilter ? adminUserRoleFilter.value : 'all';
     const status = adminUserStatusFilter ? adminUserStatusFilter.value : 'all';
-    renderAdminUsersTable(role, status, search);
+    if (fetchRemote) {
+      fetchAdminUsers(role, status, search, 1000);
+    } else {
+      renderAdminUsersTable(role, status, search);
+    }
   };
 
-  if (adminUserSearch) adminUserSearch.addEventListener('input', triggerAdminUserFilter);
-  if (adminUserRoleFilter) adminUserRoleFilter.addEventListener('change', triggerAdminUserFilter);
-  if (adminUserStatusFilter) adminUserStatusFilter.addEventListener('change', triggerAdminUserFilter);
+  if (adminUserSearch) {
+    adminUserSearch.addEventListener('input', () => {
+      triggerAdminUserFilter(false);
+      clearTimeout(adminUserDebounceTimer);
+      adminUserDebounceTimer = setTimeout(() => {
+        triggerAdminUserFilter(true);
+      }, 300);
+    });
+  }
+  if (adminUserRoleFilter) adminUserRoleFilter.addEventListener('change', () => triggerAdminUserFilter(true));
+  if (adminUserStatusFilter) adminUserStatusFilter.addEventListener('change', () => triggerAdminUserFilter(true));
   if (adminUserResetBtn) {
     adminUserResetBtn.addEventListener('click', () => {
       if (adminUserSearch) adminUserSearch.value = '';
       if (adminUserRoleFilter) adminUserRoleFilter.value = 'all';
       if (adminUserStatusFilter) adminUserStatusFilter.value = 'all';
-      renderAdminUsersTable('all', 'all', '');
+      fetchAdminUsers('all', 'all', '', 1000);
       showToast('User filters reset.');
     });
   }
@@ -10099,7 +10853,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = adminPolicyStatusFilter ? adminPolicyStatusFilter.value : 'all';
 
     if (fetchRemote) {
-      fetchAdminPolicies(type, status, search);
+      fetchAdminPolicies(type, status, search, 1000);
     } else {
       renderAdminPoliciesTable(type, status, search);
     }
@@ -10123,10 +10877,55 @@ document.addEventListener('DOMContentLoaded', () => {
       if (adminPolicySearch) adminPolicySearch.value = '';
       if (adminPolicyTypeFilter) adminPolicyTypeFilter.value = 'all';
       if (adminPolicyStatusFilter) adminPolicyStatusFilter.value = 'all';
-      fetchAdminPolicies('all', 'all', '');
+      fetchAdminPolicies('all', 'all', '', 1000);
       showToast('Policy filters reset.');
     });
   }
+
+  // Admin Policy Module (Dedicated module listeners)
+  const adminModPolicySearch = document.getElementById('admin-module-policy-search-input') || document.getElementById('admin-mod-policy-search');
+  const adminModPolicyTypeFilter = document.getElementById('admin-module-policy-type-filter') || document.getElementById('admin-mod-policy-type-filter');
+  const adminModPolicyStatusFilter = document.getElementById('admin-module-policy-status-filter') || document.getElementById('admin-mod-policy-status-filter');
+  const adminModPolicyResetBtn = document.getElementById('admin-module-policy-reset-btn') || document.getElementById('admin-mod-policy-reset-btn');
+
+  let adminModPolicyDebounceTimer = null;
+  const triggerAdminModPolicyFilter = (fetchRemote = false) => {
+    const search = adminModPolicySearch ? adminModPolicySearch.value.trim() : '';
+    const type = adminModPolicyTypeFilter ? adminModPolicyTypeFilter.value : 'all';
+    const status = adminModPolicyStatusFilter ? adminModPolicyStatusFilter.value : 'all';
+
+    if (fetchRemote) {
+      fetchAdminPolicyModulePolicies(type, status, search, 1000);
+    } else {
+      renderAdminPolicyModuleTable(type, status, search);
+    }
+  };
+
+  if (adminModPolicySearch) {
+    adminModPolicySearch.addEventListener('input', () => {
+      triggerAdminModPolicyFilter(false);
+      clearTimeout(adminModPolicyDebounceTimer);
+      adminModPolicyDebounceTimer = setTimeout(() => {
+        triggerAdminModPolicyFilter(true);
+      }, 300);
+    });
+  }
+  if (adminModPolicyTypeFilter) adminModPolicyTypeFilter.addEventListener('change', () => triggerAdminModPolicyFilter(true));
+  if (adminModPolicyStatusFilter) adminModPolicyStatusFilter.addEventListener('change', () => triggerAdminModPolicyFilter(true));
+  if (adminModPolicyResetBtn) {
+    adminModPolicyResetBtn.addEventListener('click', () => {
+      if (adminModPolicySearch) adminModPolicySearch.value = '';
+      if (adminModPolicyTypeFilter) adminModPolicyTypeFilter.value = 'all';
+      if (adminModPolicyStatusFilter) adminModPolicyStatusFilter.value = 'all';
+      fetchAdminPolicyModulePolicies('all', 'all', '', 1000);
+      showToast('Policy Module filters reset.');
+    });
+  }
+
+  const btnCreatePol = document.getElementById('btn-admin-open-create-policy');
+  if (btnCreatePol) btnCreatePol.addEventListener('click', openCreatePolicyModuleModal);
+  const btnAssignPol = document.getElementById('btn-admin-open-assign-policy');
+  if (btnAssignPol) btnAssignPol.addEventListener('click', openAssignPolicyModuleModal);
 
   // Logout Button -> Returns to Landing Page
   document.getElementById('logout-btn').addEventListener('click', () => {
@@ -10946,6 +11745,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Initial controllers & renderers
+  initSystemRoles();
   initTheme();
   initGlobalTooltips();
   initSlidePanelListeners();
@@ -11650,13 +12450,24 @@ function closePolicyAppModal(event, modalId) {
   const modal = document.getElementById(modalId);
   if (modal && event.target === modal) {
     modal.style.display = 'none';
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
   }
 }
 
 function closeModalById(modalId) {
   const modal = document.getElementById(modalId);
-  if (modal) modal.style.display = 'none';
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
 }
+
+function closeAdjusterClaimDetailModal() {
+  closeModalById('modal-adjuster-claim-details');
+}
+window.closeAdjusterClaimDetailModal = closeAdjusterClaimDetailModal;
 
 function applyFromPolicyModal(productId) {
   closeModalById('modal-policy-details');
@@ -13066,5 +13877,922 @@ if (typeof submitAgentRequestMoreInfo === 'function') window.submitAgentRequestM
 if (typeof openCustomerProvideInfoModal === 'function') window.openCustomerProvideInfoModal = openCustomerProvideInfoModal;
 if (typeof submitCustomerProvideInfo === 'function') window.submitCustomerProvideInfo = submitCustomerProvideInfo;
 if (typeof handleAgentAppPagination === 'function') window.handleAgentAppPagination = handleAgentAppPagination;
+
+// Admin Policy Module exports
+if (typeof fetchAdminPolicyModulePolicies === 'function') window.fetchAdminPolicyModulePolicies = fetchAdminPolicyModulePolicies;
+if (typeof renderAdminPolicyModuleTable === 'function') window.renderAdminPolicyModuleTable = renderAdminPolicyModuleTable;
+if (typeof openCreatePolicyModuleModal === 'function') window.openCreatePolicyModuleModal = openCreatePolicyModuleModal;
+if (typeof handleCreatePolicyModuleSubmit === 'function') window.handleCreatePolicyModuleSubmit = handleCreatePolicyModuleSubmit;
+if (typeof openAssignPolicyModuleModal === 'function') window.openAssignPolicyModuleModal = openAssignPolicyModuleModal;
+if (typeof handleAssignPolicyModuleSubmit === 'function') window.handleAssignPolicyModuleSubmit = handleAssignPolicyModuleSubmit;
+if (typeof onAssignModalPolicySelect === 'function') window.onAssignModalPolicySelect = onAssignModalPolicySelect;
+if (typeof populatePolicyModuleFormData === 'function') window.populatePolicyModuleFormData = populatePolicyModuleFormData;
+if (typeof viewPolicyModuleDetails === 'function') window.viewPolicyModuleDetails = viewPolicyModuleDetails;
+
+// ==========================================================================
+// ADJUSTER CLAIMS MANAGEMENT CONTROLLERS
+// ==========================================================================
+
+let adjusterCurrentFilter = 'all';
+let adjusterCurrentSearch = '';
+let adjusterActiveClaimDetail = null;
+
+async function fetchAdjusterStats() {
+  try {
+    const res = await fetch(`${CUSTOMER_SERVICE_URL}/adjuster/stats`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) return;
+    const stats = await res.json();
+    window.adjusterStatsData = stats;
+
+    const totalEl = document.getElementById('adj-stat-total-val');
+    const pendingEl = document.getElementById('adj-stat-pending-val');
+    const infoEl = document.getElementById('adj-stat-info-val');
+    const resolvedEl = document.getElementById('adj-stat-resolved-val');
+
+    if (totalEl) totalEl.textContent = stats.total_claims ?? '--';
+    if (pendingEl) pendingEl.textContent = stats.pending_review ?? '--';
+    if (infoEl) infoEl.textContent = stats.more_information ?? '--';
+    if (resolvedEl) resolvedEl.textContent = stats.resolved_claims ?? '--';
+  } catch (err) {
+    console.error('Error fetching adjuster stats:', err);
+  }
+}
+
+async function fetchAdjusterClaims(search = '', status = '') {
+  try {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (status && status !== 'all') params.append('status', status);
+
+    const res = await fetch(`${CUSTOMER_SERVICE_URL}/adjuster/claims?${params.toString()}`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) return;
+    const claims = await res.json();
+    window.adjusterClaimsData = claims;
+
+    renderAdjusterClaimsTable(adjusterCurrentFilter, adjusterCurrentSearch);
+    renderAdjusterDashboardQueue();
+  } catch (err) {
+    console.error('Error fetching adjuster claims:', err);
+  }
+}
+
+function renderAdjusterDashboardQueue() {
+  const tbody = document.getElementById('adjuster-dashboard-queue-tbody');
+  if (!tbody) return;
+
+  const claims = window.adjusterClaimsData || [];
+  const pending = claims.filter(c => (c.status || '').toLowerCase() === 'pending review' || (c.status || '').toLowerCase() === 'more information required');
+  const previewList = pending.length > 0 ? pending.slice(0, 6) : claims.slice(0, 6);
+
+  if (previewList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:2rem;">No claims in queue.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = previewList.map(c => {
+    const statusBadge = getAdjusterStatusBadgeHtml(c.status);
+    const amtStr = c.claimed_amount != null ? `$${Number(c.claimed_amount).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}` : '$0.00';
+    return `
+      <tr onclick="openAdjusterClaimDetailModal('${c.claim_id}')" style="cursor:pointer;" title="Click to review claim ${c.claim_number || c.claim_id}">
+        <td><strong style="font-family:monospace;color:var(--cust-brown-900);">${c.claim_number || c.claim_id}</strong></td>
+        <td><strong style="color:var(--cust-brown-900);">${c.customer_name}</strong></td>
+        <td style="font-family:monospace;font-size:0.8rem;color:var(--gray-600);">${c.policy_number}</td>
+        <td>${c.claim_type}</td>
+        <td style="font-size:0.825rem;color:var(--gray-600);">${c.reported_date}</td>
+        <td><strong style="color:var(--cust-brown-900);">${amtStr}</strong></td>
+        <td>${statusBadge}</td>
+        <td style="text-align:right;">
+          <button class="btn btn-primary btn-sm table-action-btn" onclick="event.stopPropagation(); openAdjusterClaimDetailModal('${c.claim_id}')">Review Claim →</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderAdjusterClaimsTable(statusFilter = 'all', searchTerm = '') {
+  const tbody = document.getElementById('adjuster-claims-tbody');
+  if (!tbody) return;
+
+  let claims = (window.adjusterClaimsData || []).slice();
+  const q = (searchTerm || '').trim().toLowerCase();
+
+  // Filter by status if specified
+  if (statusFilter && statusFilter.toLowerCase() !== 'all') {
+    if (statusFilter.toLowerCase() === 'resolved') {
+      claims = claims.filter(c => ['approved', 'rejected', 'resolved'].includes((c.status || '').toLowerCase()));
+    } else {
+      claims = claims.filter(c => (c.status || '').toLowerCase() === statusFilter.toLowerCase());
+    }
+  }
+
+  // Filter by search term
+  if (q) {
+    claims = claims.filter(c => {
+      return (c.claim_number || '').toLowerCase().includes(q) ||
+             (c.claim_id || '').toLowerCase().includes(q) ||
+             (c.customer_name || '').toLowerCase().includes(q) ||
+             (c.policy_number || '').toLowerCase().includes(q) ||
+             (c.claim_type || '').toLowerCase().includes(q);
+    });
+  }
+
+  // Sort Customer names A-Z
+  claims.sort((a, b) => (a.customer_name || '').localeCompare(b.customer_name || '', undefined, { sensitivity: 'base' }));
+
+  const countInfo = document.getElementById('adjuster-claims-count-info');
+  if (countInfo) {
+    countInfo.textContent = `Showing ${claims.length} of ${(window.adjusterClaimsData || []).length} claims in queue`;
+  }
+
+  if (claims.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--gray-500);padding:2.5rem;">No claims matching your filter/search criteria.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = claims.map(c => {
+    const statusBadge = getAdjusterStatusBadgeHtml(c.status);
+    const amtStr = c.claimed_amount != null ? `$${Number(c.claimed_amount).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}` : '$0.00';
+    return `
+      <tr onclick="openAdjusterClaimDetailModal('${c.claim_id}')" style="cursor:pointer;" title="Click to review claim ${c.claim_number || c.claim_id}">
+        <td><strong style="font-family:monospace;color:var(--cust-brown-900);">${c.claim_number || c.claim_id}</strong></td>
+        <td><strong style="color:var(--cust-brown-900);">${c.customer_name}</strong></td>
+        <td style="font-family:monospace;font-size:0.8rem;color:var(--gray-600);">${c.policy_number}</td>
+        <td>${c.claim_type}</td>
+        <td style="font-size:0.825rem;color:var(--gray-600);">${c.reported_date}</td>
+        <td><strong style="color:var(--cust-brown-900);">${amtStr}</strong></td>
+        <td>${statusBadge}</td>
+        <td style="text-align:right;">
+          <button class="btn btn-primary btn-sm table-action-btn" onclick="event.stopPropagation(); openAdjusterClaimDetailModal('${c.claim_id}')">Review Claim →</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function getAdjusterStatusBadgeHtml(status) {
+  const s = (status || '').trim();
+  if (s === 'Approved') {
+    return `<span class="badge badge-active" style="background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0;font-weight:600;">Approved</span>`;
+  } else if (s === 'Rejected') {
+    return `<span class="badge" style="background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;font-weight:600;">Rejected</span>`;
+  } else if (s === 'More Information Required') {
+    return `<span class="badge" style="background:#FFFBEB;color:#92400E;border:1px solid #FDE68A;font-weight:600;">More Information Required</span>`;
+  } else {
+    return `<span class="badge badge-pending" style="background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE;font-weight:600;">Pending Review</span>`;
+  }
+}
+
+function updateAdjusterBadgeElement(el, status) {
+  if (!el) return;
+  const s = (status || '').trim();
+  el.textContent = s || 'Pending Review';
+  if (s === 'Approved') {
+    el.className = 'badge badge-active';
+    el.style.cssText = 'background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0;font-weight:600;font-size:0.8rem;';
+  } else if (s === 'Rejected') {
+    el.className = 'badge';
+    el.style.cssText = 'background:#FEF2F2;color:#991B1B;border:1px solid #FECACA;font-weight:600;font-size:0.8rem;';
+  } else if (s === 'More Information Required') {
+    el.className = 'badge';
+    el.style.cssText = 'background:#FFFBEB;color:#92400E;border:1px solid #FDE68A;font-weight:600;font-size:0.8rem;';
+  } else {
+    el.className = 'badge badge-pending';
+    el.style.cssText = 'background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE;font-weight:600;font-size:0.8rem;';
+  }
+}
+
+function filterAdjusterClaims(status, btn) {
+  adjusterCurrentFilter = status;
+  document.querySelectorAll('.adjuster-filter-pill').forEach(b => {
+    b.classList.remove('active');
+    b.classList.add('btn-outline');
+    b.style.background = '';
+    b.style.color = '';
+  });
+  if (btn) {
+    btn.classList.add('active');
+    btn.classList.remove('btn-outline');
+    btn.style.background = 'var(--cust-brown-700)';
+    btn.style.color = '#fff';
+  }
+  renderAdjusterClaimsTable(adjusterCurrentFilter, adjusterCurrentSearch);
+}
+
+function filterAdjusterFromDashboard(status) {
+  navigateTo('adjuster-claims');
+  adjusterCurrentFilter = status;
+  document.querySelectorAll('.adjuster-filter-pill').forEach(b => {
+    const pillText = (b.textContent || '').trim();
+    if ((status === 'all' && pillText === 'All') ||
+        (status === 'Pending Review' && pillText === 'Pending Review') ||
+        (status === 'More Information Required' && pillText === 'More Information Required') ||
+        (status === 'Resolved' && (pillText === 'Approved' || pillText === 'Resolved'))) {
+      b.classList.add('active');
+      b.classList.remove('btn-outline');
+      b.style.background = 'var(--cust-brown-700)';
+      b.style.color = '#fff';
+    } else {
+      b.classList.remove('active');
+      b.classList.add('btn-outline');
+      b.style.background = '';
+      b.style.color = '';
+    }
+  });
+  renderAdjusterClaimsTable(adjusterCurrentFilter, adjusterCurrentSearch);
+}
+
+function handleAdjusterClaimSearch(val) {
+  adjusterCurrentSearch = val;
+  renderAdjusterClaimsTable(adjusterCurrentFilter, adjusterCurrentSearch);
+}
+
+async function openAdjusterClaimDetailModal(claimId) {
+  const modal = document.getElementById('modal-adjuster-claim-details');
+  const body = document.getElementById('adj-modal-body');
+  const idEl = document.getElementById('adj-modal-claim-id');
+  const badgeEl = document.getElementById('adj-modal-status-badge');
+  const subEl = document.getElementById('adj-modal-header-sub');
+
+  if (!modal || !body) return;
+
+  // Unconditionally display modal
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+
+  if (idEl) idEl.textContent = claimId;
+  if (subEl) subEl.textContent = 'Loading claim details from database...';
+  if (badgeEl) {
+    badgeEl.className = 'badge';
+    badgeEl.textContent = 'Loading...';
+    badgeEl.style.cssText = 'background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE;font-weight:600;font-size:0.8rem;';
+  }
+
+  body.innerHTML = `
+    <div style="text-align:center;padding:3rem 1rem;color:var(--gray-500);">
+      <div class="spinner" style="margin:0 auto 12px;"></div>
+      Fetching full claim assessment dossier, policy coverages, and exclusions...
+    </div>
+  `;
+
+  try {
+    const res = await fetch(`${CUSTOMER_SERVICE_URL}/adjuster/claims/${encodeURIComponent(claimId)}`, {
+      headers: getAuthHeaders()
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      body.innerHTML = `<div style="padding:2rem;text-align:center;color:#991B1B;font-weight:600;">Error loading claim: ${err.detail || 'Claim not found.'}</div>`;
+      return;
+    }
+
+    const data = await res.json();
+    adjusterActiveClaimDetail = data;
+
+    if (idEl) idEl.textContent = data.claim_number || data.claim_id;
+    if (badgeEl) {
+      updateAdjusterBadgeElement(badgeEl, data.status);
+    }
+    if (subEl) subEl.textContent = `${data.policy_type || 'Policy'} (${data.policy_number || ''}) · ${data.customer_name || ''}`;
+
+    renderAdjusterClaimDetailModal(data);
+  } catch (err) {
+    console.error('Error opening adjuster claim detail:', err);
+    body.innerHTML = `<div style="padding:2rem;text-align:center;color:#991B1B;font-weight:600;">Network error loading claim. Please check your connection.</div>`;
+  }
+}
+
+function renderAdjusterClaimDetailModal(data) {
+  const body = document.getElementById('adj-modal-body');
+  if (!body) return;
+
+  const claimedAmtStr = data.claimed_amount != null ? `$${Number(data.claimed_amount).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}` : '$0.00';
+  const approvedAmtVal = data.approved_amount != null ? data.approved_amount : (data.claimed_amount || 0);
+
+  // Coverages Table HTML
+  let coveragesHtml = '';
+  if (data.coverages && data.coverages.length > 0) {
+    coveragesHtml = `
+      <div class="table-responsive" style="margin-top:8px;">
+        <table class="data-table" style="font-size:0.8rem;">
+          <thead>
+            <tr>
+              <th>Coverage Line</th>
+              <th>Coverage Limit</th>
+              <th>Deductible</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.coverages.map(c => `
+              <tr>
+                <td><strong>${c.coverage_name}</strong></td>
+                <td>${c.coverage_limit != null ? '$' + Number(c.coverage_limit).toLocaleString() : 'Included'}</td>
+                <td>${c.deductible != null ? '$' + Number(c.deductible).toLocaleString() : '$0'}</td>
+                <td><span class="badge badge-active" style="font-size:0.7rem;padding:2px 6px;">${c.status || 'Active'}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    coveragesHtml = `<div style="font-size:0.825rem;color:var(--gray-500);margin-top:6px;">Standard policy schedule applies.</div>`;
+  }
+
+  // Exclusions List HTML
+  let exclusionsHtml = '';
+  if (data.exclusions && data.exclusions.length > 0) {
+    exclusionsHtml = `
+      <ul style="margin-top:8px;padding-left:18px;font-size:0.825rem;color:var(--gray-700);line-height:1.5;">
+        ${data.exclusions.map(e => `
+          <li><strong>${e.exclusion_name}:</strong> ${e.description || 'Standard exclusion provision.'}</li>
+        `).join('')}
+      </ul>
+    `;
+  } else {
+    exclusionsHtml = `<div style="font-size:0.825rem;color:var(--gray-500);margin-top:6px;">Standard policy exclusions apply.</div>`;
+  }
+
+  // Documents HTML
+  let docsHtml = '';
+  if (data.documents && data.documents.length > 0) {
+    docsHtml = `
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+        ${data.documents.map(d => `
+          <div style="display:flex;align-items:center;justify-content:space-between;background:#FAF6F2;border:1px solid #EADBCE;border-radius:8px;padding:8px 12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span>📄</span>
+              <strong style="font-size:0.825rem;color:var(--cust-brown-900);">${d.document_name}</strong>
+              <span style="font-size:0.75rem;color:var(--gray-500);">(${d.document_type || 'File'})</span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="downloadOrViewDoc('${d.document_name}','${data.claim_number}')" style="padding:2px 8px;font-size:0.75rem;">Download</button>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    docsHtml = `
+      <div style="padding:12px 14px;background:#FAF6F2;border:1px dashed #EADBCE;border-radius:8px;text-align:center;color:var(--gray-500);font-size:0.825rem;margin-top:6px;">
+        No documents available.
+      </div>
+    `;
+  }
+
+  // Logged Decision Banner (if already decided)
+  let decisionLogBanner = '';
+  if (data.status === 'Approved') {
+    decisionLogBanner = `
+      <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <strong style="color:#065F46;font-size:0.9rem;">✓ Claim Approved by Adjuster</strong>
+          <span style="font-size:0.75rem;color:#047857;">${data.decision_date || 'Logged'}</span>
+        </div>
+        <div style="font-size:0.825rem;color:#065F46;line-height:1.4;">
+          <strong>Approved Amount:</strong> $${Number(data.approved_amount || data.claimed_amount || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}
+          ${data.decision_by ? `· <strong>Adjuster:</strong> ${data.decision_by}` : ''}
+        </div>
+        ${data.decision_notes ? `<div style="font-size:0.8rem;color:#047857;margin-top:4px;"><strong>Notes:</strong> ${data.decision_notes}</div>` : ''}
+      </div>
+    `;
+  } else if (data.status === 'Rejected') {
+    decisionLogBanner = `
+      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <strong style="color:#991B1B;font-size:0.9rem;">✕ Claim Rejected by Adjuster</strong>
+          <span style="font-size:0.75rem;color:#B91C1C;">${data.decision_date || 'Logged'}</span>
+        </div>
+        <div style="font-size:0.825rem;color:#991B1B;line-height:1.4;">
+          <strong>Rejection Reason:</strong> ${data.rejection_reason || 'Not specified'}
+          ${data.decision_by ? `· <strong>Adjuster:</strong> ${data.decision_by}` : ''}
+        </div>
+        ${data.decision_notes ? `<div style="font-size:0.8rem;color:#B91C1C;margin-top:4px;"><strong>Notes:</strong> ${data.decision_notes}</div>` : ''}
+      </div>
+    `;
+  } else if (data.status === 'More Information Required') {
+    decisionLogBanner = `
+      <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px 16px;margin-bottom:1.25rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <strong style="color:#92400E;font-size:0.9rem;">⚠ Information Requested from Customer</strong>
+          <span style="font-size:0.75rem;color:#B45309;">${data.decision_date || 'Logged'}</span>
+        </div>
+        <div style="font-size:0.825rem;color:#92400E;line-height:1.4;">
+          <strong>Requested Items:</strong> ${data.requested_info || 'Additional documentation requested'}
+          ${data.decision_by ? `· <strong>Adjuster:</strong> ${data.decision_by}` : ''}
+        </div>
+        ${data.decision_notes ? `<div style="font-size:0.8rem;color:#B45309;margin-top:4px;"><strong>Notes:</strong> ${data.decision_notes}</div>` : ''}
+      </div>
+    `;
+  }
+
+  body.innerHTML = `
+    ${decisionLogBanner}
+
+    <!-- 1. CLAIM & CUSTOMER INFORMATION GRID -->
+    <div class="grid grid-2" style="margin-bottom:1.25rem;gap:16px;">
+      <!-- Claim Information Box -->
+      <div class="card" style="padding:1.25rem;border:1px solid var(--cust-cream-border);background:var(--white);border-radius:10px;">
+        <h4 style="font-size:0.925rem;color:var(--cust-brown-900);font-weight:700;margin-bottom:8px;border-bottom:1px solid var(--cust-cream-border);padding-bottom:6px;">
+          CLAIM INFORMATION
+        </h4>
+        <div class="detail-row"><span class="detail-label">Claim ID</span><span class="detail-value" style="font-family:monospace;font-weight:700;">${data.claim_number || data.claim_id}</span></div>
+        <div class="detail-row"><span class="detail-label">Claim Type</span><span class="detail-value">${data.claim_type}</span></div>
+        <div class="detail-row"><span class="detail-label">Incident Date</span><span class="detail-value">${data.incident_date}</span></div>
+        <div class="detail-row"><span class="detail-label">Reported Date</span><span class="detail-value">${data.reported_date}</span></div>
+        <div class="detail-row"><span class="detail-label">Claimed Amount</span><span class="detail-value" style="font-weight:700;color:var(--cust-brown-900);">${claimedAmtStr}</span></div>
+        <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value">${data.location || 'Not specified'}</span></div>
+        <div style="margin-top:8px;">
+          <div style="font-size:0.775rem;font-weight:600;color:var(--gray-600);margin-bottom:2px;">Description:</div>
+          <div style="font-size:0.825rem;color:var(--cust-brown-900);background:#FAF6F2;padding:8px 10px;border-radius:6px;border:1px solid #EADBCE;line-height:1.4;">
+            ${data.description || 'No description provided.'}
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Information Box -->
+      <div class="card" style="padding:1.25rem;border:1px solid var(--cust-cream-border);background:var(--white);border-radius:10px;">
+        <h4 style="font-size:0.925rem;color:var(--cust-brown-900);font-weight:700;margin-bottom:8px;border-bottom:1px solid var(--cust-cream-border);padding-bottom:6px;">
+          CUSTOMER INFORMATION
+        </h4>
+        <div class="detail-row"><span class="detail-label">Customer Name</span><span class="detail-value" style="font-weight:700;">${data.customer_name}</span></div>
+        <div class="detail-row"><span class="detail-label">Customer ID</span><span class="detail-value" style="font-family:monospace;">${data.customer_id}</span></div>
+        <div class="detail-row"><span class="detail-label">Email Address</span><span class="detail-value">${data.email}</span></div>
+        <div class="detail-row"><span class="detail-label">Primary Phone</span><span class="detail-value">${data.phone || '(555) 234-5678'}</span></div>
+        <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${data.address || '124 Grand Avenue, Chicago, IL'}</span></div>
+        
+        <h4 style="font-size:0.925rem;color:var(--cust-brown-900);font-weight:700;margin-top:14px;margin-bottom:6px;border-bottom:1px solid var(--cust-cream-border);padding-bottom:4px;">
+          DOCUMENTS
+        </h4>
+        ${docsHtml}
+      </div>
+    </div>
+
+    <!-- 2. POLICY INFORMATION ACCORDION / BOX -->
+    <div class="card" style="padding:1.25rem;border:1px solid var(--cust-cream-border);background:var(--white);border-radius:10px;margin-bottom:1.25rem;">
+      <h4 style="font-size:0.925rem;color:var(--cust-brown-900);font-weight:700;margin-bottom:8px;border-bottom:1px solid var(--cust-cream-border);padding-bottom:6px;">
+        POLICY INFORMATION
+      </h4>
+      <div class="grid grid-3" style="gap:12px;margin-bottom:10px;">
+        <div class="detail-row"><span class="detail-label">Policy Number</span><span class="detail-value" style="font-family:monospace;font-weight:700;">${data.policy_number}</span></div>
+        <div class="detail-row"><span class="detail-label">Policy Type</span><span class="detail-value">${data.policy_type}</span></div>
+        <div class="detail-row"><span class="detail-label">Status</span><span class="badge badge-active" style="font-size:0.7rem;">${data.policy_status}</span></div>
+        <div class="detail-row"><span class="detail-label">Effective Date</span><span class="detail-value">${data.effective_date || '2024-01-15'}</span></div>
+        <div class="detail-row"><span class="detail-label">Expiry Date</span><span class="detail-value">${data.expiry_date || '2027-01-15'}</span></div>
+        <div class="detail-row"><span class="detail-label">Annual Premium</span><span class="detail-value">${data.premium != null ? '$' + Number(data.premium).toLocaleString() + '/yr' : 'N/A'}</span></div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:4px;">Policy Coverage Line Items & Limits:</div>
+        ${coveragesHtml}
+      </div>
+
+      <div style="margin-top:12px;">
+        <div style="font-size:0.8rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:4px;">Relevant Policy Exclusions to Review:</div>
+        ${exclusionsHtml}
+      </div>
+    </div>
+
+    <!-- 3. AI DECISION SUPPORT SECTION -->
+    <div class="card" style="padding:1.25rem;border:1px solid #EADBCE;background:#FAF6F2;border-radius:10px;margin-bottom:1.25rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:#C85A32;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.85rem;">🤖</div>
+          <div>
+            <h4 style="font-size:0.925rem;color:var(--cust-brown-900);font-weight:700;margin:0;">Adjuster AI Decision Support</h4>
+            <div style="font-size:0.75rem;color:var(--gray-600);">Objective analysis of coverages, exclusions, and missing documentation</div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-run-adj-ai" onclick="generateAdjusterClaimAI('${data.claim_id}')" style="display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;">
+          <span>✨ Analyze Claim with AI</span>
+        </button>
+      </div>
+
+      <div style="font-size:0.75rem;color:#7A4A3A;background:#FFFDF7;border:1px solid #FDE68A;border-radius:6px;padding:6px 10px;margin-bottom:8px;">
+        <strong>Regulatory Disclaimer:</strong> The AI provides decision support only and never automatically approves or rejects claims. The final decision authority belongs exclusively to the Adjuster.
+      </div>
+
+      <div id="adj-ai-analysis-container" style="font-size:0.825rem;color:var(--cust-brown-900);line-height:1.5;">
+        <div style="color:var(--gray-500);font-style:italic;padding:8px 0;">Click "Analyze Claim with AI" to inspect policy coverage against this loss event.</div>
+      </div>
+    </div>
+
+    <!-- 4. ADJUSTER DECISION SECTION -->
+    <div class="card" style="padding:1.25rem;border:2px solid var(--cust-terracotta);background:var(--white);border-radius:10px;">
+      <h4 style="font-size:1rem;color:var(--cust-brown-900);font-weight:700;margin-bottom:6px;">
+        RECORD ADJUSTER CLAIM DECISION
+      </h4>
+      <p style="font-size:0.8rem;color:var(--gray-600);margin-bottom:1rem;">
+        Select an adjudication determination below. Notifications are automatically triggered for the Customer and assigned Agent upon submission.
+      </p>
+
+      <!-- Decision Type Selector Tabs -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;">
+        <button class="btn btn-sm adj-decision-tab active" id="tab-dec-approve" onclick="switchAdjusterDecisionTab('Approve', this)" style="border-radius:8px;padding:8px 16px;font-weight:700;background:#059669;color:#fff;border:none;cursor:pointer;" type="button">
+          ✓ Approve Claim
+        </button>
+        <button class="btn btn-outline btn-sm adj-decision-tab" id="tab-dec-reject" onclick="switchAdjusterDecisionTab('Reject', this)" style="border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;" type="button">
+          ✕ Reject Claim
+        </button>
+        <button class="btn btn-outline btn-sm adj-decision-tab" id="tab-dec-info" onclick="switchAdjusterDecisionTab('MoreInfo', this)" style="border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;" type="button">
+          ⚠ Request More Information
+        </button>
+      </div>
+
+      <!-- Decision Form Areas -->
+      <!-- A. Approve Form -->
+      <div id="adj-form-approve" class="adj-decision-form-panel">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="adj-input-approve-amount" style="display:block;font-size:0.85rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:4px;">
+            Approved Settlement Amount ($) *
+          </label>
+          <input type="number" step="0.01" min="0" class="form-control" id="adj-input-approve-amount" value="${approvedAmtVal}" style="width:100%;max-width:280px;padding:8px 12px;font-size:0.9rem;border-radius:8px;border:1px solid var(--cust-cream-border);font-weight:700;" placeholder="e.g. 4850.00">
+        </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="adj-input-approve-notes" style="display:block;font-size:0.85rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:4px;">
+            Decision Notes & Settlement Terms:
+          </label>
+          <textarea class="form-control" id="adj-input-approve-notes" rows="3" placeholder="Provide settlement notes, breakdown of covered damages, or payment instructions..." style="width:100%;box-sizing:border-box;padding:10px;font-size:0.85rem;border-radius:8px;border:1px solid var(--cust-cream-border);resize:vertical;">${data.decision_notes || ''}</textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button class="btn btn-primary" id="btn-submit-approve" onclick="submitAdjusterClaimDecision('${data.claim_id}', 'Approved')" style="background:#059669;border-color:#059669;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+            <span>Confirm Claim Approval &amp; Notify Customer/Agent</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- B. Reject Form -->
+      <div id="adj-form-reject" class="adj-decision-form-panel" style="display:none;">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="adj-input-reject-reason" style="display:block;font-size:0.85rem;font-weight:700;color:#991B1B;margin-bottom:4px;">
+            Rejection Reason (Policy Exclusion / Uncovered Peril) *
+          </label>
+          <input type="text" class="form-control" id="adj-input-reject-reason" value="${data.rejection_reason || ''}" placeholder="e.g. Loss caused by excluded exterior flood earth movement per Section 4.B" style="width:100%;padding:8px 12px;font-size:0.875rem;border-radius:8px;border:1px solid #FECACA;">
+        </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="adj-input-reject-notes" style="display:block;font-size:0.85rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:4px;">
+            Additional Decision Notes:
+          </label>
+          <textarea class="form-control" id="adj-input-reject-notes" rows="3" placeholder="Explain the rationale and policy reference for this claim decline..." style="width:100%;box-sizing:border-box;padding:10px;font-size:0.85rem;border-radius:8px;border:1px solid var(--cust-cream-border);resize:vertical;">${data.decision_notes || ''}</textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button class="btn btn-primary" id="btn-submit-reject" onclick="submitAdjusterClaimDecision('${data.claim_id}', 'Rejected')" style="background:#DC2626;border-color:#DC2626;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+            <span>Confirm Claim Rejection &amp; Notify Customer/Agent</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- C. Request More Information Form -->
+      <div id="adj-form-info" class="adj-decision-form-panel" style="display:none;">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="adj-input-req-info" style="display:block;font-size:0.85rem;font-weight:700;color:#92400E;margin-bottom:4px;">
+            Information / Documents Required from Customer *
+          </label>
+          <textarea class="form-control" id="adj-input-req-info" rows="2" placeholder="e.g. Please provide itemized plumber remediation invoice and photos of damaged subfloor." style="width:100%;box-sizing:border-box;padding:10px;font-size:0.85rem;border-radius:8px;border:1px solid #FDE68A;resize:vertical;">${data.requested_info || ''}</textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="adj-input-info-notes" style="display:block;font-size:0.85rem;font-weight:700;color:var(--cust-brown-900);margin-bottom:4px;">
+            Additional Adjuster Notes (Optional):
+          </label>
+          <textarea class="form-control" id="adj-input-info-notes" rows="2" placeholder="Additional context or instructions for customer..." style="width:100%;box-sizing:border-box;padding:10px;font-size:0.85rem;border-radius:8px;border:1px solid var(--cust-cream-border);resize:vertical;">${data.decision_notes || ''}</textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button class="btn btn-primary" id="btn-submit-info" onclick="submitAdjusterClaimDecision('${data.claim_id}', 'More Information Required')" style="background:#D97706;border-color:#D97706;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+            <span>Submit Request &amp; Notify Customer</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function switchAdjusterDecisionTab(tabName, btn) {
+  document.querySelectorAll('.adj-decision-tab').forEach(b => {
+    b.classList.remove('active');
+    b.classList.add('btn-outline');
+    b.style.background = '';
+    b.style.color = '';
+    b.style.borderColor = '';
+  });
+
+  const pApprove = document.getElementById('adj-form-approve');
+  const pReject = document.getElementById('adj-form-reject');
+  const pInfo = document.getElementById('adj-form-info');
+
+  if (pApprove) pApprove.style.display = 'none';
+  if (pReject) pReject.style.display = 'none';
+  if (pInfo) pInfo.style.display = 'none';
+
+  if (tabName === 'Approve') {
+    if (pApprove) pApprove.style.display = 'block';
+    if (btn) {
+      btn.classList.add('active');
+      btn.classList.remove('btn-outline');
+      btn.style.background = '#059669';
+      btn.style.color = '#fff';
+    }
+  } else if (tabName === 'Reject') {
+    if (pReject) pReject.style.display = 'block';
+    if (btn) {
+      btn.classList.add('active');
+      btn.classList.remove('btn-outline');
+      btn.style.background = '#DC2626';
+      btn.style.color = '#fff';
+    }
+  } else if (tabName === 'MoreInfo') {
+    if (pInfo) pInfo.style.display = 'block';
+    if (btn) {
+      btn.classList.add('active');
+      btn.classList.remove('btn-outline');
+      btn.style.background = '#D97706';
+      btn.style.color = '#fff';
+    }
+  }
+}
+
+async function submitAdjusterClaimDecision(claimId, decision) {
+  let approvedAmount = null;
+  let rejectionReason = null;
+  let requestedInfo = null;
+  let decisionNotes = null;
+
+  if (decision === 'Approved') {
+    const amtInput = document.getElementById('adj-input-approve-amount');
+    const notesInput = document.getElementById('adj-input-approve-notes');
+    const amt = amtInput ? parseFloat(amtInput.value) : null;
+    if (amt === null || isNaN(amt) || amt < 0) {
+      showToast('Please specify a valid approved amount (greater than or equal to 0).', 'error');
+      return;
+    }
+    approvedAmount = amt;
+    decisionNotes = notesInput ? notesInput.value.trim() : '';
+  } else if (decision === 'Rejected') {
+    const reasonInput = document.getElementById('adj-input-reject-reason');
+    const notesInput = document.getElementById('adj-input-reject-notes');
+    const reason = reasonInput ? reasonInput.value.trim() : '';
+    if (!reason) {
+      showToast('Please specify a rejection reason.', 'error');
+      return;
+    }
+    rejectionReason = reason;
+    decisionNotes = notesInput ? notesInput.value.trim() : '';
+  } else if (decision === 'More Information Required') {
+    const infoInput = document.getElementById('adj-input-req-info');
+    const notesInput = document.getElementById('adj-input-info-notes');
+    const info = infoInput ? infoInput.value.trim() : '';
+    if (!info) {
+      showToast('Please describe the required information or documents.', 'error');
+      return;
+    }
+    requestedInfo = info;
+    decisionNotes = notesInput ? notesInput.value.trim() : '';
+  }
+
+  const submitBtn = document.getElementById(
+    decision === 'Approved' ? 'btn-submit-approve' : (decision === 'Rejected' ? 'btn-submit-reject' : 'btn-submit-info')
+  );
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Saving decision...</span>`;
+  }
+
+  try {
+    const res = await fetch(`${CUSTOMER_SERVICE_URL}/adjuster/claims/${encodeURIComponent(claimId)}/decision`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        decision: decision,
+        approved_amount: approvedAmount,
+        rejection_reason: rejectionReason,
+        requested_info: requestedInfo,
+        decision_notes: decisionNotes
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast(err.detail || 'Failed to submit claim decision.', 'error');
+      if (submitBtn) submitBtn.disabled = false;
+      return;
+    }
+
+    const data = await res.json();
+    showToast(data.message || `Claim decision recorded as ${decision}!`);
+
+    // Refresh shared queue and stats
+    await fetchAdjusterStats();
+    await fetchAdjusterClaims(adjusterCurrentSearch, adjusterCurrentFilter);
+
+    // Re-fetch claim detail in modal to show updated status and logs
+    await openAdjusterClaimDetailModal(claimId);
+  } catch (err) {
+    console.error('Error submitting adjuster decision:', err);
+    showToast('Network error while recording claim decision.', 'error');
+    if (submitBtn) submitBtn.disabled = false;
+  }
+}
+
+async function generateAdjusterClaimAI(claimId) {
+  const container = document.getElementById('adj-ai-analysis-container');
+  const btn = document.getElementById('btn-run-adj-ai');
+
+  if (!container) return;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳ Analyzing with AI...</span>`;
+  }
+
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;padding:12px 0;color:var(--gray-600);">
+      <div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>
+      <span>Consulting policy terms, coverage limits, and exclusion schedules for Claim ${claimId}...</span>
+    </div>
+  `;
+
+  try {
+    const claimData = adjusterActiveClaimDetail || {};
+    const token = getAuthToken();
+
+    const payload = {
+      message: `Please evaluate Claim ${claimData.claim_number || claimId} (${claimData.claim_type}) against policy ${claimData.policy_number} (${claimData.policy_type}). Identify potentially applicable coverage lines, deductibles, relevant exclusions, and missing documentation for Adjuster decision support.`,
+      claim_id: claimId,
+      context: {
+        claim: claimData,
+        policy: {
+          policy_number: claimData.policy_number,
+          policy_type: claimData.policy_type,
+          policy_status: claimData.policy_status,
+          effective_date: claimData.effective_date,
+          expiry_date: claimData.expiry_date,
+          premium: claimData.premium,
+          coverages: claimData.coverages || [],
+          exclusions: claimData.exclusions || []
+        },
+        customer: {
+          customer_id: claimData.customer_id,
+          customer_name: claimData.customer_name,
+          email: claimData.email,
+          phone: claimData.phone,
+          address: claimData.address
+        },
+        documents: claimData.documents || []
+      }
+    };
+
+    const res = await fetch(`${AI_SERVICE_URL}/api/v1/ai/adjuster/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      container.innerHTML = `<div style="color:#991B1B;padding:8px 0;">AI decision support currently unavailable. Please review claim documents directly.</div>`;
+      return;
+    }
+
+    const aiRes = await res.json();
+    container.innerHTML = renderChatMarkdown(aiRes.response || 'Analysis complete.');
+  } catch (err) {
+    console.error('Error generating adjuster AI analysis:', err);
+    container.innerHTML = `<div style="color:#991B1B;padding:8px 0;">Error generating AI decision support.</div>`;
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span>✨ Re-Analyze Claim with AI</span>`;
+    }
+  }
+}
+
+let adjusterChatMessages = [
+  { sender: 'bot', text: 'Hello Claims Adjuster! I am your AI Decision Support Assistant. Select a claim or ask about policy coverages, deductible applications, or exclusion reviews across the shared claims queue.' }
+];
+
+function loadAdjusterChatHistoryFromBackend() {
+  const container = document.getElementById('adjuster-chat-messages-container');
+  if (!container) return;
+
+  container.innerHTML = adjusterChatMessages.map(m => `
+    <div class="chat-msg ${m.sender}">
+      <div class="chat-avatar">${m.sender === 'bot' ? '🤖' : 'AD'}</div>
+      <div>
+        <div class="chat-bubble">${renderChatMarkdown(m.text)}</div>
+        <div class="chat-bubble-meta"><span>Just now</span></div>
+      </div>
+    </div>
+  `).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendAdjusterPageChatMessage() {
+  const input = document.getElementById('adjuster-page-chat-input');
+  const container = document.getElementById('adjuster-chat-messages-container');
+  if (!input || !container) return;
+
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  adjusterChatMessages.push({ sender: 'user', text: msg });
+  input.value = '';
+  loadAdjusterChatHistoryFromBackend();
+
+  // Show typing indicator
+  adjusterChatMessages.push({
+    sender: 'bot',
+    text: '<div class="chat-typing-indicator"><span></span><span></span><span></span></div>',
+    isTyping: true
+  });
+  loadAdjusterChatHistoryFromBackend();
+
+  try {
+    const token = getAuthToken();
+    const stats = window.adjusterStatsData || {};
+    const claims = (window.adjusterClaimsData || []).slice(0, 15);
+
+    const payload = {
+      message: msg,
+      history: adjusterChatMessages.filter(m => !m.isTyping).map(m => ({ sender: m.sender, content: m.text })),
+      context: {
+        queue_summary: stats,
+        claims: claims
+      }
+    };
+
+    const res = await fetch(`${AI_SERVICE_URL}/api/v1/ai/adjuster/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    adjusterChatMessages = adjusterChatMessages.filter(m => !m.isTyping);
+
+    if (res.ok) {
+      const data = await res.json();
+      adjusterChatMessages.push({ sender: 'bot', text: data.response });
+    } else {
+      adjusterChatMessages.push({ sender: 'bot', text: 'Unable to process claim assessment inquiry at this time.' });
+    }
+  } catch (err) {
+    console.error('Adjuster chat error:', err);
+    adjusterChatMessages = adjusterChatMessages.filter(m => !m.isTyping);
+    adjusterChatMessages.push({ sender: 'bot', text: 'Error connecting to Adjuster AI service.' });
+  }
+
+  loadAdjusterChatHistoryFromBackend();
+}
+
+function renderAdjusterProfile() {
+  let authUser = null;
+  try {
+    const stored = (typeof localStorage !== 'undefined' ? localStorage.getItem('auth_user') : null) ||
+      (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('auth_user') : null);
+    if (stored) authUser = JSON.parse(stored);
+  } catch (e) { }
+
+  const name = (authUser && authUser.name) || 'Claims Adjuster';
+  const email = (authUser && authUser.email) || 'adjuster@insureassist.com';
+  const role = (authUser && authUser.role) || 'Adjuster';
+  const initials = name.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'AD';
+
+  const nameEl = document.getElementById('adjuster-profile-name');
+  const fullEl = document.getElementById('adjuster-profile-fullname');
+  const emailEl = document.getElementById('adjuster-profile-email');
+  const roleEl = document.getElementById('adjuster-profile-role');
+  const roleSub = document.getElementById('adjuster-profile-role-sub');
+  const avatarEl = document.getElementById('adjuster-profile-avatar');
+
+  if (nameEl) nameEl.textContent = name;
+  if (fullEl) fullEl.textContent = name;
+  if (emailEl) emailEl.textContent = email;
+  if (roleEl) roleEl.textContent = role;
+  if (roleSub) roleSub.textContent = role;
+  if (avatarEl) avatarEl.textContent = initials;
+}
+
+// Global Adjuster Exports
+if (typeof fetchAdjusterStats === 'function') window.fetchAdjusterStats = fetchAdjusterStats;
+if (typeof fetchAdjusterClaims === 'function') window.fetchAdjusterClaims = fetchAdjusterClaims;
+if (typeof renderAdjusterDashboardQueue === 'function') window.renderAdjusterDashboardQueue = renderAdjusterDashboardQueue;
+if (typeof renderAdjusterClaimsTable === 'function') window.renderAdjusterClaimsTable = renderAdjusterClaimsTable;
+if (typeof filterAdjusterClaims === 'function') window.filterAdjusterClaims = filterAdjusterClaims;
+if (typeof filterAdjusterFromDashboard === 'function') window.filterAdjusterFromDashboard = filterAdjusterFromDashboard;
+if (typeof handleAdjusterClaimSearch === 'function') window.handleAdjusterClaimSearch = handleAdjusterClaimSearch;
+if (typeof openAdjusterClaimDetailModal === 'function') window.openAdjusterClaimDetailModal = openAdjusterClaimDetailModal;
+if (typeof submitAdjusterClaimDecision === 'function') window.submitAdjusterClaimDecision = submitAdjusterClaimDecision;
+if (typeof switchAdjusterDecisionTab === 'function') window.switchAdjusterDecisionTab = switchAdjusterDecisionTab;
+if (typeof generateAdjusterClaimAI === 'function') window.generateAdjusterClaimAI = generateAdjusterClaimAI;
+if (typeof loadAdjusterChatHistoryFromBackend === 'function') window.loadAdjusterChatHistoryFromBackend = loadAdjusterChatHistoryFromBackend;
+if (typeof sendAdjusterPageChatMessage === 'function') window.sendAdjusterPageChatMessage = sendAdjusterPageChatMessage;
+if (typeof renderAdjusterProfile === 'function') window.renderAdjusterProfile = renderAdjusterProfile;
+
+
 
 

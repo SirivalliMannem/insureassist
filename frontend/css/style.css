@@ -1147,7 +1147,7 @@
     .grid {
       display: grid;
       gap: 1.25rem;
-      align-items: start;
+      align-items: stretch;
       width: 100%;
       max-width: 100%;
       min-width: 0;
@@ -1160,7 +1160,7 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 1.25rem;
-      align-items: start;
+      align-items: stretch;
       width: 100%;
       min-width: 0;
       box-sizing: border-box;
@@ -1175,7 +1175,14 @@
       border-radius: 20px;
       background: #FFFFFF;
       box-shadow: 0 2px 10px rgba(59, 36, 29, 0.04);
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 185px;
+      height: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     }
     .stat-card:hover {
       transform: translateY(-2px);
@@ -1186,13 +1193,14 @@
       border-color: #7A4A3A;
       box-shadow: 0 0 0 2px #F2B7A5, 0 10px 28px rgba(122, 74, 58, 0.12);
     }
-    .stat-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+    .stat-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; position: relative; z-index: 2; }
     .stat-icon {
-      width: 44px; height: 44px; border-radius: 14px;
+      width: 42px; height: 42px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
       background: #FAF6F2;
       border: 1px solid #EADBCE;
       color: #7A4A3A;
+      flex-shrink: 0;
     }
     .stat-icon.blue { background: #FAF6F2; color: #7A4A3A; border-color: #EADBCE; }
     .stat-icon.amber { background: #FFF7ED; color: #C2410C; border-color: #FFEDD5; }
@@ -1219,9 +1227,10 @@
     .stat-value {
       font-family: 'Playfair Display', Georgia, serif;
       font-size: 2.1rem; font-weight: 700; color: #3B241D; line-height: 1.1; letter-spacing: -0.02em;
+      margin-bottom: 0.35rem; position: relative; z-index: 2;
     }
-    .stat-label { font-size: 0.85rem; font-weight: 600; color: #7A4A3A; margin-top: 0.35rem; text-transform: uppercase; letter-spacing: 0.4px; }
-    .stat-subtext { font-size: 0.775rem; color: #8C756C; margin-top: 0.25rem; }
+    .stat-label { font-size: 0.85rem; font-weight: 600; color: #7A4A3A; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.4px; position: relative; z-index: 2; }
+    .stat-subtext { font-size: 0.775rem; color: #8C756C; margin: 0; line-height: 1.35; position: relative; z-index: 2; }
 
     .badge {
       display: inline-flex; align-items: center; gap: 5px;
@@ -1230,6 +1239,7 @@
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
     .badge-active { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+    .badge-invited { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
     .badge-pending { background: #FAE4DD; color: #8A3C26; border: 1px solid #F2B7A5; }
     .badge-pending-review { background: #FAE4DD; color: #8A3C26; border: 1px solid #F2B7A5; }
     .badge-pending-approval { background: #F5F3FF; color: #6D28D9; border: 1px solid #DDD6FE; }
@@ -2523,72 +2533,44 @@
 
     /* Customer Two-Column Cards */
     .customer-dashboard-layout {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: flex-start !important;
-      justify-content: space-between !important;
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      align-items: stretch !important;
       gap: 1.25rem !important;
       margin-bottom: 1.5rem !important;
       width: 100% !important;
+      box-sizing: border-box !important;
     }
     .customer-col-left,
     .customer-col-right {
-      flex: 1 1 0% !important;
-      min-width: 0 !important;
-      width: calc(50% - 0.625rem) !important;
-      max-width: calc(50% - 0.625rem) !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: stretch !important;
-      height: fit-content !important;
-      min-height: 0 !important;
+      height: 100% !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
     }
     .customer-card-premium {
       width: 100% !important;
-      height: fit-content !important;
-      min-height: 0 !important;
+      height: 100% !important;
+      min-height: 380px !important;
       box-sizing: border-box !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: flex-start !important;
+      justify-content: space-between !important;
       background: #FFFFFF !important;
       border: 1px solid #EADBCE !important;
       border-radius: 20px !important;
       box-shadow: 0 2px 10px rgba(59, 36, 29, 0.04) !important;
-      padding: 1.35rem 1.35rem 1.25rem !important;
-    }
-    .customer-card-premium .card-header {
-      margin-bottom: 0.85rem !important;
-      flex: 0 0 auto !important;
-    }
-    .customer-card-premium .chart-container {
-      flex: 0 0 auto !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: flex-start !important;
-      align-content: flex-start !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      height: auto !important;
-      min-height: 0 !important;
-    }
-    .customer-card-premium .chart-bars-horizontal,
-    #customer-dashboard-chart-container {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 10px !important;
-      justify-content: flex-start !important;
-      align-content: flex-start !important;
-      height: auto !important;
-      min-height: 0 !important;
-      flex: 0 0 auto !important;
-      margin: 0 !important;
-      padding: 0 !important;
+      padding: 1.35rem !important;
+      overflow: visible !important;
     }
     .customer-card-renewals {
       width: 100% !important;
-      height: fit-content !important;
-      min-height: 0 !important;
+      height: 100% !important;
+      min-height: 380px !important;
       box-sizing: border-box !important;
       display: flex !important;
       flex-direction: column !important;
@@ -2597,29 +2579,62 @@
       border: 1px solid #EADBCE !important;
       border-radius: 20px !important;
       box-shadow: 0 2px 10px rgba(59, 36, 29, 0.04) !important;
-      padding: 1.35rem 1.35rem 1.25rem !important;
+      padding: 1.35rem !important;
+      overflow: visible !important;
     }
+    .customer-card-premium .card-header,
     .customer-card-renewals .card-header {
-      margin-bottom: 0.85rem !important;
+      margin-bottom: 0.75rem !important;
       flex: 0 0 auto !important;
     }
+    .customer-card-premium .chart-container {
+      flex: 1 1 auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: visible !important;
+      min-height: 0 !important;
+      width: 100% !important;
+    }
+    .customer-card-premium .chart-bars-horizontal,
+    #customer-dashboard-chart-container {
+      width: 100% !important;
+      height: 100% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
     #customer-dashboard-renewals-container {
+      flex: 1 1 auto !important;
+      max-height: 250px !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      padding-right: 4px !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: flex-start !important;
       align-items: stretch !important;
-      gap: 10px !important;
-      height: auto !important;
-      min-height: 0 !important;
-      padding-right: 0 !important;
+      gap: 0.5rem !important;
       margin: 0 !important;
-      flex: 0 0 auto !important;
+      margin-bottom: 0.5rem !important;
     }
     #customer-dashboard-renewals-container.expanded {
-      max-height: 420px !important;
+      max-height: 480px !important;
+    }
+    .customer-card-renewals .renewal-item {
+      flex: 0 0 auto !important;
+      margin: 0 !important;
+      margin-bottom: 0 !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
     }
     .customer-card-renewals .btn-show-more-toggle {
-      margin-top: 0.75rem !important;
+      margin-top: auto !important;
       flex: 0 0 auto !important;
     }
 
@@ -2627,190 +2642,216 @@
     /* ==========================================================================
        AGENT DASHBOARD - TOP 4 KPI CARDS & TWO-COLUMN LAYOUT
        ========================================================================== */
+    #page-agent-dashboard .grid-4 {
+      display: grid !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      align-items: stretch !important;
+      gap: 1.25rem !important;
+      width: 100% !important;
+      margin-bottom: 1.5rem !important;
+    }
     #page-agent-dashboard .grid-4 .stat-card {
-      min-height: 175px !important;
-      height: 175px !important;
+      min-height: 185px !important;
+      height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
-      padding: 1.2rem 1.2rem 1rem !important;
+      padding: 1.35rem !important;
       box-sizing: border-box !important;
       overflow: hidden !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
+      border-radius: 20px !important;
+      border: 1px solid #EADBCE !important;
+      background: #FFFFFF !important;
     }
     #page-agent-dashboard .grid-4 .stat-card .stat-card-top {
-      margin-bottom: 0.5rem !important;
+      margin-bottom: 0.75rem !important;
     }
     #page-agent-dashboard .grid-4 .stat-card .stat-icon {
-      width: 40px !important;
-      height: 40px !important;
-    }
-    #page-agent-dashboard .grid-4 .stat-card .stat-icon svg {
-      width: 22px !important;
-      height: 22px !important;
+      width: 42px !important;
+      height: 42px !important;
+      border-radius: 12px !important;
     }
     #page-agent-dashboard .grid-4 .stat-card .stat-value {
-      font-size: 1.75rem !important;
-      line-height: 1.15 !important;
-      letter-spacing: -0.5px !important;
-      word-break: break-word !important;
+      font-family: 'Playfair Display', Georgia, serif !important;
+      font-size: 2.1rem !important;
+      font-weight: 700 !important;
+      color: #3B241D !important;
+      line-height: 1.1 !important;
+      margin-bottom: 0.35rem !important;
     }
     #page-agent-dashboard .grid-4 .stat-card .stat-label {
       font-size: 0.85rem !important;
       font-weight: 600 !important;
       color: #7A4A3A !important;
-      margin-top: 0.2rem !important;
-      line-height: 1.25 !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.4px !important;
+      margin-bottom: 0.25rem !important;
     }
     #page-agent-dashboard .grid-4 .stat-card .stat-subtext {
-      font-size: 0.75rem !important;
+      font-size: 0.775rem !important;
       color: #8C756C !important;
-      margin-top: 0.2rem !important;
-      line-height: 1.3 !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
-      white-space: normal !important;
+      line-height: 1.35 !important;
+      margin: 0 !important;
     }
 
     .agent-dashboard-layout {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: flex-start !important;
-      justify-content: space-between !important;
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       gap: 1.25rem !important;
+      align-items: stretch !important;
       margin-bottom: 1.5rem !important;
       width: 100% !important;
+      box-sizing: border-box !important;
     }
     .agent-col-left,
     .agent-col-right {
-      flex: 1 1 0% !important;
-      min-width: 0 !important;
-      width: calc(50% - 0.625rem) !important;
-      max-width: calc(50% - 0.625rem) !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: stretch !important;
-      align-self: flex-start !important;
-      height: auto !important;
-      min-height: 0 !important;
+      height: 100% !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
     }
     .agent-card-premium {
       width: 100% !important;
-      height: 350px !important;
-      min-height: 350px !important;
-      max-height: 350px !important;
-      align-self: flex-start !important;
-      flex: 0 0 auto !important;
+      height: 100% !important;
+      min-height: 380px !important;
       box-sizing: border-box !important;
       display: flex !important;
       flex-direction: column !important;
-      overflow: hidden !important;
+      justify-content: space-between !important;
       padding: 1.35rem !important;
       background: #FFFFFF !important;
       border: 1px solid #EADBCE !important;
       border-radius: 20px !important;
       box-shadow: 0 2px 10px rgba(59, 36, 29, 0.04) !important;
-    }
-    .agent-card-premium .card-header {
-      margin-bottom: 0.75rem !important;
-      flex-shrink: 0;
-    }
-    .agent-card-premium .chart-container {
-      flex: 1 1 auto;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      padding: 0;
-      overflow: hidden;
-      min-height: 0;
+      overflow: visible !important;
     }
     .agent-card-renewals {
       width: 100% !important;
-      min-height: 350px !important;
-      height: auto !important;
-      align-self: flex-start !important;
-      flex: 0 0 auto !important;
+      height: 100% !important;
+      min-height: 380px !important;
       box-sizing: border-box !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: space-between !important;
-      overflow: hidden !important;
-      padding: 1.35rem 1.35rem 0 !important;
+      justify-content: flex-start !important;
+      padding: 1.35rem !important;
       background: #FFFFFF !important;
       border: 1px solid #EADBCE !important;
       border-radius: 20px !important;
       box-shadow: 0 2px 10px rgba(59, 36, 29, 0.04) !important;
+      overflow: visible !important;
     }
+    .agent-card-premium .card-header,
     .agent-card-renewals .card-header {
       margin-bottom: 0.75rem !important;
-      flex-shrink: 0;
+      flex: 0 0 auto !important;
+    }
+    .agent-card-premium .chart-container {
+      flex: 1 1 auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: visible !important;
+      min-height: 0 !important;
+      width: 100% !important;
+    }
+    #agent-premium-chart-bars {
+      width: 100% !important;
+      height: 100% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
     #agent-dashboard-renewals-list {
-      max-height: 195px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding-right: 4px;
-      transition: max-height 0.3s ease;
-      flex: 1 1 auto;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+      flex: 1 1 auto !important;
+      max-height: 250px !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      padding-right: 4px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: flex-start !important;
+      align-items: stretch !important;
+      gap: 0.5rem !important;
+      margin: 0 !important;
+      margin-bottom: 0.5rem !important;
     }
     #agent-dashboard-renewals-list.expanded {
-      max-height: 420px;
+      max-height: 480px !important;
+    }
+    .agent-card-renewals .renewal-item {
+      flex: 0 0 auto !important;
+      margin: 0 !important;
+      margin-bottom: 0 !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .agent-card-renewals .btn-show-more-toggle {
+      margin-top: auto !important;
+      flex: 0 0 auto !important;
     }
 
     /* ==========================================================================
        UNDERWRITER DECISION PORTAL
        ========================================================================== */
+    #page-underwriter-dashboard .grid-4 {
+      display: grid !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      align-items: stretch !important;
+      gap: 1.25rem !important;
+      width: 100% !important;
+      margin-bottom: 1.5rem !important;
+    }
     #page-underwriter-dashboard .grid-4 .stat-card {
-      min-height: 175px !important;
-      height: 175px !important;
+      min-height: 185px !important;
+      height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
-      padding: 1.2rem 1.2rem 1rem !important;
+      padding: 1.35rem !important;
       box-sizing: border-box !important;
       overflow: hidden !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
+      border-radius: 20px !important;
+      border: 1px solid #EADBCE !important;
+      background: #FFFFFF !important;
     }
     #page-underwriter-dashboard .grid-4 .stat-card .stat-card-top {
-      margin-bottom: 0.5rem !important;
+      margin-bottom: 0.75rem !important;
     }
     #page-underwriter-dashboard .grid-4 .stat-card .stat-icon {
-      width: 40px !important;
-      height: 40px !important;
-    }
-    #page-underwriter-dashboard .grid-4 .stat-card .stat-icon svg {
-      width: 22px !important;
-      height: 22px !important;
+      width: 42px !important;
+      height: 42px !important;
+      border-radius: 12px !important;
     }
     #page-underwriter-dashboard .grid-4 .stat-card .stat-value {
-      font-size: 1.75rem !important;
-      line-height: 1.15 !important;
-      letter-spacing: -0.5px !important;
-      word-break: break-word !important;
+      font-family: 'Playfair Display', Georgia, serif !important;
+      font-size: 2.1rem !important;
+      font-weight: 700 !important;
+      color: #3B241D !important;
+      line-height: 1.1 !important;
+      margin-bottom: 0.35rem !important;
     }
     #page-underwriter-dashboard .grid-4 .stat-card .stat-label {
       font-size: 0.85rem !important;
       font-weight: 600 !important;
       color: #7A4A3A !important;
-      margin-top: 0.2rem !important;
-      line-height: 1.25 !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.4px !important;
+      margin-bottom: 0.25rem !important;
     }
     #page-underwriter-dashboard .grid-4 .stat-card .stat-subtext {
-      font-size: 0.75rem !important;
+      font-size: 0.775rem !important;
       color: #8C756C !important;
-      margin-top: 0.2rem !important;
-      line-height: 1.3 !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
-      white-space: normal !important;
+      line-height: 1.35 !important;
+      margin: 0 !important;
     }
 
     #page-underwriter-risk {
@@ -6097,8 +6138,9 @@
       justify-content: space-between;
       gap: 1.5rem;
       width: 100%;
-      padding: 0.65rem 0.25rem;
+      padding: 0.5rem 0.25rem;
       box-sizing: border-box;
+      min-height: 0;
     }
 
     @media (max-width: 900px) {
@@ -6111,12 +6153,17 @@
 
     .donut-svg-container {
       position: relative;
-      width: 175px;
-      height: 175px;
+      width: 165px;
+      height: 165px;
+      min-width: 165px;
+      min-height: 165px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      margin: auto 0;
+      box-sizing: border-box;
+      padding: 2px;
     }
 
     .donut-svg-container svg {
@@ -6180,6 +6227,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
+      justify-content: center;
       flex: 1;
       min-width: 0;
       width: 100%;
@@ -6189,7 +6237,10 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.45rem 0.75rem;
+      height: 38px;
+      min-height: 38px;
+      padding: 0 0.75rem;
+      box-sizing: border-box;
       border-radius: 9px;
       background: #FAF6F2;
       border: 1px solid #EADBCE;
@@ -6250,5 +6301,165 @@
       padding: 2px 6px;
       border-radius: 4px;
     }
+
+    /* ==========================================================================
+       ADJUSTER CLAIMS MANAGEMENT: EQUAL METRIC CARDS & REVIEW MODAL
+       ========================================================================== */
+
+    /* 1. Equal 4-Card Row for Adjuster Dashboard */
+    #page-adjuster-dashboard .grid-4,
+    .adjuster-metrics-row {
+      display: grid !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      gap: 1.25rem !important;
+      align-items: stretch !important;
+      width: 100% !important;
+      margin-bottom: 1.5rem !important;
+      box-sizing: border-box !important;
+    }
+
+    #page-adjuster-dashboard .stat-card,
+    .adjuster-metric-card {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      min-height: 185px !important;
+      height: 100% !important;
+      padding: 1.35rem !important;
+      box-sizing: border-box !important;
+      position: relative !important;
+      overflow: hidden !important;
+      border-radius: 20px !important;
+      border: 1px solid #EADBCE !important;
+      background: #FFFFFF !important;
+      box-shadow: 0 2px 10px rgba(59, 36, 29, 0.04) !important;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background-color 0.22s ease !important;
+      cursor: pointer !important;
+    }
+
+    #page-adjuster-dashboard .stat-card:hover,
+    .adjuster-metric-card:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 10px 28px rgba(122, 74, 58, 0.12) !important;
+      border-color: #C85A32 !important;
+    }
+
+    #page-adjuster-dashboard .stat-card-watermark {
+      position: absolute !important;
+      top: 2px !important;
+      right: 2px !important;
+      bottom: auto !important;
+      left: auto !important;
+      width: 102px !important;
+      height: 102px !important;
+      pointer-events: none !important;
+      opacity: 0.92 !important;
+      z-index: 1 !important;
+      overflow: visible !important;
+    }
+
+    #page-adjuster-dashboard .stat-card-top {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: flex-start !important;
+      margin-bottom: 0.75rem !important;
+      position: relative !important;
+      z-index: 2 !important;
+    }
+
+    #page-adjuster-dashboard .stat-value {
+      font-family: 'Playfair Display', Georgia, serif !important;
+      font-size: 2.1rem !important;
+      font-weight: 700 !important;
+      color: #3B241D !important;
+      line-height: 1.1 !important;
+      margin-bottom: 0.35rem !important;
+      position: relative !important;
+      z-index: 2 !important;
+    }
+
+    #page-adjuster-dashboard .stat-label {
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+      color: #7A4A3A !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.4px !important;
+      margin-bottom: 0.25rem !important;
+      position: relative !important;
+      z-index: 2 !important;
+    }
+
+    #page-adjuster-dashboard .stat-subtext {
+      font-size: 0.775rem !important;
+      color: #8C756C !important;
+      line-height: 1.35 !important;
+      margin: 0 !important;
+      position: relative !important;
+      z-index: 2 !important;
+    }
+
+    @media (max-width: 1100px) {
+      .grid-4,
+      #page-agent-dashboard .grid-4,
+      #page-underwriter-dashboard .grid-4,
+      #page-adjuster-dashboard .grid-4,
+      .adjuster-metrics-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+      .agent-dashboard-layout,
+      .customer-dashboard-layout,
+      .dashboard-grid,
+      #page-underwriter-dashboard .grid-2 {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .grid-3,
+      #page-customer-dashboard .grid-3,
+      .admin-stats-subgrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+      .donut-chart-wrapper {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 1.25rem !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .grid-4,
+      .grid-3,
+      .grid-2,
+      .dashboard-grid,
+      .agent-dashboard-layout,
+      .customer-dashboard-layout,
+      #page-customer-dashboard .grid-3,
+      #page-agent-dashboard .grid-4,
+      #page-underwriter-dashboard .grid-4,
+      #page-adjuster-dashboard .grid-4,
+      #page-underwriter-dashboard .grid-2,
+      .admin-stats-subgrid,
+      .adjuster-metrics-row {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    /* 2. Modal Display Enforcement */
+    #modal-adjuster-claim-details.open {
+      display: flex !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+
+    #modal-adjuster-claim-details:not(.open) {
+      display: none !important;
+    }
+
+    #modal-adjuster-claim-details {
+      z-index: 10000 !important;
+    }
+
+
 
 

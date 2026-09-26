@@ -178,6 +178,7 @@ class AuthService:
         """
         Validate email and password against stored hash.
         Authenticates against PostgreSQL database first, falling back to demo users.
+        Transitions user status from 'Invited' to 'Active' upon successful authentication.
         """
         user = self.get_user_by_email(login_data.email, db=db)
         if not user or not user.is_active:
@@ -186,17 +187,37 @@ class AuthService:
         if not verify_password(login_data.password, user.hashed_password):
             return None
 
+        # Transition status from 'Invited' to 'Active' ONLY after credentials are confirmed valid
+        session, should_close = self._get_db_session(db)
+        if session:
+            try:
+                clean_email = login_data.email.strip().lower() if login_data.email else ""
+                db_record = session.query(DBUser).filter(
+                    func.lower(DBUser.email) == clean_email
+                ).first()
+                if db_record and getattr(db_record, "status", None):
+                    if str(db_record.status).strip().lower() == "invited":
+                        db_record.status = "Active"
+                        session.commit()
+                        logger.info(f"User {db_record.email} status transitioned from 'Invited' to 'Active' on successful login.")
+            except Exception as ex:
+                logger.error(f"Error transitioning user status upon successful login: {ex}")
+            finally:
+                if should_close:
+                    session.close()
+
         return user
 
     def generate_login_response(self, user: UserInDB) -> LoginResponse:
         """
         Create a JWT token containing user identity and role claims, returning a LoginResponse.
         """
+        role_str = user.role.value if hasattr(user.role, "value") else str(user.role)
         token_claims = {
             "sub": str(user.id),
             "email": user.email,
             "name": user.name,
-            "role": user.role.value
+            "role": role_str
         }
         access_token = create_access_token(data=token_claims)
 
@@ -208,11 +229,11 @@ class AuthService:
                 id=str(user.id),
                 name=user.name,
                 email=user.email,
-                role=user.role,
+                role=role_str,
                 phone=user.phone,
                 title=user.title
             ),
-            role=user.role
+            role=role_str
         )
 
 

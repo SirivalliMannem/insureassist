@@ -71,3 +71,21 @@ class AdminChatResponse(BaseModel):
     message_id: str
     created_at: str
 
+
+
+class PolicyCreateRequest(BaseModel):
+    policy_number: Optional[str] = Field(default=None, description="Optional custom policy number e.g. POL-2026-001")
+    policy_type: str = Field(default="Auto", description="Policy line e.g. Auto, Homeowners, Commercial Property, General Liability, Renters, Umbrella, Specialty, Life, Health")
+    status: Optional[str] = Field(default="Active", description="Policy status e.g. Active, Pending, Draft")
+    premium: float = Field(default=0.0, description="Annual premium amount")
+    start_date: Optional[str] = Field(default=None, description="Start date YYYY-MM-DD")
+    end_date: Optional[str] = Field(default=None, description="End date YYYY-MM-DD")
+    coverage_limit: Optional[float] = Field(default=None, description="Coverage limit")
+    deductible: Optional[float] = Field(default=None, description="Deductible amount")
+
+
+class PolicyAssignRequest(BaseModel):
+    policy_id: str = Field(..., description="Target policy ID or policy number")
+    customer_id: Optional[str] = Field(default=None, description="Selected customer ID")
+    agent_id: Optional[str] = Field(default=None, description="Selected agent user ID")
+    confirm_reassignment: Optional[bool] = Field(default=True, description="Confirmation flag for reassignment")

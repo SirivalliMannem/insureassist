@@ -12,6 +12,7 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=True)
     role = Column(String(50), default="Customer", nullable=False)
+    status = Column(String(50), default="Active", nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=True)
 
     customer = relationship("Customer", back_populates="user", uselist=False)
@@ -36,7 +37,7 @@ class Policy(Base):
     __tablename__ = "policies"
 
     policy_id = Column(String(64), primary_key=True, index=True)
-    customer_id = Column(String(64), ForeignKey("customers.customer_id"), nullable=False, index=True)
+    customer_id = Column(String(64), ForeignKey("customers.customer_id"), nullable=True, index=True)
     policy_number = Column(String(100), unique=True, index=True, nullable=False)
     policy_type = Column(String(100), nullable=False)
     status = Column(String(50), default="Active", nullable=False)

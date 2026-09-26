@@ -10,7 +10,7 @@ class LoginRequest(BaseModel):
     """
     email: str = Field(..., description="User email address", examples=["sarah.mitchell@email.com"])
     password: str = Field(..., description="User plain text password", examples=["Test@123"])
-    role: Optional[UserRole] = Field(None, description="Optional expected role for validation", examples=["customer"])
+    role: Optional[str] = Field(None, description="Optional expected role for validation", examples=["customer"])
 
 
 class UserInfo(BaseModel):
@@ -20,7 +20,7 @@ class UserInfo(BaseModel):
     id: str
     name: str
     email: str
-    role: UserRole
+    role: str
     phone: Optional[str] = None
     title: Optional[str] = None
 
@@ -33,7 +33,7 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int  # In seconds
     user: UserInfo
-    role: UserRole
+    role: str
 
 
 class TokenPayload(BaseModel):
@@ -43,7 +43,7 @@ class TokenPayload(BaseModel):
     sub: str  # User ID
     email: str
     name: str
-    role: UserRole
+    role: str
     exp: int
 
 
