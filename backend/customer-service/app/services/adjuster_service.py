@@ -265,6 +265,86 @@ class AdjusterService:
         )
 
     @staticmethod
+    def _send_notification(
+        db: Session,
+        recipient_user_id: Optional[str],
+        recipient_role: str,
+        notification_type: str,
+        title: str,
+        message: str,
+        entity_type: str = "CLAIM",
+        entity_id: Optional[str] = None,
+        claim_id: Optional[str] = None,
+        policy_id: Optional[str] = None,
+        policy_number: Optional[str] = None,
+        policy_type: Optional[str] = None,
+        customer_name: Optional[str] = None,
+        status_val: Optional[str] = None
+    ):
+        import os
+        import json
+        import urllib.request
+        import urllib.error
+
+        notif_url = os.getenv("NOTIFICATION_SERVICE_URL", "http://insureassist-notification-container:8007")
+        payload = {
+            "recipient_user_id": recipient_user_id,
+            "recipient_role": recipient_role,
+            "notification_type": notification_type,
+            "title": title,
+            "message": message,
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+            "claim_id": claim_id,
+            "policy_id": policy_id,
+            "policy_number": policy_number,
+            "policy_type": policy_type,
+            "customer_name": customer_name,
+            "status": status_val
+        }
+        headers = {
+            "X-Internal-Service-Key": os.getenv("INTERNAL_SERVICE_KEY", "insureassist-internal-service-secret-key-2026"),
+            "Content-Type": "application/json"
+        }
+        data_bytes = json.dumps(payload).encode("utf-8")
+        dispatched = False
+        for endpoint in [f"{notif_url}/notifications", "http://127.0.0.1:8007/notifications"]:
+            try:
+                req = urllib.request.Request(endpoint, data=data_bytes, headers=headers, method="POST")
+                with urllib.request.urlopen(req, timeout=2.0) as resp:
+                    if resp.status in [200, 201]:
+                        dispatched = True
+                        break
+            except Exception as e:
+                logger.debug(f"Notification dispatch to {endpoint} failed: {e}")
+                continue
+
+        if not dispatched:
+            now = datetime.datetime.utcnow()
+            year = now.year
+            notif_id = f"NOTIF-{year}-{random.randint(10000, 99999)}"
+            db_notif = Notification(
+                notification_id=notif_id,
+                recipient_user_id=recipient_user_id,
+                recipient_role=recipient_role,
+                recipient_id=recipient_user_id,
+                notification_type=notification_type,
+                title=title,
+                message=message,
+                entity_type=entity_type,
+                entity_id=entity_id,
+                claim_id=claim_id,
+                policy_id=policy_id,
+                policy_number=policy_number,
+                policy_type=policy_type,
+                customer_name=customer_name,
+                status=status_val,
+                is_read=False,
+                created_at=now
+            )
+            db.add(db_notif)
+
+    @staticmethod
     def process_claim_decision(
         claim_id: str,
         payload: AdjusterDecisionRequest,
@@ -275,7 +355,7 @@ class AdjusterService:
         Execute final claim decision:
         - Validate decision type and required fields
         - Update claim record in DB
-        - Dispatch in-app notifications
+        - Dispatch notifications to Customer and Agent via Notification Service
         """
         claim = db.query(Claim).filter(
             or_(Claim.claim_id == claim_id, Claim.claim_number == claim_id)
@@ -298,7 +378,6 @@ class AdjusterService:
 
         decision_norm = payload.decision.strip().lower()
         now = datetime.datetime.utcnow()
-        year = now.year
         actor_name = adjuster_user.get("name") or adjuster_user.get("email") or "Adjuster"
 
         # Lookup statically assigned agent for customer if any
@@ -307,6 +386,14 @@ class AdjusterService:
             CustomerAgentAssignment.status == "Active"
         ).first()
         assigned_agent_id = assignment.agent_id if assignment else None
+        if not assigned_agent_id:
+            # Fallback to default agent user in DB if any
+            agent_user = db.query(User).filter(User.role.ilike("Agent")).first()
+            if agent_user:
+                assigned_agent_id = agent_user.user_id
+
+        # Determine customer recipient ID
+        cust_recipient_id = customer.user_id or customer.customer_id
 
         if decision_norm in ["approve", "approved"]:
             if payload.approved_amount is None or payload.approved_amount < 0:
@@ -326,43 +413,40 @@ class AdjusterService:
             claim.updated_at = now
 
             # 1. Customer Notification
-            cust_notif_id = f"NOTIF-{year}-{random.randint(10000, 99999)}"
-            notes_str = f" Notes: {payload.decision_notes}" if payload.decision_notes else ""
-            cust_notif = Notification(
-                notification_id=cust_notif_id,
+            AdjusterService._send_notification(
+                db=db,
+                recipient_user_id=cust_recipient_id,
                 recipient_role="Customer",
-                recipient_id=customer.customer_id,
-                title=f"Claim Approved: {claim.claim_number}",
-                message=f"Your claim {claim.claim_number} for policy {policy.policy_number} ({policy.policy_type}) has been approved for ${payload.approved_amount:,.2f}. Decision Date: {now.strftime('%Y-%m-%d')}.{notes_str}",
+                notification_type="CLAIM_APPROVED",
+                title="Claim Approved",
+                message=f"Your claim {claim.claim_number} has been approved for ${payload.approved_amount:,.2f}.",
+                entity_type="CLAIM",
+                entity_id=claim.claim_number,
                 claim_id=claim.claim_id,
                 policy_id=policy.policy_id,
                 policy_number=policy.policy_number,
                 policy_type=policy.policy_type,
                 customer_name=customer.name,
-                status="Approved",
-                is_read=False,
-                created_at=now
+                status_val="Approved"
             )
-            db.add(cust_notif)
 
             # 2. Agent Notification
-            agent_notif_id = f"NOTIF-{year}-{random.randint(10000, 99999)}"
-            agent_notif = Notification(
-                notification_id=agent_notif_id,
+            AdjusterService._send_notification(
+                db=db,
+                recipient_user_id=assigned_agent_id,
                 recipient_role="Agent",
-                recipient_id=assigned_agent_id,
-                title=f"Claim Approved: {claim.claim_number}",
-                message=f"Claim {claim.claim_number} for customer {customer.name} (Policy: {policy.policy_number}) was approved for ${payload.approved_amount:,.2f} by Adjuster {actor_name}. Decision Date: {now.strftime('%Y-%m-%d')}.{notes_str}",
+                notification_type="CLAIM_APPROVED",
+                title="Customer Claim Approved",
+                message=f"Claim {claim.claim_number} for policy {policy.policy_number} has been approved.",
+                entity_type="CLAIM",
+                entity_id=claim.claim_number,
                 claim_id=claim.claim_id,
                 policy_id=policy.policy_id,
                 policy_number=policy.policy_number,
                 policy_type=policy.policy_type,
                 customer_name=customer.name,
-                status="Approved",
-                is_read=False,
-                created_at=now
+                status_val="Approved"
             )
-            db.add(agent_notif)
 
             msg = f"Claim {claim.claim_number} successfully approved for ${payload.approved_amount:,.2f}."
 
@@ -383,45 +467,41 @@ class AdjusterService:
             claim.decision_by = actor_name
             claim.updated_at = now
 
-            notes_str = f" Notes: {payload.decision_notes}" if payload.decision_notes else ""
-
             # 1. Customer Notification
-            cust_notif_id = f"NOTIF-{year}-{random.randint(10000, 99999)}"
-            cust_notif = Notification(
-                notification_id=cust_notif_id,
+            AdjusterService._send_notification(
+                db=db,
+                recipient_user_id=cust_recipient_id,
                 recipient_role="Customer",
-                recipient_id=customer.customer_id,
-                title=f"Claim Rejected: {claim.claim_number}",
-                message=f"Your claim {claim.claim_number} for policy {policy.policy_number} ({policy.policy_type}) has been rejected. Reason: {payload.rejection_reason}. Decision Date: {now.strftime('%Y-%m-%d')}.{notes_str}",
+                notification_type="CLAIM_REJECTED",
+                title="Claim Rejected",
+                message=f"Your claim {claim.claim_number} has been rejected. Reason: {payload.rejection_reason}.",
+                entity_type="CLAIM",
+                entity_id=claim.claim_number,
                 claim_id=claim.claim_id,
                 policy_id=policy.policy_id,
                 policy_number=policy.policy_number,
                 policy_type=policy.policy_type,
                 customer_name=customer.name,
-                status="Rejected",
-                is_read=False,
-                created_at=now
+                status_val="Rejected"
             )
-            db.add(cust_notif)
 
             # 2. Agent Notification
-            agent_notif_id = f"NOTIF-{year}-{random.randint(10000, 99999)}"
-            agent_notif = Notification(
-                notification_id=agent_notif_id,
+            AdjusterService._send_notification(
+                db=db,
+                recipient_user_id=assigned_agent_id,
                 recipient_role="Agent",
-                recipient_id=assigned_agent_id,
-                title=f"Claim Rejected: {claim.claim_number}",
-                message=f"Claim {claim.claim_number} for customer {customer.name} (Policy: {policy.policy_number}) was rejected by Adjuster {actor_name}. Reason: {payload.rejection_reason}. Decision Date: {now.strftime('%Y-%m-%d')}.{notes_str}",
+                notification_type="CLAIM_REJECTED",
+                title="Customer Claim Rejected",
+                message=f"Claim {claim.claim_number} for policy {policy.policy_number} has been rejected.",
+                entity_type="CLAIM",
+                entity_id=claim.claim_number,
                 claim_id=claim.claim_id,
                 policy_id=policy.policy_id,
                 policy_number=policy.policy_number,
                 policy_type=policy.policy_type,
                 customer_name=customer.name,
-                status="Rejected",
-                is_read=False,
-                created_at=now
+                status_val="Rejected"
             )
-            db.add(agent_notif)
 
             msg = f"Claim {claim.claim_number} has been rejected."
 
@@ -440,26 +520,23 @@ class AdjusterService:
             claim.decision_by = actor_name
             claim.updated_at = now
 
-            notes_str = f" Notes: {payload.decision_notes}" if payload.decision_notes else ""
-
-            # 1. Customer Notification ONLY (Rule 6: More Information Required -> notify Customer only, do NOT notify agent or send final approval/rejection)
-            cust_notif_id = f"NOTIF-{year}-{random.randint(10000, 99999)}"
-            cust_notif = Notification(
-                notification_id=cust_notif_id,
+            # Customer Notification ONLY
+            AdjusterService._send_notification(
+                db=db,
+                recipient_user_id=cust_recipient_id,
                 recipient_role="Customer",
-                recipient_id=customer.customer_id,
-                title=f"Action Required: Information Requested for Claim {claim.claim_number}",
-                message=f"Additional information or documents are required for your claim {claim.claim_number} (Policy: {policy.policy_number}). Required: {payload.requested_info}.{notes_str}",
+                notification_type="CLAIM_MORE_INFORMATION_REQUIRED",
+                title="Claim More Information Required",
+                message=f"More information required for claim {claim.claim_number}: {payload.requested_info}.",
+                entity_type="CLAIM",
+                entity_id=claim.claim_number,
                 claim_id=claim.claim_id,
                 policy_id=policy.policy_id,
                 policy_number=policy.policy_number,
                 policy_type=policy.policy_type,
                 customer_name=customer.name,
-                status="More Information Required",
-                is_read=False,
-                created_at=now
+                status_val="More Information Required"
             )
-            db.add(cust_notif)
 
             msg = f"Information request submitted for claim {claim.claim_number}."
 

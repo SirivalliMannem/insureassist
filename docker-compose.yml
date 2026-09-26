@@ -72,6 +72,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: 1440
       DATABASE_URL: "postgresql://insureassist:Test%40123@postgres:5432/insureassist"
       EXCEL_DATASET_PATH: "/app/data/pc_insurance_large_dataset.xlsx"
+      NOTIFICATION_SERVICE_URL: "http://insureassist-notification-container:8007"
       CORS_ORIGINS: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:3000,*"
     depends_on:
       postgres:
@@ -100,6 +101,7 @@ services:
       JWT_ALGORITHM: "HS256"
       ACCESS_TOKEN_EXPIRE_MINUTES: 1440
       DATABASE_URL: "postgresql://insureassist:Test%40123@postgres:5432/insureassist"
+      NOTIFICATION_SERVICE_URL: "http://insureassist-notification-container:8007"
       CORS_ORIGINS: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:3000,*"
     depends_on:
       postgres:
@@ -128,6 +130,7 @@ services:
       JWT_ALGORITHM: "HS256"
       ACCESS_TOKEN_EXPIRE_MINUTES: 1440
       DATABASE_URL: "postgresql://insureassist:Test%40123@postgres:5432/insureassist"
+      NOTIFICATION_SERVICE_URL: "http://insureassist-notification-container:8007"
       CORS_ORIGINS: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:3000,*"
     depends_on:
       postgres:
@@ -156,6 +159,7 @@ services:
       JWT_ALGORITHM: "HS256"
       ACCESS_TOKEN_EXPIRE_MINUTES: 1440
       DATABASE_URL: "postgresql://insureassist:Test%40123@postgres:5432/insureassist"
+      NOTIFICATION_SERVICE_URL: "http://insureassist-notification-container:8007"
       CORS_ORIGINS: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:3000,*"
     depends_on:
       postgres:
@@ -188,7 +192,36 @@ services:
       USE_MOCK_GROQ: "${USE_MOCK_GROQ:-false}"
       CUSTOMER_SERVICE_URL: "http://insureassist-customer-container:8002"
       AUTH_SERVICE_URL: "http://insureassist-auth-container:8001"
+      NOTIFICATION_SERVICE_URL: "http://insureassist-notification-container:8007"
       CORS_ORIGINS: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:3000,*"
+    networks:
+      - insureassist-network
+
+  # ==============================================================================
+  # 8. Notification Microservice (In-App Workflow Notifications & Alerts)
+  # ==============================================================================
+  notification-service:
+    build:
+      context: ./backend/notification-service
+      dockerfile: Dockerfile
+    image: insureassist-notification
+    container_name: insureassist-notification-container
+    restart: unless-stopped
+    ports:
+      - "8007:8007"
+    environment:
+      APP_NAME: "InsureAssist Notification Service"
+      APP_ENV: "development"
+      PORT: 8007
+      HOST: "0.0.0.0"
+      JWT_SECRET_KEY: "insureassist-super-secret-jwt-key-for-development-mode"
+      JWT_ALGORITHM: "HS256"
+      INTERNAL_SERVICE_KEY: "insureassist-internal-service-secret-key-2026"
+      DATABASE_URL: "postgresql://insureassist:Test%40123@postgres:5432/insureassist"
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:8080,http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:3000,*"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - insureassist-network
 
@@ -200,3 +233,4 @@ networks:
   insureassist-network:
     name: insureassist-network
     driver: bridge
+

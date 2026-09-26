@@ -320,6 +320,7 @@ const AGENT_SERVICE_URL = 'http://127.0.0.1:8003';
 const UNDERWRITER_SERVICE_URL = 'http://127.0.0.1:8004';
 const ADMIN_SERVICE_URL = 'http://127.0.0.1:8005';
 const AI_SERVICE_URL = 'http://127.0.0.1:8006';
+const NOTIFICATION_SERVICE_URL = 'http://127.0.0.1:8007';
 
 /**
      * MOCK DATA REPOSITORIES (ORGANIZED SEPARATELY)
@@ -7535,17 +7536,107 @@ async function fetchAgentPolicies() {
   return { policies: [], total: 0 };
 }
 
-async function fetchNotifications() {
+function formatNotificationTimestamp(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return String(dateStr);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return String(dateStr);
+  }
+}
+
+async function handleNotificationClick(notifId, entityType, entityId) {
+  // Immediately remove from displayed unread dropdown and mark read in DB
+  markNotificationRead(notifId, false);
+  if (!entityType && !entityId) return;
+
+  const currentRole = ((window.CURRENT_AUTH && window.CURRENT_AUTH.user && window.CURRENT_AUTH.user.role) || MOCK_DB.currentRole || '').toLowerCase();
+  const entType = String(entityType || '').toUpperCase();
+  const entId = String(entityId || '').trim();
+
+  // Close notification popover
+  closeNotificationPopover();
+
+  if (entType === 'CLAIM' || entId.startsWith('CLM-')) {
+    if (currentRole === 'adjuster') {
+      if (typeof openAdjusterClaimDetailModal === 'function') {
+        openAdjusterClaimDetailModal(entId);
+      } else if (typeof showPage === 'function') {
+        showPage('claims');
+      }
+    } else if (currentRole === 'agent') {
+      if (typeof openClaimDetailsPanel === 'function') {
+        openClaimDetailsPanel(entId);
+      } else if (typeof showPage === 'function') {
+        showPage('claims');
+      }
+    } else {
+      // Customer
+      if (typeof openClaimDetailsPanel === 'function') {
+        openClaimDetailsPanel(entId);
+      } else if (typeof showPage === 'function') {
+        showPage('claims');
+      }
+    }
+  } else if (entType === 'POLICY' || entId.startsWith('POL-')) {
+    if (typeof openPolicyDetailsPanel === 'function') {
+      openPolicyDetailsPanel(entId);
+    } else if (typeof showPage === 'function') {
+      showPage('policies');
+    }
+  } else if (entType === 'APPLICATION' || entId.startsWith('APP-')) {
+    if (currentRole === 'underwriter') {
+      if (typeof openUnderwriterApplicationPanel === 'function') {
+        openUnderwriterApplicationPanel(entId);
+      } else if (typeof showPage === 'function') {
+        showPage('underwriting');
+      }
+    } else {
+      if (typeof showPage === 'function') {
+        showPage('applications');
+      }
+    }
+  }
+}
+
+async function fetchNotifications(unreadOnly = true) {
   try {
     const token = getAuthToken();
     if (!token) return [];
-    const response = await fetch(`${CUSTOMER_SERVICE_URL}/notifications`, {
-      method: 'GET',
-      headers: getAuthHeaders()
-    });
-    if (response.ok) {
-      const notifications = await response.json();
-      window.workflowNotificationsData = Array.isArray(notifications) ? notifications : [];
+    let response = null;
+    const url = unreadOnly
+      ? `${NOTIFICATION_SERVICE_URL}/notifications?unread_only=true`
+      : `${NOTIFICATION_SERVICE_URL}/notifications`;
+
+    try {
+      response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+    } catch (e) {
+      response = await fetch(`${CUSTOMER_SERVICE_URL}/notifications`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+    }
+    if (response && response.ok) {
+      const rawData = await response.json();
+      let notifications = Array.isArray(rawData) ? rawData : (rawData.items || []);
+      if (unreadOnly) {
+        notifications = notifications.filter(n => !n.is_read);
+      }
+      window.workflowNotificationsData = notifications;
       renderNotifications(window.workflowNotificationsData);
       return window.workflowNotificationsData;
     }
@@ -7555,35 +7646,76 @@ async function fetchNotifications() {
   return [];
 }
 
+async function fetchUnreadCount() {
+  try {
+    const token = getAuthToken();
+    if (!token) return 0;
+    let response = null;
+    try {
+      response = await fetch(`${NOTIFICATION_SERVICE_URL}/notifications/unread-count`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+    } catch (e) {
+      // fallback
+    }
+    if (response && response.ok) {
+      const data = await response.json();
+      const count = data.unread_count || 0;
+      const dotEl = document.getElementById('header-notification-dot');
+      if (dotEl) {
+        dotEl.style.display = count > 0 ? 'block' : 'none';
+      }
+      return count;
+    }
+  } catch (err) {
+    console.warn('Unread count fetch error:', err);
+  }
+  return 0;
+}
+
 function renderNotifications(notifications) {
   const listContainer = document.getElementById('header-notification-list');
   const dotEl = document.getElementById('header-notification-dot');
   if (!notifications) notifications = window.workflowNotificationsData || [];
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadList = notifications.filter(n => !n.is_read);
+  const unreadCount = unreadList.length;
   if (dotEl) {
     dotEl.style.display = unreadCount > 0 ? 'block' : 'none';
   }
 
+  const titleEl = document.getElementById('notif-dropdown-title');
+  if (titleEl) {
+    titleEl.textContent = unreadCount > 0 ? `Notifications (${unreadCount})` : 'Notifications';
+  }
+
   if (!listContainer) return;
 
-  if (notifications.length === 0) {
+  if (unreadList.length === 0) {
     listContainer.innerHTML = `
-      <div style="padding: 2rem 1rem; text-align: center; color: var(--gray-500); font-size: 0.85rem;">
-        No workflow notifications.
+      <div style="padding: 2.5rem 1rem; text-align: center; color: var(--gray-500); font-size: 0.85rem;">
+        <svg style="width: 24px; height: 24px; margin: 0 auto 8px; display: block; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+        </svg>
+        No unread notifications.
       </div>
     `;
     return;
   }
 
   const role = ((window.CURRENT_AUTH && window.CURRENT_AUTH.user && window.CURRENT_AUTH.user.role) || MOCK_DB.currentRole || '').toLowerCase();
-  const isStaff = ['agent', 'broker', 'underwriter', 'admin'].includes(role);
+  const isStaff = ['agent', 'broker', 'underwriter', 'admin', 'adjuster'].includes(role);
 
-  listContainer.innerHTML = notifications.map(n => {
-    const isUnread = !n.is_read;
+  listContainer.innerHTML = unreadList.map(n => {
     const isPending = (n.status || '').toLowerCase().includes('pending');
-    const isApproved = (n.status || '').toLowerCase().includes('approved');
-    const badgeColor = isApproved ? 'badge-active' : (isPending ? 'badge-pending' : 'badge-info');
+    const isApproved = (n.status || '').toLowerCase().includes('approved') || (n.notification_type || '').includes('APPROVED');
+    const isRejected = (n.status || '').toLowerCase().includes('rejected') || (n.notification_type || '').includes('REJECTED');
+    const badgeColor = isApproved ? 'badge-active' : (isRejected ? 'badge-risk-high' : (isPending ? 'badge-pending' : 'badge-info'));
+
+    const timeAgo = formatNotificationTimestamp(n.created_at);
+    const entityType = n.entity_type || (n.claim_id ? 'CLAIM' : (n.policy_id ? 'POLICY' : ''));
+    const entityId = n.entity_id || n.claim_id || n.policy_number || n.policy_id || '';
 
     let actionButton = '';
     if (isStaff && isPending && n.renewal_id) {
@@ -7594,17 +7726,26 @@ function renderNotifications(notifications) {
       `;
     }
 
+    const badgeLabel = n.status || (isApproved ? 'Approved' : (isRejected ? 'Rejected' : (isPending ? 'Pending Approval' : (n.entity_type || 'Update'))));
+
     return `
-      <div class="notification-card ${isUnread ? 'unread' : ''}" onclick="markNotificationRead('${n.notification_id}')">
+      <div class="notification-card unread" id="notif-card-${n.notification_id}" style="cursor: pointer;" onclick="handleNotificationClick('${n.notification_id}', '${entityType}', '${entityId}')">
         <div class="notification-card-top">
           <div class="notification-card-title">${n.title}</div>
-          <span class="badge ${badgeColor}" style="font-size:0.7rem;padding:2px 7px;">${n.status || (isApproved ? 'Approved' : 'Pending Approval')}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="badge ${badgeColor}" style="font-size:0.7rem;padding:2px 7px;">${badgeLabel}</span>
+            ${timeAgo ? `<span style="font-size:0.7rem;color:var(--gray-400);white-space:nowrap;">${timeAgo}</span>` : ''}
+            <button title="Mark as read" onclick="event.stopPropagation(); markNotificationRead('${n.notification_id}')" style="background:none;border:none;cursor:pointer;padding:2px 4px;color:var(--gray-400);font-size:0.75rem;border-radius:3px;display:flex;align-items:center;line-height:1;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--gray-400)'">
+              &#10003;
+            </button>
+          </div>
         </div>
         <div class="notification-card-msg">${n.message}</div>
         <div class="notification-card-meta">
           ${n.customer_name ? `<span><strong>Client:</strong> ${n.customer_name}</span>` : ''}
           ${n.policy_type ? `<span><strong>Type:</strong> ${n.policy_type}</span>` : ''}
           ${n.policy_number ? `<span><strong>Policy:</strong> ${n.policy_number}</span>` : ''}
+          ${n.entity_id && !n.policy_number && !n.claim_id ? `<span><strong>Ref:</strong> ${n.entity_id}</span>` : ''}
           ${n.renewal_date ? `<span><strong>Renewal Date:</strong> ${n.renewal_date}</span>` : ''}
           ${n.renewal_premium ? `<span><strong>Premium:</strong> ${n.renewal_premium}</span>` : ''}
         </div>
@@ -8530,27 +8671,71 @@ function downloadPolicyDocument(policyId, docName) {
 
 async function markAllNotificationsRead(e) {
   if (e && e.stopPropagation) e.stopPropagation();
-  const notifs = window.workflowNotificationsData || [];
-  for (const n of notifs) {
-    if (!n.is_read) {
-      await markNotificationRead(n.notification_id, false);
-    }
-  }
+
+  // 1. Immediately clear all notifications from the displayed unread dropdown
+  window.workflowNotificationsData = [];
+  renderNotifications([]);
+
   const dotEl = document.getElementById('header-notification-dot');
   if (dotEl) dotEl.style.display = 'none';
+  const titleEl = document.getElementById('notif-dropdown-title');
+  if (titleEl) titleEl.textContent = 'Notifications';
+
   showToast('All notifications marked as read.');
-  fetchNotifications();
+
+  // 2. Persist in database via backend API (keeps notification in DB, does NOT delete)
+  try {
+    const token = getAuthToken();
+    if (token) {
+      try {
+        await fetch(`${NOTIFICATION_SERVICE_URL}/notifications/read-all`, {
+          method: 'PATCH',
+          headers: getAuthHeaders()
+        });
+      } catch (err) {
+        // Fallback
+      }
+    }
+    fetchUnreadCount();
+  } catch (err) {
+    console.warn('Failed to mark all notifications read:', err);
+  }
 }
 
-async function markNotificationRead(notificationId, refresh = true) {
+async function markNotificationRead(notificationId, refresh = false) {
+  // 1. Immediately remove/hide notification from the currently displayed dropdown
+  if (window.workflowNotificationsData && window.workflowNotificationsData.length > 0) {
+    window.workflowNotificationsData = window.workflowNotificationsData.filter(
+      n => String(n.notification_id) !== String(notificationId)
+    );
+  }
+
+  // 2. Immediately update visual list and decrease badge count
+  renderNotifications(window.workflowNotificationsData);
+
+  // 3. Persist mark-as-read in database via API (keeps notification in DB, does NOT delete)
   try {
     const token = getAuthToken();
     if (!token) return;
-    await fetch(`${CUSTOMER_SERVICE_URL}/notifications/${notificationId}/read`, {
-      method: 'POST',
-      headers: getAuthHeaders()
-    });
-    if (refresh) fetchNotifications();
+    let response = null;
+    try {
+      response = await fetch(`${NOTIFICATION_SERVICE_URL}/notifications/${notificationId}/read`, {
+        method: 'PATCH',
+        headers: getAuthHeaders()
+      });
+    } catch (e) {
+      response = await fetch(`${CUSTOMER_SERVICE_URL}/notifications/${notificationId}/read`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+    }
+
+    // Sync unread badge count from backend
+    fetchUnreadCount();
+
+    if (refresh) {
+      await fetchNotifications(true);
+    }
   } catch (err) {
     console.warn('Failed to mark notification read:', err);
   }
